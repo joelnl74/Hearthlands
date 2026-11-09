@@ -18,5 +18,6 @@ Builds/
 *.blend1
 # Python
 **/__pycache__/
-# Prototype output
+# Prototype and art previews
 scripts/prototypes/out/
+scripts/art/out/

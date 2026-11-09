@@ -4,6 +4,10 @@
 #include "GeneratedScriptReflection.h"
 #include "Hydro/Scene/Scripting/ScriptRegistry.h"
 
+#include "Scripts/World/BrushScript.h"
+#include "Scripts/World/CameraScript.h"
+#include "Scripts/World/WorldScript.h"
+
 namespace Hydro
 {
 	void RegisterGeneratedScriptReflection()
@@ -14,5 +18,29 @@ namespace Hydro
 			return;
 		}
 		registered = true;
+
+		ScriptRegistry::Register<BrushScript>("BrushScript")
+			.Property("TerrainTypes", "Terrain Types", &BrushScript::TerrainTypes).Tooltip("Where the brushes' names come from").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
+			.Property("Radius", "Radius", &BrushScript::Radius).Range(0.5f, 8.0f).Tooltip("The brush's radius in tiles, from the point under the pointer");
+
+		ScriptRegistry::Register<CameraScript>("CameraScript")
+			.Property("Pitch", "Pitch", &CameraScript::Pitch).Range(10.0f, 80.0f).Tooltip("Degrees from looking straight down")
+			.Property("Distance", "Distance", &CameraScript::Distance).Range(4.0f, 400.0f).Tooltip("Starting distance to the ground, in metres (tiles)")
+			.Property("MinDistance", "Min Distance", &CameraScript::MinDistance).Range(2.0f, 100.0f)
+			.Property("MaxDistance", "Max Distance", &CameraScript::MaxDistance).Range(10.0f, 400.0f)
+			.Property("PanSpeed", "Pan Speed", &CameraScript::PanSpeed).Range(0.1f, 5.0f).Tooltip("Keyboard pan, in camera distances per second")
+			.Property("ZoomSpeed", "Zoom Speed", &CameraScript::ZoomSpeed).Range(0.5f, 20.0f).Tooltip("Zoom steps per second while a zoom key is held");
+
+		ScriptRegistry::Register<WorldScript>("WorldScript")
+			.Property("TerrainTypes", "Terrain Types", &WorldScript::TerrainTypes).Tooltip("The terrain types generation picks from and the shader draws").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
+			.Property("TerrainArt", "Terrain Art", &WorldScript::TerrainArt).Tooltip("One 16 x 16 tile per terrain id, in id order; none draws flat colours").AssetFilter(AssetType::Texture2D)
+			.Property("BaseTileId", "Base Tile Id", &WorldScript::BaseTileId).Range(-1.0f, 255.0f).Tooltip("Every tile starts as this terrain id (1 = dirt); -1 generates the world from Seed")
+			.Property("Seed", "Seed", &WorldScript::Seed).Range(0.0f, 1000000.0f).Tooltip("The same seed makes the same world")
+			.Property("Width", "Width", &WorldScript::Width).Range(8.0f, 1024.0f).Tooltip("Tiles across")
+			.Property("Height", "Height", &WorldScript::Height).Range(8.0f, 1024.0f).Tooltip("Tiles down")
+			.Property("OutsideTileId", "Outside Tile Id", &WorldScript::OutsideTileId).Range(0.0f, 255.0f).Tooltip("The tile id drawn all around the map (3 = water)")
+			.Property("CoastWidth", "Coast Width", &WorldScript::CoastWidth).Range(0.0f, 128.0f).Tooltip("About how many tiles of that sea round off the map's edge; 0 keeps it square")
+			.Property("BeachTileId", "Beach Tile Id", &WorldScript::BeachTileId).Range(0.0f, 255.0f).Tooltip("The tile id of the beach along the coast (0 = sand)")
+			.Property("BeachWidth", "Beach Width", &WorldScript::BeachWidth).Range(0.0f, 32.0f).Tooltip("About how many tiles of beach line the coast; 0 for none");
 	}
 }

@@ -4,6 +4,8 @@
 #include "GeneratedDataReflection.h"
 #include "Hydro/Data/DataTypeRegistry.h"
 
+#include "Data/TerrainTypeDefinition.h"
+
 namespace Hydro
 {
 	void RegisterGeneratedDataReflection()
@@ -14,5 +16,19 @@ namespace Hydro
 			return;
 		}
 		registered = true;
+
+		DataTypeRegistry::Register<TerrainTypeDefinition>("TerrainTypeDefinition", "Terrain Type")
+			.Table()
+			.DisplayField("Name")
+			.Field<&TerrainTypeDefinition::Name>("Name", "Name").Tooltip("Shown in the brush and overlays")
+			.Field<&TerrainTypeDefinition::TileId>("TileId", "Tile Id").Range(0.0f, 255.0f).Tooltip("The number the tile map stores; unique per type, never reused for another type")
+			.Field<&TerrainTypeDefinition::Color>("Color", "Color").Tooltip("Its colour until it has a texture").Color()
+			.Field<&TerrainTypeDefinition::Priority>("Priority", "Priority").Range(0.0f, 100.0f).Tooltip("Wins blend ties and overlapping ranges; high for water and roads, so thin lines stay joined")
+			.Field<&TerrainTypeDefinition::StartsUnlocked>("StartsUnlocked", "Starts Unlocked").Tooltip("A brush from the start of a run; the others unlock as the world grows")
+			.Field<&TerrainTypeDefinition::Generated>("Generated", "Generated").Tooltip("Generation: placed where the height (0 to 1) and moisture (0 to 1) are both in range")
+			.Field<&TerrainTypeDefinition::MinHeight>("MinHeight", "Min Height").Range(0.0f, 1.0f)
+			.Field<&TerrainTypeDefinition::MaxHeight>("MaxHeight", "Max Height").Range(0.0f, 1.0f)
+			.Field<&TerrainTypeDefinition::MinMoisture>("MinMoisture", "Min Moisture").Range(0.0f, 1.0f)
+			.Field<&TerrainTypeDefinition::MaxMoisture>("MaxMoisture", "Max Moisture").Range(0.0f, 1.0f);
 	}
 }

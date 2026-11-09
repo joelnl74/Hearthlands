@@ -33,7 +33,7 @@ or push it out, and the world reacts to the land you give it.
 Each art pixel looks at the tiles around it and picks the type that wins there:
 
 1. Upload the tile ids as a small texture (one texel per tile, R8, nearest).
-2. Per art pixel (pixel-snapped, e.g. 16 art pixels per tile), read the 3 x 3 tiles around it.
+2. Per art pixel (pixel-snapped, e.g. 16 art pixels per tile), read the 5 x 5 tiles around it.
 3. Give each tile a weight by its distance to the pixel (a smooth falloff; a 2 x 2 bilinear weight is cheaper but
    gives diamond-shaped corners), summed per type.
 4. Add clustered noise (per 2 x 2 art pixels) so edges look hand-drawn; take the type with the highest weight and
@@ -68,11 +68,25 @@ Every step is a pure rule (state, data and a `Random&` in, a result out), unit-t
 Brushes to raise, lower, paint and plant; later, powers that help or harm (rain, drought, fire, blessing a
 village). No direct control over the species: you change their world, not them.
 
+## Progression: an ecosystem that unlocks itself
+
+(Added Nov 9, 2026.) A run starts on an empty world of one base type (dirt) with only a few brushes (dirt and grass).
+What you paint lets life appear, and life unlocks the next tools. The goal is balance: keep the cycle going and let
+all kinds of things happen on the world.
+
+1. Grass painted on dirt slowly fills with life: small grazers appear once there is enough grass.
+2. Once grazers pass a threshold, predators appear; trees start to spread.
+3. Each step unlocks new terrain types and brushes (water, sand, snow, ...), and later the species of the table above.
+4. Too many grazers strip the grass, too many predators starve: the player keeps it in balance by shaping the land.
+
+Unlocks are run state (`HearthlandsSession::UnlockedTiles`); which types start unlocked is data
+(`TerrainTypeDefinition::StartsUnlocked`). The thresholds and what each step unlocks will be data too.
+
 ## First milestone
 
-1. Generate a tile map from a seed and draw it with the blend shader.
-2. Paint tiles with a brush.
-3. Humans: appear where land is attractive, found a village, plow fields around it (grass becomes plowed field).
+1. Generate a tile map from a seed and draw it with the blend shader. Done; a world can also start as one type.
+2. Paint tiles with a brush. Done (keys 1-9 pick an unlocked type, left mouse paints).
+3. Grass life: grazers appear on enough grass and eat it; grass regrows (the first loop of the progression).
 4. An overlay showing why a spot is attractive.
 
 ## Open questions

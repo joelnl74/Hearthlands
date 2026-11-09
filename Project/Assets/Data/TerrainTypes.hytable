@@ -1,0 +1,60 @@
+Handle: 4392505292887402202
+DataTable:
+  Version: 1
+  Type: TerrainTypeDefinition
+  Rows:
+    Sand:
+      Name: Sand
+      TileId: 0
+      Color: [0.87, 0.78, 0.51]
+      Priority: 1
+      StartsUnlocked: false
+      Generated: true
+      MinHeight: 0.35
+      MaxHeight: 0.45
+      MinMoisture: 0
+      MaxMoisture: 1
+    Dirt:
+      Name: Dirt
+      TileId: 1
+      Color: [0.47, 0.33, 0.22]
+      Priority: 2
+      StartsUnlocked: true
+      Generated: true
+      MinHeight: 0.45
+      MaxHeight: 0.55
+      MinMoisture: 0
+      MaxMoisture: 1
+    Grass:
+      Name: Grass
+      TileId: 2
+      Color: [0.31, 0.55, 0.24]
+      Priority: 3
+      StartsUnlocked: true
+      Generated: true
+      MinHeight: 0.55
+      MaxHeight: 0.85
+      MinMoisture: 0
+      MaxMoisture: 1
+    Water:
+      Name: Water
+      TileId: 3
+      Color: [0.2, 0.35, 0.63]
+      Priority: 10
+      StartsUnlocked: false
+      Generated: true
+      MinHeight: 0.0
+      MaxHeight: 0.35
+      MinMoisture: 0
+      MaxMoisture: 1
+    Snow:
+      Name: Snow
+      TileId: 4
+      Color: [0.91, 0.94, 0.97]
+      Priority: 4
+      StartsUnlocked: false
+      Generated: true
+      MinHeight: 0.85
+      MaxHeight: 1.0
+      MinMoisture: 0
+      MaxMoisture: 1

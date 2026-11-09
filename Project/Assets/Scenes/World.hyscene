@@ -1,0 +1,104 @@
+Handle: 1488175154853619013
+Scene: World
+RenderSettings:
+  OverrideProject: true
+  Features:
+    Depth: Shared
+    SpriteSorting: ViewDepth
+    Lighting: Forward
+    DefaultSpriteAlpha: Cutout
+    Meshes: true
+    Shadows: Sun
+    SpriteShadows: AsDrawn
+    UprightSprites: Vertical
+    HDR: true
+    Bloom: false
+    DepthOfField: false
+Environment:
+  SkyAmbient: [0.45, 0.47, 0.5]
+  GroundAmbient: [0.2, 0.18, 0.15]
+  Fog: false
+  FogColor: [0.7, 0.75, 0.8]
+  FogStart: 120
+  FogEnd: 260
+Entities:
+  - Entity: 1802531392876026124
+    TagComponent:
+      Tag: Camera
+    TransformComponent:
+      Translation: [0, -18.35, 26.21]
+      Rotation: [0.610865, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      Primary: true
+      Projection: Perspective
+      PerspectiveFOV: 50
+      PerspectiveNear: 0.5
+      PerspectiveFar: 1500
+      OrthographicSize: 40
+      OrthographicNear: -1
+      OrthographicFar: 1
+      FocusDistance: 0
+    NativeScriptComponent:
+      Scripts:
+        - Name: CameraScript
+          Properties:
+            Pitch: 35
+            Distance: 32
+            MinDistance: 8
+            MaxDistance: 160
+            PanSpeed: 1
+            ZoomSpeed: 4
+  - Entity: 2674510592191953209
+    TagComponent:
+      Tag: Sun
+    TransformComponent:
+      Translation: [-20, -20, 40]
+      Rotation: [0.8, 0, -0.66]
+      Scale: [1, 1, 1]
+    DirectionalLightComponent:
+      Color: [1, 0.95, 0.88]
+      Intensity: 0.9
+      IsMainLight: true
+      CastShadows: true
+      ShadowStrength: 0.8
+      ShadowDistance: 80
+      ShadowBias: 1
+  - Entity: 8037302111884550761
+    TagComponent:
+      Tag: Terrain
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      Shape: Plane
+      Size: [2560, 2560, 1]
+      CastShadows: false
+      Materials:
+        - Inline:
+            ShaderHandle: 406790589308717322
+            Tint: [1, 1, 1, 1]
+            Tiling: [16, 0.18]
+            EmissionColor: [0, 0, 0]
+            EmissionIntensity: 1
+            AlphaCutoff: 0
+            Filter: Nearest
+    NativeScriptComponent:
+      Scripts:
+        - Name: WorldScript
+          Properties:
+            TerrainTypes: 4392505292887402202
+            TerrainArt: 4186076384102379045
+            BaseTileId: 1
+            Seed: 1
+            Width: 512
+            Height: 512
+            OutsideTileId: 3
+            CoastWidth: 24
+            BeachTileId: 0
+            BeachWidth: 3
+        - Name: BrushScript
+          Properties:
+            TerrainTypes: 4392505292887402202
+            Radius: 1.5

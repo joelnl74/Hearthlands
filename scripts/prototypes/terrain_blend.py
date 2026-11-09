@@ -40,9 +40,9 @@ def render(kernel,noise_amt,radius):
     for i in range(4): wts[i]+= n*(1 if i!=3 else 0.5)+prio[i]*1e-4 + (hashn(px,py,i+1)-0.5)*noise_amt*0.5
     return pal[np.argmax(wts,0)]
 bil=lambda dx,dy: np.clip(1-np.abs(dx),0,1)*np.clip(1-np.abs(dy),0,1)
-gau=lambda dx,dy: np.exp(-(dx*dx+dy*dy)/(2*0.45**2))
+gau=lambda dx,dy: np.exp(-(dx*dx+dy*dy)/(2*0.75**2))  # tile_blend.frag: Sigma 0.75, 5 x 5 (Reach 2)
 raw=pal[np.repeat(np.repeat(tiles,P,0),P,1)]
-a=render(bil,0.0,1); b=render(gau,0.0,1); c=render(gau,0.18,1)
+a=render(bil,0.0,1); b=render(gau,0.0,2); c=render(gau,0.18,2)
 gap=np.full((H*P,6,3),30,np.uint8)
 out=os.path.join(os.path.dirname(os.path.abspath(__file__)),"out","terrain_blend.png")
 os.makedirs(os.path.dirname(out),exist_ok=True)
