@@ -1,0 +1,4 @@
+{
+  "Game": { "Id": "hearthlands", "Name": "Hearthlands", "Target": "HearthlandsGame", "CodeDirectory": "Game" },
+  "DefaultProject": "Project/Hearthlands.hyproj"
+}

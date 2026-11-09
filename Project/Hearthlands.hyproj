@@ -1,0 +1,6 @@
+Project:
+  Name: Hearthlands
+  Game:
+    Id: hearthlands
+    Name: Hearthlands
+  AssetDirectory: Assets
