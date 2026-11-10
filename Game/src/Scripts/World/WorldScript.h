@@ -1,10 +1,12 @@
 #pragma once
 
 #include "Hydro.h"
+#include "Data/ObjectDefinition.h"
 #include "Data/TerrainTypeDefinition.h"
 #include "Rules/BrushRules.h"
 #include "Rules/TerrainGenRules.h"
 #include "State/HearthlandsSession.h"
+#include "Views/ObjectsView.h"
 #include "Views/TerrainView.h"
 
 #include <vector>
@@ -19,9 +21,12 @@ namespace Hydro
 	public:
 		static constexpr uint64_t DefaultTerrainTypes = 4392505292887402202ull; // Assets/Data/TerrainTypes.hytable
 		static constexpr uint64_t DefaultTerrainArt = 4186076384102379045ull;   // Assets/Textures/TerrainAtlas.png
+		static constexpr uint64_t DefaultObjectTypes = 9091122517145490043ull;  // Assets/Data/Objects.hytable
 
 		HY_PROPERTY(Asset(DataTable, TerrainTypeDefinition), Tooltip("The terrain types generation picks from and the shader draws"))
 		AssetHandle TerrainTypes = DefaultTerrainTypes;
+		HY_PROPERTY(Asset(DataTable, ObjectDefinition), Tooltip("The objects' sprites and sizes"))
+		AssetHandle ObjectTypes = DefaultObjectTypes;
 		HY_PROPERTY(Asset(Texture2D), Tooltip("One 16 x 16 tile per terrain id, in id order; none draws flat colours"))
 		AssetHandle TerrainArt = DefaultTerrainArt;
 		HY_PROPERTY(Range(-1, 255), Tooltip("Every tile starts as this terrain id (1 = dirt); -1 generates the world from Seed"))
@@ -85,6 +90,13 @@ namespace Hydro
 			}
 
 			m_View.Bind(GetEntity());
+			std::vector<ObjectDefinition> objects;
+			const DataTableView<ObjectDefinition> objectTable = Data::GetTable<ObjectDefinition>(ObjectTypes);
+			for (const auto& [id, object] : objectTable.Rows())
+			{
+				objects.push_back(object);
+			}
+			m_Objects.Bind(*GetEntity().GetScene(), objects);
 			m_View.Present(map, m_Types, (uint8_t)OutsideTileId, TerrainArt, nullptr, 0.0f);
 		}
 
@@ -93,15 +105,18 @@ namespace Hydro
 			const HearthlandsSession& session = HearthlandsSession::Get();
 			const std::vector<uint8_t>* moisture = session.ShowMoisture ? &session.Water.Moisture : nullptr;
 			m_View.Present(session.Map, m_Types, (uint8_t)OutsideTileId, TerrainArt, moisture, deltaTime);
+			m_Objects.Present(session.Objects, session.Map.GetWidth(), session.Map.GetHeight(), GetWorldPosition(), deltaTime);
 		}
 
 		void OnDestroy() override
 		{
 			m_View.Release();
+			m_Objects.Release();
 		}
 
 	private:
 		std::vector<TerrainTypeDefinition> m_Types;
 		TerrainView m_View;
+		ObjectsView m_Objects;
 	};
 }

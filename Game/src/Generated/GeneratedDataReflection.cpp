@@ -4,6 +4,7 @@
 #include "GeneratedDataReflection.h"
 #include "Hydro/Data/DataTypeRegistry.h"
 
+#include "Data/ObjectDefinition.h"
 #include "Data/TerrainRuleDefinition.h"
 #include "Data/TerrainTypeDefinition.h"
 
@@ -18,10 +19,38 @@ namespace Hydro
 		}
 		registered = true;
 
+		DataTypeRegistry::RegisterEnum<ObjectKind>("ObjectKind")
+			.Value("Ground", ObjectKind::Ground)
+			.Value("Shrub", ObjectKind::Shrub)
+			.Value("Tree", ObjectKind::Tree)
+			.Value("Rock", ObjectKind::Rock);
+
 		DataTypeRegistry::RegisterEnum<TerrainRole>("TerrainRole")
 			.Value("Land", TerrainRole::Land)
 			.Value("Water", TerrainRole::Water)
 			.Value("Riverbed", TerrainRole::Riverbed);
+
+		DataTypeRegistry::Register<ObjectDefinition>("ObjectDefinition", "Object")
+			.Table()
+			.DisplayField("Name")
+			.Field<&ObjectDefinition::Name>("Name", "Name")
+			.Field<&ObjectDefinition::ObjectId>("ObjectId", "Object Id").Range(1.0f, 255.0f).Tooltip("The number the object layer stores (0 is none); unique, never reused")
+			.Field<&ObjectDefinition::Kind>("Kind", "Kind")
+			.Field<&ObjectDefinition::Sprite>("Sprite", "Sprite").Tooltip("Drawn standing on its tile, bottom centre on the ground").AssetFilter(AssetType::Texture2D)
+			.Field<&ObjectDefinition::PixelsPerTile>("PixelsPerTile", "Pixels Per Tile").Range(4.0f, 128.0f).Tooltip("Sprite pixels per tile: the size it is drawn at")
+			.Field<&ObjectDefinition::CastsShadow>("CastsShadow", "Casts Shadow")
+			.Field<&ObjectDefinition::GrowsOnTileId>("GrowsOnTileId", "Grows On Tile Id").Range(-1.0f, 255.0f).Tooltip("The tile it lives on; -1 any land (not water or riverbed). It dies elsewhere")
+			.Field<&ObjectDefinition::MinMoisture>("MinMoisture", "Min Moisture").Range(0.0f, 1.0f).Tooltip("The tile's moisture it lives in, at least ...")
+			.Field<&ObjectDefinition::MaxMoisture>("MaxMoisture", "Max Moisture").Range(0.0f, 1.0f).Tooltip("... and at most")
+			.Field<&ObjectDefinition::NeighbourTileId>("NeighbourTileId", "Neighbour Tile Id").Range(-1.0f, 255.0f).Tooltip("Needs MinNeighbours of the 8 neighbouring tiles to be this id; -1 none")
+			.Field<&ObjectDefinition::MinNeighbours>("MinNeighbours", "Min Neighbours").Range(1.0f, 8.0f)
+			.Field<&ObjectDefinition::SproutChance>("SproutChance", "Sprout Chance").Range(0.0f, 1.0f).Tooltip("Chance to appear each time an empty tile that suits it is looked at")
+			.Field<&ObjectDefinition::MinSpacing>("MinSpacing", "Min Spacing").Range(0.0f, 4.0f).Tooltip("Tiles around it free of objects of its kind or bigger for it to appear")
+			.Field<&ObjectDefinition::SpreadFromObjectId>("SpreadFromObjectId", "Spread From Object Id").Range(-1.0f, 255.0f).Tooltip("Spreads from this object within MinSpacing + 1 tiles; -1 none")
+			.Field<&ObjectDefinition::SpreadChance>("SpreadChance", "Spread Chance").Range(0.0f, 1.0f).Tooltip("Extra chance to appear next to SpreadFromObjectId")
+			.Field<&ObjectDefinition::GrowsIntoObjectId>("GrowsIntoObjectId", "Grows Into Object Id").Range(-1.0f, 255.0f).Tooltip("Becomes this object after GrowDays; -1 stays")
+			.Field<&ObjectDefinition::GrowDays>("GrowDays", "Grow Days").Range(0.0f, 100.0f).Tooltip("World days (on average) before it grows into the next stage")
+			.Field<&ObjectDefinition::StartDensity>("StartDensity", "Start Density").Range(0.0f, 1.0f).Tooltip("Placed on this share of the tiles that suit it when the world is made");
 
 		DataTypeRegistry::Register<TerrainRuleDefinition>("TerrainRuleDefinition", "Terrain Rule")
 			.Table()

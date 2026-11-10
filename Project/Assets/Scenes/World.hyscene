@@ -10,7 +10,7 @@ RenderSettings:
     Meshes: true
     Shadows: Sun
     SpriteShadows: AsDrawn
-    UprightSprites: Vertical
+    UprightSprites: LeanToCamera
     HDR: true
     Bloom: false
     DepthOfField: false
@@ -26,29 +26,28 @@ Entities:
     TagComponent:
       Tag: Camera
     TransformComponent:
-      Translation: [0, -18.35, 26.21]
-      Rotation: [0.610865, 0, 0]
+      Translation: [612.37, -612.37, 500.00]
+      Rotation: [1.047198, 0.0, 0.785398]
       Scale: [1, 1, 1]
     CameraComponent:
       Primary: true
-      Projection: Perspective
+      Projection: Orthographic
       PerspectiveFOV: 50
       PerspectiveNear: 0.5
       PerspectiveFar: 1500
-      OrthographicSize: 40
-      OrthographicNear: -1
-      OrthographicFar: 1
+      OrthographicSize: 22.5
+      OrthographicNear: 1
+      OrthographicFar: 3000
       FocusDistance: 0
     NativeScriptComponent:
       Scripts:
         - Name: CameraScript
           Properties:
-            Pitch: 35
-            Distance: 32
-            MinDistance: 8
-            MaxDistance: 160
-            PanSpeed: 1
-            ZoomSpeed: 4
+            Yaw: 45
+            Elevation: 30
+            Zoom: 3
+            PixelsPerTile: 24
+            PanSpeed: 0.8
   - Entity: 2674510592191953209
     TagComponent:
       Tag: Sun
@@ -90,6 +89,7 @@ Entities:
           Properties:
             TerrainTypes: 4392505292887402202
             TerrainArt: 4186076384102379045
+            ObjectTypes: 9091122517145490043
             BaseTileId: 1
             Seed: 1
             Width: 512
@@ -103,6 +103,7 @@ Entities:
           Properties:
             TerrainTypes: 4392505292887402202
             TerrainRules: 9052849889970328576
+            ObjectTypes: 9091122517145490043
             TicksPerSecond: 4
             SamplesPerTick: 20000
             SourceHead: 24

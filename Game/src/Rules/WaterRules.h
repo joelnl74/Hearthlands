@@ -30,6 +30,7 @@ namespace Hydro
 			int Filled = 0;  // riverbed tiles that took water
 			int Dried = 0;   // water tiles that dried
 			int Looked = 0;  // active tiles looked at
+			std::vector<uint32_t> Changes; // the map's changes taken this tick (brush, growth): for other rules to react
 		};
 
 		// `settings` with the water and riverbed ids from the types' roles (unchanged when a role has no type).
@@ -109,7 +110,8 @@ namespace Hydro
 		{
 			TickReport report;
 			const int width = map.GetWidth();
-			for (uint32_t index : map.TakeChanges())
+			report.Changes = map.TakeChanges();
+			for (uint32_t index : report.Changes)
 			{
 				ActivateAround(map, water, index);
 			}

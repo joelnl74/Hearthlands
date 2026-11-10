@@ -7,6 +7,7 @@
 #include "Rules/BrushRules.h"
 #include "Rules/CameraRules.h"
 #include "Rules/GrowthRules.h"
+#include "Rules/ObjectRules.h"
 #include "Rules/TerrainGenRules.h"
 #include "Rules/WaterRules.h"
 #include "State/Random.h"
@@ -400,23 +401,131 @@ namespace Hydro
 
 	static void TestCameraRules(int& checks)
 	{
-		// The camera sits back along -Y and up, at the distance, looking at the target.
-		const glm::vec3 position = CameraRules::Position(glm::vec2(3.0f, 4.0f), 10.0f, glm::radians(35.0f));
-		RULE_CHECK(std::abs(glm::length(position - glm::vec3(3.0f, 4.0f, 0.0f)) - 10.0f) < 1e-4f);
-		RULE_CHECK(position.x == 3.0f && position.y < 4.0f && position.z > 0.0f);
-		RULE_CHECK(CameraRules::Position(glm::vec2(0.0f), 5.0f, 0.0f) == glm::vec3(0.0f, 0.0f, 5.0f));
+		// Looking straight down (elevation 90) the camera sits above the target; isometric it sits back along -Y+X and up.
+		const glm::vec3 above = CameraRules::Position(glm::vec2(3.0f, 4.0f), CameraRules::Rotation(0.0f, 90.0f), 10.0f);
+		RULE_CHECK(glm::length(above - glm::vec3(3.0f, 4.0f, 10.0f)) < 1e-4f);
+		const glm::quat iso = CameraRules::Rotation(45.0f, 30.0f);
+		const glm::vec3 back = CameraRules::Position(glm::vec2(0.0f), iso, 1.0f);
+		RULE_CHECK(std::abs(back.z - 0.5f) < 1e-4f && back.x > 0.0f && back.y < 0.0f && std::abs(back.x + back.y) < 1e-4f);
+		const glm::vec3 forward = iso * glm::vec3(0.0f, 0.0f, -1.0f); // the camera looks down at 30 degrees
+		RULE_CHECK(std::abs(std::asin(-forward.z) - glm::radians(30.0f)) < 1e-4f);
+
+		// Zoom: whole steps within the table; the orthographic size shows that many art pixels a screen pixel.
+		RULE_CHECK(CameraRules::StepZoom(3, 1) == 4 && CameraRules::StepZoom(5, 1) == 5 && CameraRules::StepZoom(0, -2) == 0);
+		RULE_CHECK(std::abs(CameraRules::OrthographicSize(1080.0f, 2.0f, 24.0f) - 22.5f) < 1e-4f);
+
+		// A drag: screen right moves along the camera's right, screen up along its ground forward, stretched by 1 / sin(30) = 2.
+		const glm::vec2 right = CameraRules::GroundDelta(glm::vec2(10.0f, 0.0f), 10.0f, 0.0f, 30.0f);
+		RULE_CHECK(glm::length(right - glm::vec2(1.0f, 0.0f)) < 1e-4f);
+		const glm::vec2 up = CameraRules::GroundDelta(glm::vec2(0.0f, -10.0f), 10.0f, 0.0f, 30.0f);
+		RULE_CHECK(glm::length(up - glm::vec2(0.0f, 2.0f)) < 1e-4f);
+		const glm::vec2 turned = CameraRules::GroundDelta(glm::vec2(10.0f, 0.0f), 10.0f, 90.0f, 30.0f);
+		RULE_CHECK(glm::length(turned - glm::vec2(0.0f, 1.0f)) < 1e-4f);
 
 		RULE_CHECK(CameraRules::ClampTarget(glm::vec2(300.0f, -10.0f), 512, 512) == glm::vec2(256.0f, -10.0f));
 		RULE_CHECK(CameraRules::ClampTarget(glm::vec2(-5.0f, -40.0f), 64, 32) == glm::vec2(-5.0f, -16.0f));
+	}
 
-		RULE_CHECK(CameraRules::Zoom(40.0f, 1.0f, 8.0f, 160.0f) < 40.0f && CameraRules::Zoom(40.0f, -1.0f, 8.0f, 160.0f) > 40.0f);
-		RULE_CHECK(CameraRules::Zoom(10.0f, 50.0f, 8.0f, 160.0f) == 8.0f && CameraRules::Zoom(100.0f, -50.0f, 8.0f, 160.0f) == 160.0f);
-		RULE_CHECK(std::abs(CameraRules::MetresPerPixel(10.0f, 90.0f, 100.0f) - 0.2f) < 1e-4f);
+	static ObjectDefinition MakeObject(int id, int tileId, float sprout, int growsInto, float growDays)
+	{
+		ObjectDefinition object;
+		object.ObjectId = id;
+		object.GrowsOnTileId = tileId;
+		object.SproutChance = sprout;
+		object.GrowsIntoObjectId = growsInto;
+		object.GrowDays = growDays;
+		return object;
+	}
+
+	static void TestObjectRules(int& checks)
+	{
+		// A grass field (2) with a dirt column (1) and a water tile (3); everything moist.
+		TileMap map(12, 12, 2);
+		for (int y = 0; y < 12; y++)
+		{
+			map.Set(0, y, 1);
+		}
+		map.Set(11, 11, 3);
+		Hydrology water;
+		water.Moisture.assign(144, 200);
+		std::vector<uint8_t> land(144, 1);
+
+		std::vector<ObjectDefinition> objects = { MakeObject(1, 2, 1.0f, 2, 1.0f), MakeObject(2, 2, 0.0f, -1, 0.0f),
+			MakeObject(3, -1, 0.0f, -1, 0.0f) };
+		objects[0].MinMoisture = 0.5f;
+		const std::vector<int> byId = ObjectRules::IndexById(objects);
+		RULE_CHECK(byId[1] == 0 && byId[3] == 2 && byId[4] == -1);
+
+		// Fits: the tile, the moisture, any land for -1 (not water).
+		RULE_CHECK(ObjectRules::Fits(objects[0], map, water, 3, 3) && ObjectRules::Fits(objects[0], map, water, 0, 3) == false);
+		RULE_CHECK(ObjectRules::Fits(objects[2], map, water, 0, 3) && ObjectRules::Fits(objects[2], map, water, 11, 11) == false);
+		water.Moisture[(size_t)3 * 12 + 3] = 50;
+		RULE_CHECK(ObjectRules::Fits(objects[0], map, water, 3, 3) == false);
+		water.Moisture[(size_t)3 * 12 + 3] = 200;
+
+		// Sprouting with chance 1 fills the grass but not the dirt; with MinSpacing 1 no two touch.
+		ObjectLayer layer;
+		layer.Reset(144);
+		Random random(5);
+		objects[0].MinSpacing = 1;
+		ObjectRules::Step(layer, map, water, land, objects, byId, 3000, 0.0f, random);
+		bool spaced = true;
+		bool onGrass = true;
+		for (int y = 0; y < 12; y++)
+		{
+			for (int x = 0; x < 12; x++)
+			{
+				const size_t index = (size_t)y * 12 + (size_t)x;
+				onGrass = onGrass && (layer.Get(index) == 0 || map.Get(x, y) == 2);
+				spaced = spaced && (layer.Get(index) == 0 || ObjectRules::CountObjects(layer, map, x, y, 0, 1) == 0);
+			}
+		}
+		RULE_CHECK(layer.GetCount() > 10 && onGrass && spaced);
+
+		// Growing: GrowDays 1 at 10 looks a day grows 1 in 10 looks; after many looks all have grown.
+		objects[0].SproutChance = 0.0f;
+		ObjectRules::Step(layer, map, water, land, objects, byId, 20000, 10.0f, random);
+		bool grown = true;
+		for (uint8_t id : layer.GetIds())
+		{
+			grown = grown && id != 1;
+		}
+		RULE_CHECK(grown && layer.GetCount() > 10);
+
+		// Spreading: a lone object 2 spreads to tiles near it (SpreadFromObjectId) and nowhere else.
+		ObjectLayer spread;
+		spread.Reset(144);
+		spread.Set((size_t)6 * 12 + 6, 2);
+		ObjectDefinition seedling = MakeObject(4, 2, 0.0f, -1, 0.0f);
+		seedling.SpreadFromObjectId = 2;
+		seedling.SpreadChance = 1.0f;
+		const std::vector<ObjectDefinition> pair = { seedling, MakeObject(2, 2, 0.0f, -1, 0.0f) };
+		ObjectRules::Step(spread, map, water, land, pair, ObjectRules::IndexById(pair), 3000, 0.0f, random);
+		RULE_CHECK(spread.Get((size_t)6 * 12 + 7) == 4 && spread.Get((size_t)2 * 12 + 2) == 0);
+
+		// Dying: a dug tile loses its object at once (RemoveUnfit); a dried one in Step.
+		const size_t tree = (size_t)6 * 12 + 6;
+		map.Set(6, 6, 5);
+		RULE_CHECK(ObjectRules::RemoveUnfit(spread, map, water, pair, ObjectRules::IndexById(pair), { (uint32_t)tree }) == 1);
+		RULE_CHECK(spread.Get(tree) == 0);
+		ObjectLayer dry;
+		dry.Reset(144);
+		dry.Set((size_t)3 * 12 + 3, 1);
+		water.Moisture.assign(144, 10);
+		ObjectRules::Step(dry, map, water, land, objects, byId, 5000, 0.0f, random);
+		RULE_CHECK(dry.GetCount() == 0);
+
+		// Scatter: StartDensity 1 places on every land tile that fits.
+		ObjectLayer rocks;
+		rocks.Reset(144);
+		ObjectDefinition rock = MakeObject(3, -1, 0.0f, -1, 0.0f);
+		rock.StartDensity = 1.0f;
+		RULE_CHECK(ObjectRules::Scatter(rocks, map, water, { rock }, random) == 142 && rocks.Get(143) == 0);
 	}
 
 	int TestGameRules(int& checks)
 	{
-		std::printf("Game rules: TileMap, TerrainGenRules, BrushRules, CameraRules, SimulationClock, WaterRules, GrowthRules\n");
+		std::printf("Game rules: TileMap, TerrainGenRules, BrushRules, CameraRules, SimulationClock, WaterRules, GrowthRules, ObjectRules\n");
 		TestTileMap(checks);
 		TestTerrainGenRules(checks);
 		TestBrushRules(checks);
@@ -424,6 +533,7 @@ namespace Hydro
 		TestSimulationClock(checks);
 		TestWaterRules(checks);
 		TestGrowthRules(checks);
+		TestObjectRules(checks);
 
 		return s_RuleFailures;
 	}

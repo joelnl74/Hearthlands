@@ -24,12 +24,11 @@ namespace Hydro
 		ScriptRegistry::Register<BrushScript>("BrushScript");
 
 		ScriptRegistry::Register<CameraScript>("CameraScript")
-			.Property("Pitch", "Pitch", &CameraScript::Pitch).Range(10.0f, 80.0f).Tooltip("Degrees from looking straight down")
-			.Property("Distance", "Distance", &CameraScript::Distance).Range(4.0f, 400.0f).Tooltip("Starting distance to the ground, in metres (tiles)")
-			.Property("MinDistance", "Min Distance", &CameraScript::MinDistance).Range(2.0f, 100.0f)
-			.Property("MaxDistance", "Max Distance", &CameraScript::MaxDistance).Range(10.0f, 400.0f)
-			.Property("PanSpeed", "Pan Speed", &CameraScript::PanSpeed).Range(0.1f, 5.0f).Tooltip("Keyboard pan, in camera distances per second")
-			.Property("ZoomSpeed", "Zoom Speed", &CameraScript::ZoomSpeed).Range(0.5f, 20.0f).Tooltip("Zoom steps per second while a zoom key is held");
+			.Property("Yaw", "Yaw", &CameraScript::Yaw).Range(0.0f, 360.0f).Tooltip("Degrees the view is turned about the vertical; 45 is isometric")
+			.Property("Elevation", "Elevation", &CameraScript::Elevation).Range(10.0f, 90.0f).Tooltip("Degrees above the ground; 30 is 2:1 isometric, 90 straight down")
+			.Property("Zoom", "Zoom", &CameraScript::Zoom).Range(0.0f, 5.0f).Tooltip("Starting zoom: index into 1/4, 1/2, 1, 2, 3, 4 screen pixels per art pixel")
+			.Property("PixelsPerTile", "Pixels Per Tile", &CameraScript::PixelsPerTile).Range(8.0f, 64.0f).Tooltip("Art pixels per tile in the object sprites (sets the pixel scale)")
+			.Property("PanSpeed", "Pan Speed", &CameraScript::PanSpeed).Range(0.1f, 5.0f).Tooltip("Keyboard pan, in screen heights per second");
 
 		ScriptRegistry::Register<HudScript>("HudScript")
 			.Property("UIFont", "UI Font", &HudScript::UIFont).Tooltip("The HUD's text").AssetFilter(AssetType::Font)
@@ -38,6 +37,7 @@ namespace Hydro
 		ScriptRegistry::Register<SimulationScript>("SimulationScript")
 			.Property("TerrainTypes", "Terrain Types", &SimulationScript::TerrainTypes).Tooltip("Roles (water, riverbed) and unlocks").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
 			.Property("TerrainRules", "Terrain Rules", &SimulationScript::TerrainRules).Tooltip("How land changes by itself").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainRuleDefinition")
+			.Property("ObjectTypes", "Object Types", &SimulationScript::ObjectTypes).Tooltip("What grows and stands on the tiles").AssetFilter(AssetType::DataTable).DataTypeFilter("ObjectDefinition")
 			.Property("TicksPerSecond", "Ticks Per Second", &SimulationScript::TicksPerSecond).Range(1.0f, 20.0f).Tooltip("Ticks per world second (at 1x)")
 			.Property("SamplesPerTick", "Samples Per Tick", &SimulationScript::SamplesPerTick).Range(0.0f, 200000.0f).Tooltip("Random tiles the terrain rules look at per tick")
 			.Property("SourceHead", "Source Head", &SimulationScript::SourceHead).Range(1.0f, 200.0f).Tooltip("How far a one-tile-wide channel carries water from the sea, in tiles")
@@ -46,6 +46,7 @@ namespace Hydro
 
 		ScriptRegistry::Register<WorldScript>("WorldScript")
 			.Property("TerrainTypes", "Terrain Types", &WorldScript::TerrainTypes).Tooltip("The terrain types generation picks from and the shader draws").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
+			.Property("ObjectTypes", "Object Types", &WorldScript::ObjectTypes).Tooltip("The objects' sprites and sizes").AssetFilter(AssetType::DataTable).DataTypeFilter("ObjectDefinition")
 			.Property("TerrainArt", "Terrain Art", &WorldScript::TerrainArt).Tooltip("One 16 x 16 tile per terrain id, in id order; none draws flat colours").AssetFilter(AssetType::Texture2D)
 			.Property("BaseTileId", "Base Tile Id", &WorldScript::BaseTileId).Range(-1.0f, 255.0f).Tooltip("Every tile starts as this terrain id (1 = dirt); -1 generates the world from Seed")
 			.Property("Seed", "Seed", &WorldScript::Seed).Range(0.0f, 1000000.0f).Tooltip("The same seed makes the same world")

@@ -1,6 +1,7 @@
 # Hearthlands: concept
 
-Initial concept (Nov 9, 2026). A starting point to grow from, not a spec.
+Initial concept (Nov 9, 2026), with the design direction of Nov 10 below. A starting point to grow from, not a spec:
+the direction can still pivot.
 
 ## Pitch
 
@@ -51,7 +52,7 @@ engine draws terrain; the difference is a tile-id texture instead of a 4-channel
 
 ## Species
 
-Each species is data: what attracts it (tile types nearby, water, space, other species), what it avoids, how it
+(The first idea; the design direction below replaces the peoples part with "Peoples and ages".) Each species is data: what attracts it (tile types nearby, water, space, other species), what it avoids, how it
 grows, and how it changes the land.
 
 | Species | Drawn to | Changes the land |
@@ -92,6 +93,107 @@ wets the land around it, fading over 6 tiles, and grass sprouts and spreads ther
 `TerrainRules.hytable`) and dries away from water. 400 grass tiles unlock the Grass brush. Later: mountains and springs
 as more water sources; water that only reaches so far inland gives the player a reason to shape the land.
 
+## Design direction (Nov 10, 2026)
+
+### Look
+
+- **Isometric** (2:1, orthographic). The terrain stays the tile-id blend shader; everything standing on it (plants,
+  rocks, buildings, animals, people) is an upright sprite on a tile. Round things are drawn front-on, buildings at the
+  diagonal angle. Reference: the ChatGPT key art and asset sheet (style only; the cleaned sheet is placeholder art).
+- **Fake elevation in the shader**, no real geometry: each type has a layer height (water and riverbed -1, dirt and
+  sand 0, grass +1, rock +2). Where a higher type lies behind, the art pixel is part of its side face (a cliff colour
+  per type), with a highlight on the lip and a shadow at the foot.
+- **Edges and detail**: rough, tufted edges per type (grass tufty, sand smooth), foam where water meets land, small
+  decorations picked by a hash per tile (tufts, flowers, pebbles), chunkier repainted ground tiles, object shadows.
+- **Scale**: 2 screen pixels per art pixel at the default zoom; each sprite's size is data, so a rabbit stays smaller
+  than a hut.
+
+### Water
+
+- **Hidden groundwater**: a per-tile value (0 to 1) from noise. Digging onto it makes a spring, a water source whose
+  strength follows the groundwater, so the inland can come alive too. Clues on the surface (reeds, darker dirt, a
+  faint sign in the moisture view) keep it from being blind digging; a talent shows it outright.
+- **Seasons are part of the game** from the start: sources weaken in summer (droughts, rivers shrink, grass dries),
+  rains and fuller rivers in spring, growth slows in winter. Later: elevation per tile (water runs downhill),
+  mountains as sources.
+
+### Life
+
+- **Succession**: dirt -> grass -> shrubs -> forest while moist; back to dirt when overgrazed, burnt or dry.
+- **Fauna as populations per region** (a predator-prey model per area), with only a sample of animals drawn.
+- **Disturbances** that test the balance: drought, flood, wildfire through dry grass, disease.
+
+### Peoples and ages (evolution)
+
+- **Humans, elves and dwarves all start prehistoric**: a camp of lean-tos and round huts, foraging and hunting. Each
+  people has **its own ladder of ages** (for example elves: camp -> grove -> tree city; dwarves: camp -> stone hall ->
+  mountain hold) that it climbs when conditions hold (food surplus, population, materials) and talents allow; each age
+  brings buildings and new ways of changing the land.
+- **Affinities**: each people favours some activities. Elves: foraging and forestry (groves, tree homes, forest
+  spreads). Humans: farming and building (fields, roads). Dwarves: mining and stone (quarries, hills, minerals).
+  Activities: foraging, hunting, fishing, farming, herding, forestry, mining, building.
+- **Talents act through affinities**: a talent raises an activity, and each people gets it times its affinity
+  ("Seed gathering: +50% foraging" -> elves +75%, dwarves +25%). Same talent, different impact per people.
+- **Peoples come to land that suits them**: elves to old forest by fresh water, humans to fertile grass by water,
+  dwarves to rock, hills and minerals. The player never controls them directly (pillar): they shape the land and
+  choose talents.
+- **Regions are shared and contested**: peoples can live side by side (elves in the forest next to human fields) and
+  also compete for the same land (humans fell the forest the elves need); the player tips the balance by shaping it.
+
+### Talents
+
+- **Points come from milestones for now** (Nov 10): one point per first-time event, such as the Grass brush unlocked,
+  a hidden water source found, the first forest grown, the first grazers, the first settlers, a people reaching a new
+  age. The milestones are data, so new ones are a row. Later ideas: points from variety and stability (species and
+  types present, populations steady over days), so painting one huge field earns nothing.
+- **Branches**: Water (wider dig, sense groundwater, wells, dams), Land (sand, stone, raise and lower), Life
+  (introduce species, nurseries), Insight (overlays: fertility, populations, minerals; forecasts), Peoples (ages,
+  per-people traits).
+- **The world decides what is possible, talents decide which tools**: no wolf talent before there are deer.
+- **Energy**: brushes cost energy (digging more than dirt) that refills with the world's health, so tools are choices.
+
+### Structure
+
+No fail state (cozy); optional island goals (a self-sustaining forest with wolves, a dwarf town in the hills) next to
+a free sandbox; seeded islands; saving and loading.
+
+### Systems
+
+| System | Reads | Changes |
+| --- | --- | --- |
+| Water (`WaterRules`) | tiles, sources (later groundwater, height, season) | water tiles, heads, moisture |
+| Growth (`GrowthRules`, `TerrainRules`) | tiles, moisture, neighbours | tiles (succession) |
+| Plants and objects | tiles, moisture | the object layer (bushes, trees, rocks) |
+| Fauna | food (grass, bushes), water, cover, predators | populations per region; grazing changes tiles |
+| Peoples | attraction (land, food, water, materials), age, talents x affinity | settlements, buildings, land use |
+| Talents and energy | the world's variety and stability | unlocks, multipliers, energy |
+| Disturbances | season, dryness, events | drought, fire, flood |
+
+### Progression (first numbers, to tune)
+
+| Stage | The player gets | When |
+| --- | --- | --- |
+| Barren island | Dirt, Dig | start |
+| Riverlands | Grass brush | 400 grass tiles |
+| First life | bushes, grazers appear | enough grass and bushes |
+| Predators and forest | wolves, trees spread | enough grazers |
+| First people | a camp of the people the land suits | food, fresh water, shelter |
+| Ages | buildings and land use per people | talents and conditions |
+
+### Build order
+
+1. The isometric orthographic camera. Done (Nov 10).
+2. The object layer: data (sprite, size, where it grows), state (objects per tile), a view (sprites, culling);
+   placeholders from the cleaned sheet. Done (Nov 10).
+3. Succession: bushes first, saplings between them, trees through stages; pines on the drier edge. Done as object
+   data (Nov 10); later bushes giving way to forest, and grass under old forest.
+4. The art pass: raised layers, rough edges, foam, decorations, repainted tiles, animated water (needs a time value
+   in Hydro's frame data).
+5. Hidden groundwater and springs.
+6. Fauna populations.
+7. Talents and energy.
+8. One people (camp and first age), then the others.
+
 ## First milestone
 
 1. Generate a tile map from a seed and draw it with the blend shader. Done; a world can also start as one type.
@@ -101,7 +203,11 @@ as more water sources; water that only reaches so far inland gives the player a 
 
 ## Open questions
 
-- Top-down or isometric (the reference picture is isometric)?
-- Map size and whether it scrolls or is one screen.
-- Settlers as entities with sprites, or only drawn as part of the settlement tiles?
-- Win or lose conditions, or a pure sandbox?
+Answered Nov 10: isometric; 512 x 512, scrolling camera; animals and people as sprites (populations drawn by
+sample); no fail state, optional island goals plus a sandbox.
+
+Answered Nov 10 (later): a ladder of ages per people; regions shared and contested; seasons from the start; talent
+points from milestones (first-time events) for now.
+
+- How much energy a brush stroke costs, and how fast it refills.
+- How long a season lasts (in days), and how hard a drought is in the first year.

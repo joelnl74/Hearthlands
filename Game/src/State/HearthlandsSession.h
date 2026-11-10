@@ -2,6 +2,7 @@
 
 #include "Hydro/Scene/GameSession.h"
 #include "State/Hydrology.h"
+#include "State/ObjectLayer.h"
 #include "State/Random.h"
 #include "State/SimulationClock.h"
 #include "State/TileMap.h"
@@ -35,6 +36,7 @@ namespace Hydro
 		SimulationClock Clock;
 		bool PointerOverHud = false;        // this frame's: the pointer is over a HUD panel, so the brush doesn't paint
 		Hydrology Water;                    // water heads and moisture (empty until SimulationScript starts it)
+		ObjectLayer Objects;                // what stands on each tile (bushes, trees, rocks)
 		Random Rng{ 1 };                    // the simulation's dice, seeded from the world's seed
 		bool ShowMoisture = false;          // the moisture overlay (M)
 	};
