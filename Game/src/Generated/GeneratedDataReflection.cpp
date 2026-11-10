@@ -4,6 +4,7 @@
 #include "GeneratedDataReflection.h"
 #include "Hydro/Data/DataTypeRegistry.h"
 
+#include "Data/TerrainRuleDefinition.h"
 #include "Data/TerrainTypeDefinition.h"
 
 namespace Hydro
@@ -17,14 +18,35 @@ namespace Hydro
 		}
 		registered = true;
 
+		DataTypeRegistry::RegisterEnum<TerrainRole>("TerrainRole")
+			.Value("Land", TerrainRole::Land)
+			.Value("Water", TerrainRole::Water)
+			.Value("Riverbed", TerrainRole::Riverbed);
+
+		DataTypeRegistry::Register<TerrainRuleDefinition>("TerrainRuleDefinition", "Terrain Rule")
+			.Table()
+			.DisplayField("Name")
+			.Field<&TerrainRuleDefinition::Name>("Name", "Name")
+			.Field<&TerrainRuleDefinition::FromTileId>("FromTileId", "From Tile Id").Range(0.0f, 255.0f)
+			.Field<&TerrainRuleDefinition::ToTileId>("ToTileId", "To Tile Id").Range(0.0f, 255.0f)
+			.Field<&TerrainRuleDefinition::MinMoisture>("MinMoisture", "Min Moisture").Range(0.0f, 1.0f).Tooltip("The tile's moisture (0 dry to 1 next to fresh water) must be at least this")
+			.Field<&TerrainRuleDefinition::MaxMoisture>("MaxMoisture", "Max Moisture").Range(0.0f, 1.0f).Tooltip("... and at most this")
+			.Field<&TerrainRuleDefinition::NeighbourTileId>("NeighbourTileId", "Neighbour Tile Id").Range(-1.0f, 255.0f).Tooltip("Needs MinNeighbours of its 8 neighbours to be this id; -1 needs none")
+			.Field<&TerrainRuleDefinition::MinNeighbours>("MinNeighbours", "Min Neighbours").Range(1.0f, 8.0f)
+			.Field<&TerrainRuleDefinition::Chance>("Chance", "Chance").Range(0.0f, 1.0f).Tooltip("The chance it happens each time the tile is looked at");
+
 		DataTypeRegistry::Register<TerrainTypeDefinition>("TerrainTypeDefinition", "Terrain Type")
 			.Table()
 			.DisplayField("Name")
-			.Field<&TerrainTypeDefinition::Name>("Name", "Name").Tooltip("Shown in the brush and overlays")
+			.Field<&TerrainTypeDefinition::Name>("Name", "Name").Tooltip("Shown in overlays")
+			.Field<&TerrainTypeDefinition::BrushName>("BrushName", "Brush Name").Tooltip("The brush's label when it isn't the name (Dig for the riverbed)")
 			.Field<&TerrainTypeDefinition::TileId>("TileId", "Tile Id").Range(0.0f, 255.0f).Tooltip("The number the tile map stores; unique per type, never reused for another type")
+			.Field<&TerrainTypeDefinition::Role>("Role", "Role")
 			.Field<&TerrainTypeDefinition::Color>("Color", "Color").Tooltip("Its colour until it has a texture").Color()
 			.Field<&TerrainTypeDefinition::Priority>("Priority", "Priority").Range(0.0f, 100.0f).Tooltip("Wins blend ties and overlapping ranges; high for water and roads, so thin lines stay joined")
-			.Field<&TerrainTypeDefinition::StartsUnlocked>("StartsUnlocked", "Starts Unlocked").Tooltip("A brush from the start of a run; the others unlock as the world grows")
+			.Field<&TerrainTypeDefinition::StartsUnlocked>("StartsUnlocked", "Starts Unlocked").Tooltip("A brush from the start of a run")
+			.Field<&TerrainTypeDefinition::UnlockTileId>("UnlockTileId", "Unlock Tile Id").Range(-1.0f, 255.0f).Tooltip("Becomes a brush once the map holds UnlockCount tiles of this id; -1 never")
+			.Field<&TerrainTypeDefinition::UnlockCount>("UnlockCount", "Unlock Count").Range(0.0f, 100000.0f)
 			.Field<&TerrainTypeDefinition::Generated>("Generated", "Generated").Tooltip("Generation: placed where the height (0 to 1) and moisture (0 to 1) are both in range")
 			.Field<&TerrainTypeDefinition::MinHeight>("MinHeight", "Min Height").Range(0.0f, 1.0f)
 			.Field<&TerrainTypeDefinition::MaxHeight>("MaxHeight", "Max Height").Range(0.0f, 1.0f)

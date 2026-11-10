@@ -1,0 +1,32 @@
+Handle: 9052849889970328576
+DataTable:
+  Version: 1
+  Type: TerrainRuleDefinition
+  Rows:
+    GrassSpreads:
+      Name: GrassSpreads
+      FromTileId: 1
+      ToTileId: 2
+      MinMoisture: 0.2
+      MaxMoisture: 1
+      NeighbourTileId: 2
+      MinNeighbours: 1
+      Chance: 0.25
+    GrassSprouts:
+      Name: GrassSprouts
+      FromTileId: 1
+      ToTileId: 2
+      MinMoisture: 0.5
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      Chance: 0.02
+    GrassDries:
+      Name: GrassDries
+      FromTileId: 2
+      ToTileId: 1
+      MinMoisture: 0
+      MaxMoisture: 0.05
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      Chance: 0.1

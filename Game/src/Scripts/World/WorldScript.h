@@ -11,8 +11,8 @@
 
 namespace Hydro
 {
-	// The world scene's director, on the Terrain entity (a Plane whose material runs tile_blend.frag): when the run has no
-	// map yet, makes it (all one base type, or generated from a seed) with the starting brushes; then keeps it drawn.
+	// The world scene's director, on the Terrain entity (a Plane running tile_blend.frag): makes the run's map when there is
+	// none (one base type or generated, then coast, beach, land, brushes), then keeps it drawn (with the moisture overlay).
 	HY_SCRIPT()
 	class WorldScript : public ScriptableEntity
 	{
@@ -77,6 +77,7 @@ namespace Hydro
 				const TileMap coast = TerrainGenRules::ShapeCoast(map, CoastWidth, (uint32_t)Seed, sea);
 				map.Replace(TerrainGenRules::AddBeach(coast, BeachWidth, (uint32_t)Seed, sea, (uint8_t)BeachTileId));
 				session.Land = TerrainGenRules::LandOf(map, sea);
+				session.Rng = Random((uint64_t)Seed * 2654435761ull + 1);
 			}
 			if (session.UnlockedTiles.empty())
 			{
@@ -84,12 +85,14 @@ namespace Hydro
 			}
 
 			m_View.Bind(GetEntity());
-			m_View.Present(map, m_Types, (uint8_t)OutsideTileId, TerrainArt);
+			m_View.Present(map, m_Types, (uint8_t)OutsideTileId, TerrainArt, nullptr, 0.0f);
 		}
 
-		void OnUpdate([[maybe_unused]] float deltaTime) override
+		void OnUpdate(float deltaTime) override
 		{
-			m_View.Present(HearthlandsSession::Get().Map, m_Types, (uint8_t)OutsideTileId, TerrainArt);
+			const HearthlandsSession& session = HearthlandsSession::Get();
+			const std::vector<uint8_t>* moisture = session.ShowMoisture ? &session.Water.Moisture : nullptr;
+			m_View.Present(session.Map, m_Types, (uint8_t)OutsideTileId, TerrainArt, moisture, deltaTime);
 		}
 
 		void OnDestroy() override

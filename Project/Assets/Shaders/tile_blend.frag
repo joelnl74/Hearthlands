@@ -11,11 +11,11 @@
 //              every tile. A 1-texel-high atlas (one colour per type, made in code from TerrainTypeDefinition::Color)
 //              gives flat colours until the types have art.
 //   Emissive = the tile map, made in code (AssetManager::AddMemoryAsset), RGBA (linear), 1 texel per tile, rows as
-//              TileMap stores them (row 0 = the top = the plane's +Y edge): R = tile id, G = priority (ties: higher wins).
+//              TileMap stores them (row 0 = the top = the plane's +Y edge): R = tile id, G = priority (ties: higher wins), A = moisture.
 //              It has a ring of the outside tile (water) around the map; lookups clamp to it, so a plane larger than
 //              the texture shows that tile beyond the map. Both stay centred on the plane.
 //   Tiling.x = art pixels per tile for the blend (e.g. 16), Tiling.y = edge noise (e.g. 0.18)
-//   Tint     = multiplies the colour (white = as drawn)
+//   Tint     = rgb multiplies the colour (white = as drawn); alpha below 0.5 shows the moisture overlay (the map's alpha)
 // Up to MaxTypes ids; other ids draw as id 0.
 
 #include "lighting.glsl"
@@ -94,6 +94,14 @@ void main()
 	ivec2 inTile = min(ivec2(fract(p) * float(columnSize)), ivec2(columnSize - 1));
 	ivec2 atlasTexel = ivec2(winner * columnSize + inTile.x, columnSize - 1 - inTile.y);
 	vec3 albedo = texelFetch(albedoTexture, atlasTexel, 0).rgb * material.tint.rgb * fragColor.rgb;
+
+	// The moisture overlay (tint alpha below 0.5): the tile's moisture (the map's alpha), dry orange to wet blue, over its art.
+	if (material.tint.a < 0.5)
+	{
+		ivec2 here = clamp(ivec2(floor(p)), ivec2(0), mapSize - 1);
+		float wet = texelFetch(emissiveTexture, ivec2(here.x, mapSize.y - 1 - here.y), 0).a;
+		albedo = mix(albedo, mix(vec3(0.85, 0.55, 0.25), vec3(0.15, 0.45, 1.0), wet), 0.6);
+	}
 
 	if (IsForwardLit() == false)
 	{

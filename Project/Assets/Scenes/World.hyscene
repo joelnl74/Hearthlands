@@ -99,6 +99,25 @@ Entities:
             BeachTileId: 0
             BeachWidth: 3
         - Name: BrushScript
+        - Name: SimulationScript
           Properties:
             TerrainTypes: 4392505292887402202
-            Radius: 1.5
+            TerrainRules: 9052849889970328576
+            TicksPerSecond: 4
+            SamplesPerTick: 20000
+            SourceHead: 24
+            Loss: 1
+            MoistureReach: 6
+  - Entity: 418967495985030932
+    TagComponent:
+      Tag: HUD
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    NativeScriptComponent:
+      Scripts:
+        - Name: HudScript
+          Properties:
+            UIFont: 7311820458392716001
+            TerrainTypes: 4392505292887402202

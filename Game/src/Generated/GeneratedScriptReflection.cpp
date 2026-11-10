@@ -6,6 +6,8 @@
 
 #include "Scripts/World/BrushScript.h"
 #include "Scripts/World/CameraScript.h"
+#include "Scripts/World/HudScript.h"
+#include "Scripts/World/SimulationScript.h"
 #include "Scripts/World/WorldScript.h"
 
 namespace Hydro
@@ -19,9 +21,7 @@ namespace Hydro
 		}
 		registered = true;
 
-		ScriptRegistry::Register<BrushScript>("BrushScript")
-			.Property("TerrainTypes", "Terrain Types", &BrushScript::TerrainTypes).Tooltip("Where the brushes' names come from").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
-			.Property("Radius", "Radius", &BrushScript::Radius).Range(0.5f, 8.0f).Tooltip("The brush's radius in tiles, from the point under the pointer");
+		ScriptRegistry::Register<BrushScript>("BrushScript");
 
 		ScriptRegistry::Register<CameraScript>("CameraScript")
 			.Property("Pitch", "Pitch", &CameraScript::Pitch).Range(10.0f, 80.0f).Tooltip("Degrees from looking straight down")
@@ -30,6 +30,19 @@ namespace Hydro
 			.Property("MaxDistance", "Max Distance", &CameraScript::MaxDistance).Range(10.0f, 400.0f)
 			.Property("PanSpeed", "Pan Speed", &CameraScript::PanSpeed).Range(0.1f, 5.0f).Tooltip("Keyboard pan, in camera distances per second")
 			.Property("ZoomSpeed", "Zoom Speed", &CameraScript::ZoomSpeed).Range(0.5f, 20.0f).Tooltip("Zoom steps per second while a zoom key is held");
+
+		ScriptRegistry::Register<HudScript>("HudScript")
+			.Property("UIFont", "UI Font", &HudScript::UIFont).Tooltip("The HUD's text").AssetFilter(AssetType::Font)
+			.Property("TerrainTypes", "Terrain Types", &HudScript::TerrainTypes).Tooltip("The brushes' names and colours").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition");
+
+		ScriptRegistry::Register<SimulationScript>("SimulationScript")
+			.Property("TerrainTypes", "Terrain Types", &SimulationScript::TerrainTypes).Tooltip("Roles (water, riverbed) and unlocks").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
+			.Property("TerrainRules", "Terrain Rules", &SimulationScript::TerrainRules).Tooltip("How land changes by itself").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainRuleDefinition")
+			.Property("TicksPerSecond", "Ticks Per Second", &SimulationScript::TicksPerSecond).Range(1.0f, 20.0f).Tooltip("Ticks per world second (at 1x)")
+			.Property("SamplesPerTick", "Samples Per Tick", &SimulationScript::SamplesPerTick).Range(0.0f, 200000.0f).Tooltip("Random tiles the terrain rules look at per tick")
+			.Property("SourceHead", "Source Head", &SimulationScript::SourceHead).Range(1.0f, 200.0f).Tooltip("How far a one-tile-wide channel carries water from the sea, in tiles")
+			.Property("Loss", "Loss", &SimulationScript::Loss).Range(0.1f, 10.0f).Tooltip("Head lost per tile in a narrow channel; wide ones lose less")
+			.Property("MoistureReach", "Moisture Reach", &SimulationScript::MoistureReach).Range(1.0f, 32.0f).Tooltip("Tiles over which moisture fades from fresh water");
 
 		ScriptRegistry::Register<WorldScript>("WorldScript")
 			.Property("TerrainTypes", "Terrain Types", &WorldScript::TerrainTypes).Tooltip("The terrain types generation picks from and the shader draws").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")

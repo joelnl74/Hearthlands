@@ -6,9 +6,12 @@ DataTable:
     Sand:
       Name: Sand
       TileId: 0
+      Role: Land
       Color: [0.87, 0.78, 0.51]
       Priority: 1
       StartsUnlocked: false
+      UnlockTileId: -1
+      UnlockCount: 0
       Generated: true
       MinHeight: 0.35
       MaxHeight: 0.45
@@ -17,9 +20,12 @@ DataTable:
     Dirt:
       Name: Dirt
       TileId: 1
+      Role: Land
       Color: [0.47, 0.33, 0.22]
       Priority: 2
       StartsUnlocked: true
+      UnlockTileId: -1
+      UnlockCount: 0
       Generated: true
       MinHeight: 0.45
       MaxHeight: 0.55
@@ -28,9 +34,12 @@ DataTable:
     Grass:
       Name: Grass
       TileId: 2
+      Role: Land
       Color: [0.31, 0.55, 0.24]
       Priority: 3
-      StartsUnlocked: true
+      StartsUnlocked: false
+      UnlockTileId: 2
+      UnlockCount: 400
       Generated: true
       MinHeight: 0.55
       MaxHeight: 0.85
@@ -39,9 +48,12 @@ DataTable:
     Water:
       Name: Water
       TileId: 3
+      Role: Water
       Color: [0.2, 0.35, 0.63]
       Priority: 10
       StartsUnlocked: false
+      UnlockTileId: -1
+      UnlockCount: 0
       Generated: true
       MinHeight: 0.0
       MaxHeight: 0.35
@@ -50,11 +62,29 @@ DataTable:
     Snow:
       Name: Snow
       TileId: 4
+      Role: Land
       Color: [0.91, 0.94, 0.97]
       Priority: 4
       StartsUnlocked: false
+      UnlockTileId: -1
+      UnlockCount: 0
       Generated: true
       MinHeight: 0.85
       MaxHeight: 1.0
+      MinMoisture: 0
+      MaxMoisture: 1
+    Riverbed:
+      Name: Riverbed
+      BrushName: Dig
+      TileId: 5
+      Role: Riverbed
+      Color: [0.33, 0.25, 0.19]
+      Priority: 9
+      StartsUnlocked: true
+      UnlockTileId: -1
+      UnlockCount: 0
+      Generated: false
+      MinHeight: 0.0
+      MaxHeight: 0.0
       MinMoisture: 0
       MaxMoisture: 1

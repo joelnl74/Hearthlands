@@ -1,5 +1,5 @@
 # Makes Project/Assets/Textures/TerrainAtlas.png: tile_blend.frag's atlas, one 16 x 16 pixel-art tile per terrain id in id
-# order (0 sand, 1 dirt, 2 grass, 3 water, 4 snow). Every tile wraps, since the shader repeats it every tile. Pillow only.
+# order (0 sand, 1 dirt, 2 grass, 3 water, 4 snow, 5 riverbed). Every tile wraps, since the shader repeats it every tile. Pillow only.
 #   py scripts/art/make_terrain_atlas.py [--preview]   (--preview also writes scripts/art/out/atlas_preview.png)
 import os
 import random
@@ -83,7 +83,22 @@ def snow(rng):
     return tile
 
 
-TILES = [sand, dirt, grass, water, snow]  # in tile id order
+def riverbed(rng):
+    tile = fill((86, 64, 48))
+    speckle(tile, rng, 30, [(74, 55, 41), (78, 58, 44)])
+    speckle(tile, rng, 12, [(98, 75, 57)])
+    for _ in range(6):  # wet pebbles: a pale top over a dark shadow
+        x, y = rng.randrange(S), rng.randrange(S)
+        put(tile, x, y, (132, 120, 104))
+        put(tile, x, y + 1, (60, 45, 34))
+    for _ in range(3):  # damp streaks along the channel
+        x, y = rng.randrange(S), rng.randrange(S)
+        for i in range(3):
+            put(tile, x + i, y, (70, 60, 56))
+    return tile
+
+
+TILES = [sand, dirt, grass, water, snow, riverbed]  # in tile id order
 
 
 def make_atlas(seed=11):

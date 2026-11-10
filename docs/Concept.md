@@ -79,8 +79,18 @@ all kinds of things happen on the world.
 3. Each step unlocks new terrain types and brushes (water, sand, snow, ...), and later the species of the table above.
 4. Too many grazers strip the grass, too many predators starve: the player keeps it in balance by shaping the land.
 
-Unlocks are run state (`HearthlandsSession::UnlockedTiles`); which types start unlocked is data
-(`TerrainTypeDefinition::StartsUnlocked`). The thresholds and what each step unlocks will be data too.
+Unlocks are run state (`HearthlandsSession::UnlockedTiles`); which types start unlocked and what unlocks the others is
+data (`TerrainTypeDefinition::StartsUnlocked`, `UnlockTileId`, `UnlockCount`).
+
+### Water and rivers (Nov 9, 2026)
+
+A run starts with two tools: **Dig** (an empty riverbed) and **Dirt**. There is no water brush: water flows into dug
+channels from the water they touch, one tile per tick. Each water tile has a head, the strongest neighbouring water's head
+less a loss; a narrow channel carries water about 24 tiles inland, a wide one or a junction of rivers loses less and goes
+further. Cutting a river with dirt drains it behind the cut. The sea is salt: only fresh water (rivers, lakes on the land)
+wets the land around it, fading over 6 tiles, and grass sprouts and spreads there by the terrain rules (data,
+`TerrainRules.hytable`) and dries away from water. 400 grass tiles unlock the Grass brush. Later: mountains and springs
+as more water sources; water that only reaches so far inland gives the player a reason to shape the land.
 
 ## First milestone
 

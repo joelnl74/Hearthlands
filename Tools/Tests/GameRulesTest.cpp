@@ -6,7 +6,11 @@
 
 #include "Rules/BrushRules.h"
 #include "Rules/CameraRules.h"
+#include "Rules/GrowthRules.h"
 #include "Rules/TerrainGenRules.h"
+#include "Rules/WaterRules.h"
+#include "State/Random.h"
+#include "State/SimulationClock.h"
 #include "State/TileMap.h"
 
 #include <cmath>
@@ -68,6 +72,19 @@ namespace Hydro
 		map.Replace(other);
 		RULE_CHECK(map.GetWidth() == 2 && map.GetHeight() == 2 && map.Get(0, 0) == 1 && map.Get(1, 1) == 0);
 		RULE_CHECK(map.GetRevision() > before);
+
+		// Counts and the change log.
+		TileMap counted(3, 2, 1);
+		RULE_CHECK(counted.GetCount(1) == 6 && counted.GetCount(2) == 0 && counted.TakeChanges().empty());
+		counted.Set(0, 0, 2);
+		counted.Set(2, 1, 2);
+		counted.Set(2, 1, 2); // no change, not logged
+		RULE_CHECK(counted.GetCount(1) == 4 && counted.GetCount(2) == 2);
+		const std::vector<uint32_t> changes = counted.TakeChanges();
+		RULE_CHECK(changes.size() == 2 && changes[0] == 0 && changes[1] == 5 && counted.TakeChanges().empty());
+		TileMap other2(2, 2, 3);
+		counted.Replace(other2);
+		RULE_CHECK(counted.GetCount(3) == 4 && counted.GetCount(1) == 0 && counted.TakeChanges().empty());
 
 		TileMap empty(-3, 5);
 		RULE_CHECK(empty.GetWidth() == 0 && empty.GetTiles().empty() && empty.InBounds(0, 0) == false);
@@ -197,6 +214,17 @@ namespace Hydro
 		RULE_CHECK(BrushRules::Stamp(glm::vec2(5.5f, 5.5f), 1.5f, 10, 10, seaRow).size() == 6);
 		RULE_CHECK(BrushRules::Stamp(glm::vec2(5.5f, 5.5f), 0.1f, 10, 10, seaRow).empty());
 
+		// Brush sizes step through Radii and stay in it; the brush tile falls back to the first unlocked one.
+		RULE_CHECK(BrushRules::StepRadius(1.5f, 1) == 2.0f && BrushRules::StepRadius(1.5f, -1) == 1.0f);
+		RULE_CHECK(BrushRules::StepRadius(8.0f, 1) == 8.0f && BrushRules::StepRadius(0.5f, -3) == 0.5f);
+		RULE_CHECK(BrushRules::StepRadius(2.5f, 1) == 3.0f);
+		const std::vector<uint8_t> open = { 1, 2 };
+		RULE_CHECK(BrushRules::BrushTile(2, open) == 2 && BrushRules::BrushTile(4, open) == 1 && BrushRules::BrushTile(4, {}) == 0);
+
+		// Digging never drains water; painting the same tile does nothing.
+		RULE_CHECK(BrushRules::CanPaint(3, 5, 3, 5) == false && BrushRules::CanPaint(1, 5, 3, 5) && BrushRules::CanPaint(3, 1, 3, 5));
+		RULE_CHECK(BrushRules::CanPaint(1, 1, 3, 5) == false);
+
 		// Starting brushes: the StartsUnlocked types, ascending, each once.
 		std::vector<TerrainTypeDefinition> types = TestTypes();
 		RULE_CHECK(BrushRules::StartingBrushes(types).empty());
@@ -205,6 +233,169 @@ namespace Hydro
 		types.push_back(types[1]);      // a duplicate id
 		const std::vector<uint8_t> brushes = BrushRules::StartingBrushes(types);
 		RULE_CHECK(brushes.size() == 2 && brushes[0] == 1 && brushes[1] == 2);
+	}
+
+	static void TestSimulationClock(int& checks)
+	{
+		SimulationClock clock;
+		RULE_CHECK(clock.GetDay() == 1 && clock.Speed == 1);
+		clock.Seconds = SimulationClock::SecondsPerDay * 2.5;
+		RULE_CHECK(clock.GetDay() == 3);
+	}
+
+	// A strip map: sea (3) in column 0, dirt (1) elsewhere; dig a riverbed (5) channel `width` rows tall from the sea.
+	static TileMap ChannelMap(int length, int width, int height)
+	{
+		TileMap map(length + 1, height, 1);
+		for (int y = 0; y < height; y++)
+		{
+			map.Set(0, y, 3);
+		}
+		const int top = (height - width) / 2;
+		for (int y = top; y < top + width; y++)
+		{
+			for (int x = 1; x <= length; x++)
+			{
+				map.Set(x, y, 5);
+			}
+		}
+		map.TakeChanges();
+		return map;
+	}
+
+	// How many tiles along the channel's middle row hold water after `ticks` ticks.
+	static int Flood(TileMap& map, Hydrology& water, const std::vector<uint8_t>& land, const WaterRules::Settings& settings, int ticks)
+	{
+		for (int x = 1; x < map.GetWidth(); x++)
+		{
+			for (int y = 0; y < map.GetHeight(); y++)
+			{
+				water.Activate((uint32_t)(y * map.GetWidth() + x));
+			}
+		}
+		for (int i = 0; i < ticks; i++)
+		{
+			WaterRules::Step(map, water, land, settings);
+		}
+		int reach = 0;
+		while (reach + 1 < map.GetWidth() && map.Get(reach + 1, map.GetHeight() / 2) == 3)
+		{
+			reach++;
+		}
+		return reach;
+	}
+
+	static void TestWaterRules(int& checks)
+	{
+		WaterRules::Settings settings; // water 3, riverbed 5, head 24, loss 1, reach 6
+		RULE_CHECK(WaterRules::FromTypes({}, settings).WaterTileId == 3);
+		std::vector<TerrainTypeDefinition> roles(2);
+		roles[0].TileId = 7;
+		roles[0].Role = TerrainRole::Water;
+		roles[1].TileId = 8;
+		roles[1].Role = TerrainRole::Riverbed;
+		RULE_CHECK(WaterRules::FromTypes(roles, settings).WaterTileId == 7 && WaterRules::FromTypes(roles, settings).BedTileId == 8);
+
+		// A narrow channel fills about SourceHead tiles; a wide one reaches further. Water moves a tile per tick.
+		TileMap narrow = ChannelMap(60, 1, 5);
+		std::vector<uint8_t> land(narrow.GetTiles().size(), 1);
+		for (int y = 0; y < 5; y++)
+		{
+			land[(size_t)y * 61] = 0; // column 0 is the sea
+		}
+		Hydrology narrowWater = WaterRules::Start(narrow, land, settings);
+		RULE_CHECK(narrowWater.Source[0] == 1 && narrowWater.Head[0] == 24.0f && narrowWater.Moisture[0] == 0); // salt: dry
+		RULE_CHECK(Flood(narrow, narrowWater, land, settings, 3) <= 4);
+		const int narrowReach = Flood(narrow, narrowWater, land, settings, 100);
+		RULE_CHECK(narrowReach >= 20 && narrowReach <= 24);
+
+		TileMap wide = ChannelMap(60, 3, 7);
+		std::vector<uint8_t> wideLand(wide.GetTiles().size(), 1);
+		for (int y = 0; y < 7; y++)
+		{
+			wideLand[(size_t)y * 61] = 0;
+		}
+		Hydrology wideWater = WaterRules::Start(wide, wideLand, settings);
+		const int wideReach = Flood(wide, wideWater, wideLand, settings, 150);
+		RULE_CHECK(wideReach > narrowReach + 10);
+		std::printf("  Water: narrow channel %d tiles, three wide %d tiles\n", narrowReach, wideReach);
+
+		// River water wets the land around it, fading over MoistureReach; the dirt far away stays dry.
+		RULE_CHECK(narrowWater.Moisture[(size_t)2 * 61 + 5] == 255);
+		RULE_CHECK(narrowWater.Moisture[(size_t)1 * 61 + 5] > 150 && narrowWater.Moisture[(size_t)1 * 61 + 5] < 255);
+		RULE_CHECK(narrowWater.Moisture[(size_t)2 * 61 + 59] == 0);
+
+		// Cutting the river with dirt drains the water behind the cut back to riverbed, and the land dries.
+		narrow.Set(2, 2, 1);
+		for (int i = 0; i < 200; i++)
+		{
+			WaterRules::Step(narrow, narrowWater, land, settings);
+		}
+		RULE_CHECK(narrow.Get(1, 2) == 3 && narrow.Get(3, 2) == 5 && narrow.Get(10, 2) == 5);
+		RULE_CHECK(narrowWater.Moisture[(size_t)1 * 61 + 10] == 0);
+
+		// A generated lake on land is a source and wets its shore.
+		TileMap lake(9, 9, 1);
+		lake.Set(4, 4, 3);
+		const Hydrology lakeWater = WaterRules::Start(lake, std::vector<uint8_t>(81, 1), settings);
+		RULE_CHECK(lakeWater.Source[40] == 1 && lakeWater.Moisture[40] == 255 && lakeWater.Moisture[41] == 255 - 42);
+	}
+
+	static void TestGrowthRules(int& checks)
+	{
+		// Random: repeatable, in range.
+		Random a(7);
+		Random b(7);
+		bool same = true;
+		bool inRange = true;
+		for (int i = 0; i < 1000; i++)
+		{
+			const float value = a.Float();
+			same = same && value == b.Float();
+			inRange = inRange && value >= 0.0f && value < 1.0f && a.Below(10) < 10;
+			b.Below(10);
+		}
+		RULE_CHECK(same && inRange);
+
+		TerrainRuleDefinition spread;
+		spread.FromTileId = 1;
+		spread.ToTileId = 2;
+		spread.MinMoisture = 0.2f;
+		spread.NeighbourTileId = 2;
+		spread.Chance = 1.0f;
+		TileMap map(5, 5, 1);
+		map.Set(2, 2, 2);
+		Hydrology water;
+		water.Moisture.assign(25, 128);
+		RULE_CHECK(GrowthRules::Matches(spread, map, water, 1, 1) && GrowthRules::Matches(spread, map, water, 0, 0) == false);
+		water.Moisture[6] = 10;
+		RULE_CHECK(GrowthRules::Matches(spread, map, water, 1, 1) == false); // too dry
+		RULE_CHECK(GrowthRules::CountNeighbours(map, 1, 1, 2) == 1 && GrowthRules::CountNeighbours(map, 2, 2, 1) == 8);
+
+		// With Chance 1, sampling enough tiles turns every matching neighbour; never the sea or a dry tile.
+		water.Moisture.assign(25, 128);
+		water.Moisture[6] = 10;
+		std::vector<uint8_t> land(25, 1);
+		land[8] = 0;
+		Random random(3);
+		const int grown = GrowthRules::Step(map, water, land, { spread }, 2000, random);
+		RULE_CHECK(grown > 0 && map.Get(3, 2) == 2 && map.Get(1, 1) == 1 && map.Get(3, 1) == 1);
+		RULE_CHECK(map.Get(0, 0) == 2); // spread on from the grown ring
+
+		// Unlocks: a locked type opens once the map holds enough of its UnlockTileId; open ones aren't repeated.
+		std::vector<TerrainTypeDefinition> types(2);
+		types[0].TileId = 2;
+		types[0].UnlockTileId = 2;
+		types[0].UnlockCount = 10;
+		types[1].TileId = 4;
+		TileMap few(3, 3, 2);
+		RULE_CHECK(GrowthRules::NewUnlocks(types, { 1 }, few).empty());
+		TileMap many(4, 4, 2);
+		RULE_CHECK(GrowthRules::NewUnlocks(types, { 1 }, many).size() == 1 && GrowthRules::NewUnlocks(types, { 1, 2 }, many).empty());
+
+		// Ticks due: whole ticks of world time not yet run, capped.
+		RULE_CHECK(GrowthRules::TicksDue(1.0, 0, 4.0f, 8) == 4 && GrowthRules::TicksDue(1.0, 3, 4.0f, 8) == 1);
+		RULE_CHECK(GrowthRules::TicksDue(10.0, 0, 4.0f, 8) == 8 && GrowthRules::TicksDue(0.2, 0, 4.0f, 8) == 0);
 	}
 
 	static void TestCameraRules(int& checks)
@@ -225,11 +416,14 @@ namespace Hydro
 
 	int TestGameRules(int& checks)
 	{
-		std::printf("Game rules: TileMap, TerrainGenRules, BrushRules, CameraRules\n");
+		std::printf("Game rules: TileMap, TerrainGenRules, BrushRules, CameraRules, SimulationClock, WaterRules, GrowthRules\n");
 		TestTileMap(checks);
 		TestTerrainGenRules(checks);
 		TestBrushRules(checks);
 		TestCameraRules(checks);
+		TestSimulationClock(checks);
+		TestWaterRules(checks);
+		TestGrowthRules(checks);
 
 		return s_RuleFailures;
 	}

@@ -2,94 +2,76 @@
 
 #include "Hydro.h"
 #include "Hydro/Scene/UI/UI.h"
-#include "Data/TerrainTypeDefinition.h"
 #include "Rules/BrushRules.h"
 #include "State/HearthlandsSession.h"
+#include "Views/BrushCursorView.h"
 
-#include <string>
 #include <vector>
 
 namespace Hydro
 {
-	// The player's terrain brush, on the Terrain entity next to WorldScript: keys 1 to 9 pick one of the run's unlocked
-	// tile types, holding the left mouse button over the land paints a round brush, joined along the drag (never the sea).
+	// The player's terrain brush, on the Terrain entity next to WorldScript: holding the left mouse button over the land
+	// paints the session's brush (HudScript picks it) in a round stamp, joined along the drag; a ring shows where.
 	HY_SCRIPT()
 	class BrushScript : public ScriptableEntity
 	{
-	public:
-		static constexpr uint64_t DefaultTerrainTypes = 4392505292887402202ull; // Assets/Data/TerrainTypes.hytable
-
-		HY_PROPERTY(Asset(DataTable, TerrainTypeDefinition), Tooltip("Where the brushes' names come from"))
-		AssetHandle TerrainTypes = DefaultTerrainTypes;
-		HY_PROPERTY(Range(0.5, 8), Tooltip("The brush's radius in tiles, from the point under the pointer"))
-		float Radius = 1.5f;
-
 	protected:
 		void OnCreate() override
 		{
-			const DataTableView<TerrainTypeDefinition> table = Data::GetTable<TerrainTypeDefinition>(TerrainTypes);
-			for (const auto& [id, type] : table.Rows())
-			{
-				if (type.TileId >= 0 && type.TileId <= 255)
-				{
-					m_Names.resize(256);
-					m_Names[(size_t)type.TileId] = type.Name;
-				}
-			}
+			m_Cursor.Bind(*GetEntity().GetScene());
 		}
 
 		void OnUpdate([[maybe_unused]] float deltaTime) override
 		{
 			HearthlandsSession& session = HearthlandsSession::Get();
-			if (session.UnlockedTiles.empty())
-			{
-				return;
-			}
-			PickBrush(session.UnlockedTiles);
-
-			glm::vec2 point(0.0f);
 			const Scene::UIPointer& pointer = GetEntity().GetScene()->GetUIPointer();
-			const bool painting = pointer.Down && pointer.Inside && UI::CapturesInput(*GetEntity().GetScene()) == false;
-			if (painting == false || PointUnderPointer(session.Map, point) == false)
+			glm::vec2 point(0.0f);
+			const bool overLand = pointer.Inside && session.PointerOverHud == false && PointUnderPointer(session.Map, point)
+				&& IsLand(session, point);
+			const float radius = session.Brush.Radius;
+			m_Cursor.Present(overLand, GroundPoint(session.Map, point), radius);
+
+			const bool painting = overLand && pointer.Down && UI::CapturesInput(*GetEntity().GetScene()) == false;
+			if (painting == false || session.UnlockedTiles.empty())
 			{
 				m_Stroking = false;
 				return;
 			}
 
-			const uint8_t tileId = session.UnlockedTiles[(size_t)m_Brush];
+			const uint8_t tileId = BrushRules::BrushTile(session.Brush.TileId, session.UnlockedTiles);
 			const glm::vec2 from = m_Stroking ? m_LastPoint : point;
 			for (const glm::vec2& step : BrushRules::Stroke(from, point, 0.5f))
 			{
-				for (const glm::ivec2& at : BrushRules::Stamp(step, Radius, session.Map.GetWidth(), session.Map.GetHeight(), session.Land))
+				for (const glm::ivec2& at : BrushRules::Stamp(step, radius, session.Map.GetWidth(), session.Map.GetHeight(), session.Land))
 				{
-					session.Map.Set(at.x, at.y, tileId);
+					if (BrushRules::CanPaint(session.Map.Get(at.x, at.y), tileId, session.Water.WaterTileId, session.Water.BedTileId))
+					{
+						session.Map.Set(at.x, at.y, tileId);
+					}
 				}
 			}
 			m_LastPoint = point;
 			m_Stroking = true;
 		}
 
-	private:
-		// Keys 1 to 9 pick the first nine unlocked types; the pick stays valid when the list changes.
-		void PickBrush(const std::vector<uint8_t>& unlocked)
+		void OnDestroy() override
 		{
-			const KeyCode keys[9] = { Key::D1, Key::D2, Key::D3, Key::D4, Key::D5, Key::D6, Key::D7, Key::D8, Key::D9 };
-			int picked = m_Brush < (int)unlocked.size() ? m_Brush : 0;
-			for (int i = 0; i < 9 && i < (int)unlocked.size(); i++)
-			{
-				if (Input::IsKeyPressed(keys[i]))
-				{
-					picked = i;
-				}
-			}
-			if (picked != m_Brush || m_Announced == false)
-			{
-				const uint8_t tileId = unlocked[(size_t)picked];
-				const std::string name = tileId < m_Names.size() && m_Names[tileId].empty() == false ? m_Names[tileId] : "tile";
-				HY_INFO("Brush: {} (tile {}, key {})", name, tileId, picked + 1);
-				m_Announced = true;
-			}
-			m_Brush = picked;
+			m_Cursor.Release();
+		}
+
+	private:
+		static bool IsLand(const HearthlandsSession& session, const glm::vec2& point)
+		{
+			const size_t index = (size_t)point.y * (size_t)session.Map.GetWidth() + (size_t)point.x;
+			return session.Land.empty() || (index < session.Land.size() && session.Land[index] != 0);
+		}
+
+		// A map point back in the world, on this entity's ground.
+		glm::vec3 GroundPoint(const TileMap& map, const glm::vec2& point)
+		{
+			const glm::vec3 centre = GetWorldPosition();
+			const glm::vec2 offset(point.x - (float)map.GetWidth() * 0.5f, (float)map.GetHeight() * 0.5f - point.y);
+			return glm::vec3(centre.x + offset.x, centre.y + offset.y, centre.z);
 		}
 
 		// The map point under the pointer (BrushRules::MapPoint): the primary camera's ray met with the ground (this z).
@@ -97,7 +79,7 @@ namespace Hydro
 		{
 			Scene& scene = *GetEntity().GetScene();
 			Entity camera = scene.GetPrimaryCameraEntity();
-			if ((bool)camera == false || scene.GetViewportWidth() == 0 || scene.GetViewportHeight() == 0)
+			if ((bool)camera == false || scene.GetViewportWidth() == 0 || scene.GetViewportHeight() == 0 || map.GetWidth() == 0)
 			{
 				return false;
 			}
@@ -124,9 +106,7 @@ namespace Hydro
 			return BrushRules::OnMap(point, map.GetWidth(), map.GetHeight());
 		}
 
-		std::vector<std::string> m_Names; // by tile id
-		int m_Brush = 0;                  // index into the session's UnlockedTiles
-		bool m_Announced = false;
+		BrushCursorView m_Cursor;
 		bool m_Stroking = false;
 		glm::vec2 m_LastPoint{ 0.0f };
 	};

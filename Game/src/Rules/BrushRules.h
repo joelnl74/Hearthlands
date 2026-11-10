@@ -81,6 +81,44 @@ namespace Hydro
 			return tiles;
 		}
 
+		// The brush sizes the HUD steps through, in tiles.
+		static constexpr float Radii[8] = { 0.5f, 1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 6.0f, 8.0f };
+
+		// The next size up (steps > 0) or down from a radius, staying within Radii; a radius between two counts as the
+		// one below it.
+		static float StepRadius(float radius, int steps)
+		{
+			int index = 0;
+			for (int i = 0; i < 8; i++)
+			{
+				if (Radii[i] <= radius + 1e-4f)
+				{
+					index = i;
+				}
+			}
+			index += steps;
+			return Radii[index < 0 ? 0 : (index > 7 ? 7 : index)];
+		}
+
+		// The tile id the brush paints: the chosen one when it is unlocked, else the first unlocked one (0 without any).
+		static uint8_t BrushTile(uint8_t chosen, const std::vector<uint8_t>& unlocked)
+		{
+			for (uint8_t tileId : unlocked)
+			{
+				if (tileId == chosen)
+				{
+					return chosen;
+				}
+			}
+			return unlocked.empty() ? (uint8_t)0 : unlocked.front();
+		}
+
+		// Whether painting `paint` over `current` does anything: digging (the riverbed) never drains water.
+		static bool CanPaint(uint8_t current, uint8_t paint, uint8_t waterTileId, uint8_t bedTileId)
+		{
+			return current != paint && (paint != bedTileId || current != waterTileId);
+		}
+
 		// The tile ids a run can paint from the start (StartsUnlocked), ascending, each once.
 		static std::vector<uint8_t> StartingBrushes(const std::vector<TerrainTypeDefinition>& types)
 		{
