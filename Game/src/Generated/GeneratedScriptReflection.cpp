@@ -21,7 +21,9 @@ namespace Hydro
 		}
 		registered = true;
 
-		ScriptRegistry::Register<BrushScript>("BrushScript");
+		ScriptRegistry::Register<BrushScript>("BrushScript")
+			.Property("TerrainTypes", "Terrain Types", &BrushScript::TerrainTypes).Tooltip("Which type raises (Rock) and the levels rock and snow start at").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
+			.Property("MaxStep", "Max Step", &BrushScript::MaxStep).Range(1.0f, 32.0f).Tooltip("Most levels between neighbouring land tiles: steeper strokes slump outwards");
 
 		ScriptRegistry::Register<CameraScript>("CameraScript")
 			.Property("Yaw", "Yaw", &CameraScript::Yaw).Range(0.0f, 360.0f).Tooltip("Degrees the view is turned about the vertical; 45 is isometric")
@@ -42,12 +44,19 @@ namespace Hydro
 			.Property("SamplesPerTick", "Samples Per Tick", &SimulationScript::SamplesPerTick).Range(0.0f, 200000.0f).Tooltip("Random tiles the terrain rules look at per tick")
 			.Property("SourceHead", "Source Head", &SimulationScript::SourceHead).Range(1.0f, 200.0f).Tooltip("How far a one-tile-wide channel carries water from the sea, in tiles")
 			.Property("Loss", "Loss", &SimulationScript::Loss).Range(0.1f, 10.0f).Tooltip("Head lost per tile in a narrow channel; wide ones lose less")
-			.Property("MoistureReach", "Moisture Reach", &SimulationScript::MoistureReach).Range(1.0f, 32.0f).Tooltip("Tiles over which moisture fades from fresh water");
+			.Property("MoistureReach", "Moisture Reach", &SimulationScript::MoistureReach).Range(1.0f, 32.0f).Tooltip("Tiles over which moisture fades from fresh water")
+			.Property("MeltHead", "Melt Head", &SimulationScript::MeltHead).Range(1.0f, 200.0f).Tooltip("How far a one-tile-wide channel carries meltwater from a mountain's foot, in tiles")
+			.Property("MeltReach", "Melt Reach", &SimulationScript::MeltReach).Range(1.0f, 64.0f).Tooltip("Tiles of raised land below the snow that meltwater runs down (and wets)")
+			.Property("MeltMoisture", "Melt Moisture", &SimulationScript::MeltMoisture).Range(0.0f, 1.0f).Tooltip("Moisture (0 to 1) meltwater gives the land right below the snow, fading over MeltReach")
+			.Property("RainPerLevel", "Rain Per Level", &SimulationScript::RainPerLevel).Range(0.0f, 0.25f).Tooltip("Moisture each level gives all raised land (rain); 0: only snow and rivers wet hills")
+			.Property("SpringFrom", "Spring From", &SimulationScript::SpringFrom).Range(0.0f, 1.0f).Tooltip("Groundwater (0 to 1) from which a dug riverbed springs")
+			.Property("SpringHead", "Spring Head", &SimulationScript::SpringHead).Range(1.0f, 200.0f).Tooltip("A spring's head at full groundwater (tiles of narrow channel it fills); weaker ones less")
+			.Property("GroundwaterMoisture", "Groundwater Moisture", &SimulationScript::GroundwaterMoisture).Range(0.0f, 1.0f).Tooltip("Moisture full groundwater gives the land above it");
 
 		ScriptRegistry::Register<WorldScript>("WorldScript")
 			.Property("TerrainTypes", "Terrain Types", &WorldScript::TerrainTypes).Tooltip("The terrain types generation picks from and the shader draws").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
 			.Property("ObjectTypes", "Object Types", &WorldScript::ObjectTypes).Tooltip("The objects' sprites and sizes").AssetFilter(AssetType::DataTable).DataTypeFilter("ObjectDefinition")
-			.Property("TerrainArt", "Terrain Art", &WorldScript::TerrainArt).Tooltip("One 16 x 16 tile per terrain id, in id order; none draws flat colours").AssetFilter(AssetType::Texture2D)
+			.Property("TerrainArt", "Terrain Art", &WorldScript::TerrainArt).Tooltip("The terrain atlas (scripts/art/make_terrain_atlas.py); none draws flat colours").AssetFilter(AssetType::Texture2D)
 			.Property("BaseTileId", "Base Tile Id", &WorldScript::BaseTileId).Range(-1.0f, 255.0f).Tooltip("Every tile starts as this terrain id (1 = dirt); -1 generates the world from Seed")
 			.Property("Seed", "Seed", &WorldScript::Seed).Range(0.0f, 1000000.0f).Tooltip("The same seed makes the same world")
 			.Property("Width", "Width", &WorldScript::Width).Range(8.0f, 1024.0f).Tooltip("Tiles across")
@@ -55,6 +64,12 @@ namespace Hydro
 			.Property("OutsideTileId", "Outside Tile Id", &WorldScript::OutsideTileId).Range(0.0f, 255.0f).Tooltip("The tile id drawn all around the map (3 = water)")
 			.Property("CoastWidth", "Coast Width", &WorldScript::CoastWidth).Range(0.0f, 128.0f).Tooltip("About how many tiles of that sea round off the map's edge; 0 keeps it square")
 			.Property("BeachTileId", "Beach Tile Id", &WorldScript::BeachTileId).Range(0.0f, 255.0f).Tooltip("The tile id of the beach along the coast (0 = sand)")
-			.Property("BeachWidth", "Beach Width", &WorldScript::BeachWidth).Range(0.0f, 32.0f).Tooltip("About how many tiles of beach line the coast; 0 for none");
+			.Property("BeachWidth", "Beach Width", &WorldScript::BeachWidth).Range(0.0f, 32.0f).Tooltip("About how many tiles of beach line the coast; 0 for none")
+			.Property("LevelHeight", "Level Height", &WorldScript::LevelHeight).Range(0.05f, 2.0f).Tooltip("Metres a level of height stands: 8 art pixels at 32 a tile from 30 degrees = 0.2887")
+			.Property("HillsFrom", "Hills From", &WorldScript::HillsFrom).Range(0.0f, 1.0f).Tooltip("Generated worlds: the height noise above which the land rises")
+			.Property("LevelsPerHeight", "Levels Per Height", &WorldScript::LevelsPerHeight).Range(1.0f, 100.0f).Tooltip("Generated worlds: levels per unit of height noise above HillsFrom")
+			.Property("GroundwaterScale", "Groundwater Scale", &WorldScript::GroundwaterScale).Range(4.0f, 256.0f).Tooltip("Tiles across a patch of groundwater")
+			.Property("ClueClarity", "Clue Clarity", &WorldScript::ClueClarity).Range(0.0f, 1.0f).Tooltip("How plainly the surface shows groundwater at the start: 0 not, 1 plainly")
+			.Property("ClueFrom", "Clue From", &WorldScript::ClueFrom).Range(0.0f, 1.0f).Tooltip("Groundwater (0 to 1) from which the surface shows it at the start");
 	}
 }

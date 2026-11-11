@@ -21,7 +21,7 @@ namespace Hydro
 		HY_PROPERTY(Range(0, 5), Tooltip("Starting zoom: index into 1/4, 1/2, 1, 2, 3, 4 screen pixels per art pixel"))
 		int Zoom = 3;
 		HY_PROPERTY(Range(8, 64), Tooltip("Art pixels per tile in the object sprites (sets the pixel scale)"))
-		float PixelsPerTile = 24.0f;
+		float PixelsPerTile = 32.0f;
 		HY_PROPERTY(Range(0.1, 5), Tooltip("Keyboard pan, in screen heights per second"))
 		float PanSpeed = 0.8f;
 

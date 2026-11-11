@@ -5,6 +5,7 @@
 #include "Data/TerrainRuleDefinition.h"
 #include "Data/TerrainTypeDefinition.h"
 #include "Rules/GrowthRules.h"
+#include "Rules/MountainRules.h"
 #include "Rules/ObjectRules.h"
 #include "Rules/WaterRules.h"
 #include "State/HearthlandsSession.h"
@@ -13,8 +14,8 @@
 
 namespace Hydro
 {
-	// The world's time, on the Terrain entity: advances the clock and runs the ticks due, each moving the water (WaterRules),
-	// growing the land (GrowthRules) and the objects on it (ObjectRules); now and then it unlocks new brushes.
+	// The world's time on the Terrain entity: runs the ticks due, each settling rock, snow and rain on changed heights, moving
+	// the water (meltwater from the mountains), growing the land and its objects; now and then it unlocks brushes.
 	HY_SCRIPT()
 	class SimulationScript : public ScriptableEntity
 	{
@@ -39,6 +40,20 @@ namespace Hydro
 		float Loss = 1.0f;
 		HY_PROPERTY(Range(1, 32), Tooltip("Tiles over which moisture fades from fresh water"))
 		int MoistureReach = 6;
+		HY_PROPERTY(Range(1, 200), Tooltip("How far a one-tile-wide channel carries meltwater from a mountain's foot, in tiles"))
+		float MeltHead = 24.0f;
+		HY_PROPERTY(Range(1, 64), Tooltip("Tiles of raised land below the snow that meltwater runs down (and wets)"))
+		int MeltReach = 16;
+		HY_PROPERTY(Range(0, 1), Tooltip("Moisture (0 to 1) meltwater gives the land right below the snow, fading over MeltReach"))
+		float MeltMoisture = 0.7f;
+		HY_PROPERTY(Range(0, 0.25), Tooltip("Moisture each level gives all raised land (rain); 0: only snow and rivers wet hills"))
+		float RainPerLevel = 0.0f;
+		HY_PROPERTY(Range(0, 1), Tooltip("Groundwater (0 to 1) from which a dug riverbed springs"))
+		float SpringFrom = 0.78f;
+		HY_PROPERTY(Range(1, 200), Tooltip("A spring's head at full groundwater (tiles of narrow channel it fills); weaker ones less"))
+		float SpringHead = 20.0f;
+		HY_PROPERTY(Range(0, 1), Tooltip("Moisture full groundwater gives the land above it"))
+		float GroundwaterMoisture = 0.12f;
 
 	protected:
 		void OnCreate() override
@@ -63,7 +78,17 @@ namespace Hydro
 			settings.SourceHead = SourceHead;
 			settings.Loss = Loss;
 			settings.MoistureReach = MoistureReach;
+			settings.MeltHead = MeltHead;
+			settings.RainPerLevel = RainPerLevel;
+			settings.MeltMoisture = MeltMoisture;
+			settings.Groundwater.SpringFrom = SpringFrom;
+			settings.Groundwater.SpringHead = SpringHead;
+			settings.Groundwater.MinSpringHead = SpringHead * 0.3f;
+			settings.Groundwater.Moisture = GroundwaterMoisture;
 			m_Settings = WaterRules::FromTypes(m_Types, settings);
+			MountainRules::Settings mountains;
+			mountains.MeltReach = MeltReach;
+			m_Mountains = MountainRules::FromTypes(m_Types, mountains);
 		}
 
 		void OnUpdate(float deltaTime) override
@@ -73,12 +98,19 @@ namespace Hydro
 			{
 				return;
 			}
+			if (session.Heights.GetLevels().size() != session.Map.GetTiles().size())
+			{
+				session.Heights.Replace(HeightMap(session.Map.GetWidth(), session.Map.GetHeight())); // flat, if nothing made any
+			}
 			if (session.Water.Head.size() != session.Map.GetTiles().size())
 			{
-				session.Water = WaterRules::Start(session.Map, session.Land, m_Settings);
+				MountainRules::Settle(session.Map, session.Heights, m_Mountains); // rock and snow on a generated world's hills
+				session.Water = WaterRules::Start(session.Map, session.Land, m_Settings, &session.Heights, &session.Groundwater);
+				WaterRules::UpdateMelt(session.Map, session.Water, MountainRules::Meltwater(session.Map, session.Heights, m_Mountains));
 				session.Map.TakeChanges(); // the new map is the start, not a change
+				session.Heights.TakeChanges();
 				session.Objects.Reset(session.Map.GetTiles().size());
-				ObjectRules::Scatter(session.Objects, session.Map, session.Water, m_Objects, session.Rng);
+				ObjectRules::Scatter(session.Objects, session.Map, session.Water, m_Objects, session.Rng, &session.Heights);
 			}
 
 			SimulationClock& clock = session.Clock;
@@ -88,11 +120,24 @@ namespace Hydro
 				/ (float)session.Map.GetTiles().size();
 			for (int i = 0; i < run; i++)
 			{
+				const std::vector<uint32_t> raised = session.Heights.TakeChanges(); // the brush's, since the last tick
+				if (raised.empty() == false)
+				{
+					MountainRules::SettleTiles(session.Map, session.Heights, raised, m_Mountains); // the brush settles too: a no-op then
+					WaterRules::UpdateRain(session.Map, session.Water, session.Heights, raised, m_Settings);
+					session.MountainsChanged = true;
+				}
 				const WaterRules::TickReport water = WaterRules::Step(session.Map, session.Water, session.Land, m_Settings);
 				ObjectRules::RemoveUnfit(session.Objects, session.Map, session.Water, m_Objects, m_ObjectsById, water.Changes);
+				if (session.MountainsChanged && (clock.Ticks + (uint64_t)i) % TicksPerSettle == 0)
+				{
+					// Meltwater looks at the whole map: at most every other tick. Its changes wake the water for the next tick.
+					WaterRules::UpdateMelt(session.Map, session.Water, MountainRules::Meltwater(session.Map, session.Heights, m_Mountains));
+					session.MountainsChanged = false;
+				}
 				GrowthRules::Step(session.Map, session.Water, session.Land, m_Rules, SamplesPerTick, session.Rng);
 				ObjectRules::Step(session.Objects, session.Map, session.Water, session.Land, m_Objects, m_ObjectsById, SamplesPerTick,
-					visitsPerDay, session.Rng);
+					visitsPerDay, session.Rng, &session.Heights);
 				if ((clock.Ticks + (uint64_t)i) % 4 == 0)
 				{
 					Unlock(session);
@@ -104,6 +149,7 @@ namespace Hydro
 
 	private:
 		static constexpr int MaxTicksPerFrame = 8;
+		static constexpr int TicksPerSettle = 2; // meltwater looks at the whole map: at most every other tick
 
 		void Unlock(HearthlandsSession& session) const
 		{
@@ -119,5 +165,6 @@ namespace Hydro
 		std::vector<ObjectDefinition> m_Objects;
 		std::vector<int> m_ObjectsById;
 		WaterRules::Settings m_Settings;
+		MountainRules::Settings m_Mountains;
 	};
 }

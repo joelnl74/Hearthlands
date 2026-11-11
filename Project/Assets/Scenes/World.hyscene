@@ -46,7 +46,7 @@ Entities:
             Yaw: 45
             Elevation: 30
             Zoom: 3
-            PixelsPerTile: 24
+            PixelsPerTile: 32
             PanSpeed: 0.8
   - Entity: 2674510592191953209
     TagComponent:
@@ -78,7 +78,7 @@ Entities:
         - Inline:
             ShaderHandle: 406790589308717322
             Tint: [1, 1, 1, 1]
-            Tiling: [16, 0.18]
+            Tiling: [32, 0.18]
             EmissionColor: [0, 0, 0]
             EmissionIntensity: 1
             AlphaCutoff: 0

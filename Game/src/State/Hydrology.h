@@ -12,7 +12,11 @@ namespace Hydro
 		uint8_t BedTileId = 5;
 		std::vector<float> Head;       // water strength on Water tiles (0 elsewhere); drops along a river, dries at 0
 		std::vector<uint8_t> Source;   // 1: holds its head and never dries (the sea and generated lakes)
-		std::vector<uint8_t> Moisture; // 0 dry to 255 next to fresh water
+		std::vector<uint8_t> Carried;  // moisture spread from fresh water: 0 dry to 255 next to it
+		std::vector<uint8_t> Moisture; // what the land has: Carried, more where wet grass walls a tile in or rain falls (WaterRules)
+		std::vector<uint8_t> Rain;     // moisture the land's height alone gives it (highland rain); empty = none
+		std::vector<uint8_t> Groundwater; // the hidden water under each tile (GroundwaterRules); empty = none
+		std::vector<uint8_t> Melt;     // meltwater running there, 255 at the snow (MountainRules::Meltwater); empty = none
 		std::vector<uint32_t> Active;  // tiles to look at on the next tick
 		std::vector<uint8_t> Queued;   // 1 while a tile is in Active
 

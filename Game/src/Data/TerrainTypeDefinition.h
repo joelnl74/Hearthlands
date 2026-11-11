@@ -16,7 +16,9 @@ namespace Hydro
 	{
 		Land,     // grows and changes by the terrain rules
 		Water,    // carries water: a strength that drops along it (the sea and generated lakes hold it)
-		Riverbed  // dug, empty channel: water flows into it from water it touches
+		Riverbed, // dug, empty channel: water flows into it from water it touches
+		Rock,     // the raised land from FromLevel up (MountainRules); the Raise brush
+		Snow      // caps the land from FromLevel up; meltwater runs out at the foot of the land below it
 	};
 
 	HY_DATA(Table, DisplayField(Name))
@@ -40,6 +42,14 @@ namespace Hydro
 		int UnlockTileId = -1;
 		HY_PROPERTY(Range(0, 100000))
 		int UnlockCount = 0;
+		HY_PROPERTY(Range(0, 1), Tooltip("Moisture a tile walled in by this type (5 of 8 neighbours) keeps above theirs; 0 none"))
+		float Shelter = 0.0f;
+		HY_PROPERTY(Range(0, 255), Tooltip("Land this many levels high or more turns to this type (rock, snow); 0 never"))
+		int FromLevel = 0;
+		HY_PROPERTY(Range(-1, 255), Tooltip("What it turns back into when the land drops below FromLevel; -1 none"))
+		int BelowTileId = -1;
+		HY_PROPERTY(Color, Tooltip("The cliff face under a raised tile of this type"))
+		glm::vec3 CliffColor{ 0.45f, 0.36f, 0.27f };
 		HY_PROPERTY(Tooltip("Generation: placed where the height (0 to 1) and moisture (0 to 1) are both in range"))
 		bool Generated = true;
 		HY_PROPERTY(Range(0, 1))

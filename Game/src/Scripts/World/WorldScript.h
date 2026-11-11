@@ -4,17 +4,21 @@
 #include "Data/ObjectDefinition.h"
 #include "Data/TerrainTypeDefinition.h"
 #include "Rules/BrushRules.h"
+#include "Rules/GroundwaterRules.h"
+#include "Rules/HeightRules.h"
+#include "Rules/MountainRules.h"
 #include "Rules/TerrainGenRules.h"
 #include "State/HearthlandsSession.h"
 #include "Views/ObjectsView.h"
+#include "Views/ReliefView.h"
 #include "Views/TerrainView.h"
 
 #include <vector>
 
 namespace Hydro
 {
-	// The world scene's director, on the Terrain entity (a Plane running tile_blend.frag): makes the run's map when there is
-	// none (one base type or generated, then coast, beach, land, brushes), then keeps it drawn (with the moisture overlay).
+	// The world scene's director on the Terrain entity (a Plane running tile_blend.frag): makes the run's map and heights when
+	// there are none, then keeps them drawn: the ground (moisture overlay), the raised land as stepped blocks, the objects.
 	HY_SCRIPT()
 	class WorldScript : public ScriptableEntity
 	{
@@ -27,7 +31,7 @@ namespace Hydro
 		AssetHandle TerrainTypes = DefaultTerrainTypes;
 		HY_PROPERTY(Asset(DataTable, ObjectDefinition), Tooltip("The objects' sprites and sizes"))
 		AssetHandle ObjectTypes = DefaultObjectTypes;
-		HY_PROPERTY(Asset(Texture2D), Tooltip("One 16 x 16 tile per terrain id, in id order; none draws flat colours"))
+		HY_PROPERTY(Asset(Texture2D), Tooltip("The terrain atlas (scripts/art/make_terrain_atlas.py); none draws flat colours"))
 		AssetHandle TerrainArt = DefaultTerrainArt;
 		HY_PROPERTY(Range(-1, 255), Tooltip("Every tile starts as this terrain id (1 = dirt); -1 generates the world from Seed"))
 		int BaseTileId = 1;
@@ -45,6 +49,18 @@ namespace Hydro
 		int BeachTileId = 0;
 		HY_PROPERTY(Range(0, 32), Tooltip("About how many tiles of beach line the coast; 0 for none"))
 		float BeachWidth = 3.0f;
+		HY_PROPERTY(Range(0.05, 2), Tooltip("Metres a level of height stands: 8 art pixels at 32 a tile from 30 degrees = 0.2887"))
+		float LevelHeight = 0.2887f;
+		HY_PROPERTY(Range(0, 1), Tooltip("Generated worlds: the height noise above which the land rises"))
+		float HillsFrom = 0.55f;
+		HY_PROPERTY(Range(1, 100), Tooltip("Generated worlds: levels per unit of height noise above HillsFrom"))
+		float LevelsPerHeight = 28.0f;
+		HY_PROPERTY(Range(4, 256), Tooltip("Tiles across a patch of groundwater"))
+		float GroundwaterScale = 40.0f;
+		HY_PROPERTY(Range(0, 1), Tooltip("How plainly the surface shows groundwater at the start: 0 not, 1 plainly"))
+		float ClueClarity = 0.25f;
+		HY_PROPERTY(Range(0, 1), Tooltip("Groundwater (0 to 1) from which the surface shows it at the start"))
+		float ClueFrom = 0.78f;
 
 	protected:
 		void OnCreate() override
@@ -61,6 +77,7 @@ namespace Hydro
 
 			HearthlandsSession& session = HearthlandsSession::Get();
 			TileMap& map = session.Map;
+			session.LevelHeight = LevelHeight;
 			const bool made = map.GetWidth() == 0;
 			if (made && BaseTileId >= 0)
 			{
@@ -83,6 +100,15 @@ namespace Hydro
 				map.Replace(TerrainGenRules::AddBeach(coast, BeachWidth, (uint32_t)Seed, sea, (uint8_t)BeachTileId));
 				session.Land = TerrainGenRules::LandOf(map, sea);
 				session.Rng = Random((uint64_t)Seed * 2654435761ull + 1);
+				MakeHeights(session, BaseTileId < 0);
+				session.ClueClarity = ClueClarity;
+				session.ClueFrom = ClueFrom;
+			}
+			if (session.Groundwater.size() != map.GetTiles().size())
+			{
+				GroundwaterRules::Settings groundwater;
+				groundwater.Scale = GroundwaterScale;
+				session.Groundwater = GroundwaterRules::Generate(map.GetWidth(), map.GetHeight(), (uint32_t)Seed, groundwater);
 			}
 			if (session.UnlockedTiles.empty())
 			{
@@ -97,26 +123,91 @@ namespace Hydro
 				objects.push_back(object);
 			}
 			m_Objects.Bind(*GetEntity().GetScene(), objects);
-			m_View.Present(map, m_Types, (uint8_t)OutsideTileId, TerrainArt, nullptr, 0.0f);
+			m_Relief.Bind(*GetEntity().GetScene(), GetEntity(), m_Types);
+			m_View.Present(map, m_Types, (uint8_t)OutsideTileId, TerrainArt, nullptr, false, 0.0f, &session.Heights);
 		}
 
 		void OnUpdate(float deltaTime) override
 		{
 			const HearthlandsSession& session = HearthlandsSession::Get();
-			const std::vector<uint8_t>* moisture = session.ShowMoisture ? &session.Water.Moisture : nullptr;
-			m_View.Present(session.Map, m_Types, (uint8_t)OutsideTileId, TerrainArt, moisture, deltaTime);
-			m_Objects.Present(session.Objects, session.Map.GetWidth(), session.Map.GetHeight(), GetWorldPosition(), deltaTime);
+			UpdateClues(session);
+			m_View.Present(session.Map, m_Types, (uint8_t)OutsideTileId, TerrainArt, &session.Water.Moisture, session.ShowMoisture,
+				deltaTime, &session.Heights, &m_Clues, m_CluesRevision);
+			m_Relief.Present(session.Heights, session.Map, GetWorldPosition(), session.LevelHeight, deltaTime);
+			m_Objects.Present(session.Objects, session.Map.GetWidth(), session.Map.GetHeight(), GetWorldPosition(), deltaTime,
+				&session.Heights, session.LevelHeight);
 		}
 
 		void OnDestroy() override
 		{
 			m_View.Release();
 			m_Objects.Release();
+			m_Relief.Release();
 		}
 
 	private:
+		// The groundwater the surface shows (GroundwaterRules::Clue), again when it or the clue settings change.
+		void UpdateClues(const HearthlandsSession& session)
+		{
+			const bool same = m_Clues.size() == session.Groundwater.size() && session.ClueClarity == m_ClueClarity
+				&& session.ClueFrom == m_ClueFrom;
+			if (same)
+			{
+				return;
+			}
+			m_Clues.resize(session.Groundwater.size());
+			for (size_t i = 0; i < m_Clues.size(); i++)
+			{
+				m_Clues[i] = GroundwaterRules::Clue(session.Groundwater[i], session.ClueClarity, session.ClueFrom);
+			}
+			m_ClueClarity = session.ClueClarity;
+			m_ClueFrom = session.ClueFrom;
+			m_CluesRevision++;
+		}
+
+		// The new map's heights: flat, or (generated) from the height noise on the land that isn't water or beach, slopes
+		// slumped to HeightRules' MaxStep and rock and snow settled on them.
+		void MakeHeights(HearthlandsSession& session, bool generated)
+		{
+			const TileMap& map = session.Map;
+			if (generated == false)
+			{
+				session.Heights.Replace(HeightMap(map.GetWidth(), map.GetHeight()));
+				return;
+			}
+			HeightRules::Settings slopes;
+			std::vector<uint8_t> keep(session.Land);
+			for (size_t i = 0; i < keep.size(); i++)
+			{
+				const uint8_t tile = map.GetTiles()[i];
+				const bool low = (int)tile == OutsideTileId || (int)tile == BeachTileId || tile == slopes.WaterTileId;
+				keep[i] = low ? (uint8_t)0 : keep[i];
+			}
+			TerrainGenRules::Settings settings;
+			settings.Seed = (uint32_t)Seed;
+			settings.Width = Width;
+			settings.Height = Height;
+			session.Heights.Replace(TerrainGenRules::Levels(settings, HillsFrom, LevelsPerHeight, slopes.MaxLevel, keep));
+			std::vector<uint32_t> raised;
+			for (uint32_t i = 0; i < (uint32_t)session.Heights.GetLevels().size(); i++)
+			{
+				if (session.Heights.GetLevels()[i] > 0)
+				{
+					raised.push_back(i);
+				}
+			}
+			HeightRules::Slump(session.Heights, map, session.Land, raised, true, slopes);
+			session.Heights.TakeChanges();
+			MountainRules::Settle(session.Map, session.Heights, MountainRules::FromTypes(m_Types, MountainRules::Settings{}));
+		}
+
 		std::vector<TerrainTypeDefinition> m_Types;
 		TerrainView m_View;
 		ObjectsView m_Objects;
+		ReliefView m_Relief;
+		std::vector<uint8_t> m_Clues; // per tile 0 to 63 (UpdateClues)
+		float m_ClueClarity = -1.0f;
+		float m_ClueFrom = -1.0f;
+		uint64_t m_CluesRevision = 0;
 	};
 }

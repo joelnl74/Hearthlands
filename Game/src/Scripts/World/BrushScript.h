@@ -2,7 +2,10 @@
 
 #include "Hydro.h"
 #include "Hydro/Scene/UI/UI.h"
+#include "Data/TerrainTypeDefinition.h"
 #include "Rules/BrushRules.h"
+#include "Rules/HeightRules.h"
+#include "Rules/MountainRules.h"
 #include "State/HearthlandsSession.h"
 #include "Views/BrushCursorView.h"
 
@@ -10,15 +13,31 @@
 
 namespace Hydro
 {
-	// The player's terrain brush, on the Terrain entity next to WorldScript: holding the left mouse button over the land
-	// paints the session's brush (HudScript picks it) in a round stamp, joined along the drag; a ring shows where.
+	// The player's terrain brush on the Terrain entity: the left mouse paints the session's brush in a round stamp along the
+	// drag (a ring shows where); Raise (the rock type) lifts a dome per press, Dig lowers raised land, then digs riverbed.
 	HY_SCRIPT()
 	class BrushScript : public ScriptableEntity
 	{
+	public:
+		static constexpr uint64_t DefaultTerrainTypes = 4392505292887402202ull; // Assets/Data/TerrainTypes.hytable
+
+		HY_PROPERTY(Asset(DataTable, TerrainTypeDefinition), Tooltip("Which type raises (Rock) and the levels rock and snow start at"))
+		AssetHandle TerrainTypes = DefaultTerrainTypes;
+		HY_PROPERTY(Range(1, 32), Tooltip("Most levels between neighbouring land tiles: steeper strokes slump outwards"))
+		int MaxStep = 2;
+
 	protected:
 		void OnCreate() override
 		{
 			m_Cursor.Bind(*GetEntity().GetScene());
+			std::vector<TerrainTypeDefinition> types;
+			const DataTableView<TerrainTypeDefinition> table = Data::GetTable<TerrainTypeDefinition>(TerrainTypes);
+			for (const auto& [id, type] : table.Rows())
+			{
+				types.push_back(type);
+			}
+			m_Mountains = MountainRules::FromTypes(types, MountainRules::Settings{});
+			m_Heights.MaxStep = MaxStep;
 		}
 
 		void OnUpdate([[maybe_unused]] float deltaTime) override
@@ -26,10 +45,11 @@ namespace Hydro
 			HearthlandsSession& session = HearthlandsSession::Get();
 			const Scene::UIPointer& pointer = GetEntity().GetScene()->GetUIPointer();
 			glm::vec2 point(0.0f);
-			const bool overLand = pointer.Inside && session.PointerOverHud == false && PointUnderPointer(session.Map, point)
+			float pointZ = 0.0f;
+			const bool overLand = pointer.Inside && session.PointerOverHud == false && PointUnderPointer(session, point, pointZ)
 				&& IsLand(session, point);
 			const float radius = session.Brush.Radius;
-			m_Cursor.Present(overLand, GroundPoint(session.Map, point), radius);
+			m_Cursor.Present(overLand, GroundPoint(session.Map, point) + glm::vec3(0.0f, 0.0f, pointZ), radius);
 
 			const bool painting = overLand && pointer.Down && UI::CapturesInput(*GetEntity().GetScene()) == false;
 			if (painting == false || session.UnlockedTiles.empty())
@@ -39,16 +59,36 @@ namespace Hydro
 			}
 
 			const uint8_t tileId = BrushRules::BrushTile(session.Brush.TileId, session.UnlockedTiles);
+			const bool raise = (int)tileId == m_Mountains.RockTileId;
+			const bool dig = tileId == session.Water.BedTileId;
+			if (m_Stroking == false)
+			{
+				m_Stroke.Begin(session.Map.GetTiles().size()); // a new press: every tile moves at most its bump from here
+			}
+			m_Heights.WaterTileId = session.Water.WaterTileId;
+			m_Heights.BedTileId = session.Water.BedTileId;
+			std::vector<uint32_t> moved;
 			const glm::vec2 from = m_Stroking ? m_LastPoint : point;
 			for (const glm::vec2& step : BrushRules::Stroke(from, point, 0.5f))
 			{
 				for (const glm::ivec2& at : BrushRules::Stamp(step, radius, session.Map.GetWidth(), session.Map.GetHeight(), session.Land))
 				{
-					if (BrushRules::CanPaint(session.Map.Get(at.x, at.y), tileId, session.Water.WaterTileId, session.Water.BedTileId))
+					if (raise || dig)
 					{
-						session.Map.Set(at.x, at.y, tileId);
+						Shape(session, at, step, radius, raise, moved);
+					}
+					else if (MountainRules::LevelTile(session.Heights.Get(at.x, at.y), at.x, at.y, m_Mountains) < 0
+						&& BrushRules::CanPaint(session.Map.Get(at.x, at.y), tileId, session.Water.WaterTileId, session.Water.BedTileId))
+					{
+						session.Map.Set(at.x, at.y, tileId); // rock and snow are the height's: painting doesn't cover them
 					}
 				}
+			}
+			if (moved.empty() == false)
+			{
+				std::vector<uint32_t> slumped = HeightRules::Slump(session.Heights, session.Map, session.Land, moved, raise, m_Heights);
+				moved.insert(moved.end(), slumped.begin(), slumped.end());
+				MountainRules::SettleTiles(session.Map, session.Heights, moved, m_Mountains); // rock and snow at once, even paused
 			}
 			m_LastPoint = point;
 			m_Stroking = true;
@@ -60,6 +100,40 @@ namespace Hydro
 		}
 
 	private:
+		// Raise: water and riverbed fill with bare land, then the tile rises its bump. Dig: raised land (at the press) sinks
+		// its bump, ground-level land becomes riverbed.
+		void Shape(HearthlandsSession& session, const glm::ivec2& at, const glm::vec2& centre, float radius, bool raise,
+			std::vector<uint32_t>& moved)
+		{
+			const glm::vec2 offset = glm::vec2((float)at.x + 0.5f, (float)at.y + 0.5f) - centre;
+			const int bump = HeightRules::Bump(glm::length(offset), radius);
+			const uint32_t index = (uint32_t)(at.y * session.Map.GetWidth() + at.x);
+			const uint8_t tile = session.Map.Get(at.x, at.y);
+			if (raise)
+			{
+				if ((tile == session.Water.WaterTileId || tile == session.Water.BedTileId) && m_Mountains.BareTileId >= 0)
+				{
+					session.Map.Set(at.x, at.y, (uint8_t)m_Mountains.BareTileId);
+				}
+				if (HeightRules::Move(session.Heights, m_Stroke, at.x, at.y, bump, m_Heights))
+				{
+					moved.push_back(index);
+				}
+				return;
+			}
+			if (HeightRules::StartLevel(session.Heights, m_Stroke, at.x, at.y) > 0)
+			{
+				if (HeightRules::Move(session.Heights, m_Stroke, at.x, at.y, -bump, m_Heights))
+				{
+					moved.push_back(index);
+				}
+			}
+			else if (BrushRules::CanPaint(tile, session.Water.BedTileId, session.Water.WaterTileId, session.Water.BedTileId))
+			{
+				session.Map.Set(at.x, at.y, session.Water.BedTileId);
+			}
+		}
+
 		static bool IsLand(const HearthlandsSession& session, const glm::vec2& point)
 		{
 			const size_t index = (size_t)point.y * (size_t)session.Map.GetWidth() + (size_t)point.x;
@@ -74,9 +148,11 @@ namespace Hydro
 			return glm::vec3(centre.x + offset.x, centre.y + offset.y, centre.z);
 		}
 
-		// The map point under the pointer (BrushRules::MapPoint): the primary camera's ray met with the ground (this z).
-		bool PointUnderPointer(const TileMap& map, glm::vec2& point)
+		// The map point under the pointer (BrushRules::MapPoint) and the height there: the primary camera's ray met with the
+		// raised land, else the ground (this z).
+		bool PointUnderPointer(const HearthlandsSession& session, glm::vec2& point, float& z)
 		{
+			const TileMap& map = session.Map;
 			Scene& scene = *GetEntity().GetScene();
 			Entity camera = scene.GetPrimaryCameraEntity();
 			if ((bool)camera == false || scene.GetViewportWidth() == 0 || scene.GetViewportHeight() == 0 || map.GetWidth() == 0)
@@ -97,16 +173,25 @@ namespace Hydro
 			farPoint /= farPoint.w;
 
 			const glm::vec3 centre = GetWorldPosition();
+			if (session.Heights.GetLevels().size() == map.GetTiles().size())
+			{
+				return HeightRules::RayToLand(glm::vec3(nearPoint) - centre, glm::vec3(farPoint - nearPoint), session.Heights,
+					session.LevelHeight, m_Heights.MaxLevel, point, z);
+			}
 			glm::vec3 hit(0.0f);
 			if (BrushRules::RayToGround(glm::vec3(nearPoint), glm::vec3(farPoint - nearPoint), centre.z, hit) == false)
 			{
 				return false;
 			}
+			z = 0.0f;
 			point = BrushRules::MapPoint(glm::vec2(hit.x - centre.x, hit.y - centre.y), map.GetWidth(), map.GetHeight());
 			return BrushRules::OnMap(point, map.GetWidth(), map.GetHeight());
 		}
 
 		BrushCursorView m_Cursor;
+		MountainRules::Settings m_Mountains;
+		HeightRules::Settings m_Heights;
+		HeightRules::Stroke m_Stroke;
 		bool m_Stroking = false;
 		glm::vec2 m_LastPoint{ 0.0f };
 	};

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Data/ObjectDefinition.h"
+#include "State/HeightMap.h"
 #include "State/Hydrology.h"
 #include "State/ObjectLayer.h"
 #include "State/Random.h"
@@ -37,9 +38,16 @@ namespace Hydro
 			return byId;
 		}
 
-		// Whether an object can live on the tile (x, y): its tile, its moisture, its neighbouring tiles.
-		static bool Fits(const ObjectDefinition& object, const TileMap& map, const Hydrology& water, int x, int y)
+		// Whether an object can live on the tile (x, y): its tile, its height (heights: nullptr flat), its moisture, its
+		// neighbouring tiles.
+		static bool Fits(const ObjectDefinition& object, const TileMap& map, const Hydrology& water, int x, int y,
+			const HeightMap* heights = nullptr)
 		{
+			const int level = heights != nullptr ? heights->Get(x, y) : 0;
+			if (level < object.MinLevel || level > object.MaxLevel)
+			{
+				return false;
+			}
 			const size_t index = (size_t)y * (size_t)map.GetWidth() + (size_t)x;
 			const uint8_t tile = map.GetTiles()[index];
 			const bool anyLand = object.GrowsOnTileId < 0 && tile != water.WaterTileId && tile != water.BedTileId;
@@ -57,7 +65,7 @@ namespace Hydro
 
 		// Places objects with a StartDensity on the tiles that suit them (rocks), for a new world.
 		static int Scatter(ObjectLayer& layer, const TileMap& map, const Hydrology& water, const std::vector<ObjectDefinition>& objects,
-			Random& random)
+			Random& random, const HeightMap* heights = nullptr)
 		{
 			int placed = 0;
 			for (int y = 0; y < map.GetHeight(); y++)
@@ -67,7 +75,7 @@ namespace Hydro
 					const size_t index = (size_t)y * (size_t)map.GetWidth() + (size_t)x;
 					for (const ObjectDefinition& object : objects)
 					{
-						if (object.StartDensity > 0.0f && layer.Get(index) == 0 && Fits(object, map, water, x, y)
+						if (object.StartDensity > 0.0f && layer.Get(index) == 0 && Fits(object, map, water, x, y, heights)
 							&& random.Float() < object.StartDensity)
 						{
 							layer.Set(index, (uint8_t)object.ObjectId);
@@ -79,11 +87,11 @@ namespace Hydro
 			return placed;
 		}
 
-		// Looks at `samples` random tiles on the land: empty ones may sprout (or be spread to), objects may grow a stage
-		// (1 / (GrowDays x visitsPerDay) a look, so GrowDays holds on average) or die where they no longer fit.
+		// Looks at `samples` random land tiles: empty ones may sprout or be spread to (HeightFactor higher up), objects grow a
+		// stage (1 / (GrowDays x visitsPerDay) a look, so GrowDays holds on average) or die where they no longer fit.
 		static TickReport Step(ObjectLayer& layer, const TileMap& map, const Hydrology& water, const std::vector<uint8_t>& land,
 			const std::vector<ObjectDefinition>& objects, const std::vector<int>& byId, int samples, float visitsPerDay,
-			Random& random)
+			Random& random, const HeightMap* heights = nullptr)
 		{
 			TickReport report;
 			const uint32_t count = (uint32_t)map.GetTiles().size();
@@ -102,7 +110,7 @@ namespace Hydro
 					for (const ObjectDefinition& object : objects)
 					{
 						const bool active = object.SproutChance > 0.0f || object.SpreadChance > 0.0f;
-						if (active == false || Fits(object, map, water, x, y) == false
+						if (active == false || Fits(object, map, water, x, y, heights) == false
 							|| Crowded(object, layer, map, objects, byId, x, y))
 						{
 							continue;
@@ -113,6 +121,7 @@ namespace Hydro
 						{
 							chance += object.SpreadChance;
 						}
+						chance *= HeightFactor(object, heights != nullptr ? heights->Get(x, y) : 0);
 						if (chance > 0.0f && random.Float() < chance)
 						{
 							layer.Set(index, (uint8_t)object.ObjectId);
@@ -124,7 +133,7 @@ namespace Hydro
 				}
 
 				const int row = byId[current];
-				if (row < 0 || Fits(objects[(size_t)row], map, water, x, y) == false)
+				if (row < 0 || Fits(objects[(size_t)row], map, water, x, y, heights) == false)
 				{
 					layer.Set(index, 0);
 					report.Died++;
@@ -166,6 +175,13 @@ namespace Hydro
 				}
 			}
 			return removed;
+		}
+
+		// How much likelier the object sprouts and spreads at this level: 1 + ChancePerLevel x level.
+		static float HeightFactor(const ObjectDefinition& object, int level)
+		{
+			const float factor = 1.0f + object.ChancePerLevel * (float)level;
+			return factor > 0.0f ? factor : 0.0f;
 		}
 
 		static int CountTiles(const TileMap& map, int x, int y, uint8_t tileId)

@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 // The things standing on tiles (bushes, trees, reeds, rocks) as data: one row per kind and growth stage in
 // Assets/Data/Objects.hytable. The object layer stores ObjectId per tile.
@@ -32,8 +33,10 @@ namespace Hydro
 		ObjectKind Kind = ObjectKind::Shrub;
 		HY_PROPERTY(Asset(Texture2D), Tooltip("Drawn standing on its tile, bottom centre on the ground"))
 		AssetHandle Sprite = 0;
+		HY_PROPERTY(Asset(Texture2D), Tooltip("Other looks: each tile picks the sprite or one of these"))
+		std::vector<AssetHandle> Variants;
 		HY_PROPERTY(Range(4, 128), Tooltip("Sprite pixels per tile: the size it is drawn at"))
-		float PixelsPerTile = 24.0f;
+		float PixelsPerTile = 32.0f;
 		HY_PROPERTY()
 		bool CastsShadow = true;
 		HY_PROPERTY(Range(-1, 255), Tooltip("The tile it lives on; -1 any land (not water or riverbed). It dies elsewhere"))
@@ -46,6 +49,12 @@ namespace Hydro
 		int NeighbourTileId = -1;
 		HY_PROPERTY(Range(1, 8))
 		int MinNeighbours = 1;
+		HY_PROPERTY(Range(0, 255), Tooltip("The land's height (levels) it lives at, at least ..."))
+		int MinLevel = 0;
+		HY_PROPERTY(Range(0, 255), Tooltip("... and at most"))
+		int MaxLevel = 255;
+		HY_PROPERTY(Range(0, 4), Tooltip("Sprout and spread chances grow by this share per level of height (0.5: twice at level 2)"))
+		float ChancePerLevel = 0.0f;
 		HY_PROPERTY(Range(0, 1), Tooltip("Chance to appear each time an empty tile that suits it is looked at"))
 		float SproutChance = 0.0f;
 		HY_PROPERTY(Range(0, 4), Tooltip("Tiles around it free of objects of its kind or bigger for it to appear"))

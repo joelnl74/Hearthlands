@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Data/TerrainTypeDefinition.h"
+#include "State/HeightMap.h"
 #include "State/TileMap.h"
 
 #include <cmath>
@@ -37,6 +38,30 @@ namespace Hydro
 				}
 			}
 			return map;
+		}
+
+		// The land's height in levels from the same height noise Generate uses: 0 up to fromHeight, then one level for every
+		// 1 / levelsPerHeight above it, at most maxLevel. Only where keep[i] != 0 (empty: everywhere); 0 elsewhere.
+		static HeightMap Levels(const Settings& settings, float fromHeight, float levelsPerHeight, int maxLevel,
+			const std::vector<uint8_t>& keep = {})
+		{
+			HeightMap heights(settings.Width, settings.Height);
+			for (int y = 0; y < settings.Height; y++)
+			{
+				for (int x = 0; x < settings.Width; x++)
+				{
+					const size_t index = (size_t)y * (size_t)settings.Width + (size_t)x;
+					if (keep.empty() == false && (index >= keep.size() || keep[index] == 0))
+					{
+						continue;
+					}
+					const float height = Noise(x, y, settings.HeightScale, settings.Octaves, settings.Seed);
+					const int level = (int)std::floor((height - fromHeight) * levelsPerHeight);
+					heights.Set(x, y, (uint8_t)(level < 0 ? 0 : (level > maxLevel ? maxLevel : level)));
+				}
+			}
+			heights.TakeChanges(); // a new map is not a list of changes
+			return heights;
 		}
 
 		// Floods the map's rim with seaTileId along a rounded, wavy coast: a tile turns to sea when it is nearer than

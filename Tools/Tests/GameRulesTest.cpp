@@ -6,10 +6,14 @@
 
 #include "Rules/BrushRules.h"
 #include "Rules/CameraRules.h"
+#include "Rules/GroundwaterRules.h"
 #include "Rules/GrowthRules.h"
+#include "Rules/HeightRules.h"
+#include "Rules/MountainRules.h"
 #include "Rules/ObjectRules.h"
 #include "Rules/TerrainGenRules.h"
 #include "Rules/WaterRules.h"
+#include "State/HeightMap.h"
 #include "State/Random.h"
 #include "State/SimulationClock.h"
 #include "State/TileMap.h"
@@ -286,6 +290,103 @@ namespace Hydro
 		return reach;
 	}
 
+	// 13 x 11 dirt; with `wet`, column 0 is water; a 5 x 5 grass block over x 3..7, y 3..7 with a dirt hole at (5, 5).
+	static TileMap ShelterMap(bool wet, bool grass)
+	{
+		TileMap map(13, 11, 1);
+		for (int y = 0; y < 11 && wet; y++)
+		{
+			map.Set(0, y, 3);
+		}
+		for (int y = 3; y <= 7 && grass; y++)
+		{
+			for (int x = 3; x <= 7; x++)
+			{
+				map.Set(x, y, x == 5 && y == 5 ? 1 : 2);
+			}
+		}
+		map.TakeChanges();
+		return map;
+	}
+
+	static void TestShelter(int& checks, const WaterRules::Settings& plain)
+	{
+		// Grass (2) shelters with 0.15; a dirt hole walled in by wet grass holds their mean moisture plus that.
+		std::vector<TerrainTypeDefinition> types(1);
+		types[0].TileId = 2;
+		types[0].Shelter = 0.15f;
+		const WaterRules::Settings settings = WaterRules::FromTypes(types, plain);
+		RULE_CHECK(settings.Shelter[2] == 38 && settings.Shelter[1] == 0 && plain.Shelter[2] == 0);
+		const std::vector<uint8_t> land(13 * 11, 1);
+		const size_t hole = (size_t)5 * 13 + 5;
+		TileMap map = ShelterMap(true, true);
+		const Hydrology water = WaterRules::Start(map, land, settings);
+		RULE_CHECK(water.Carried[hole] == 255 - 5 * 42 && water.Moisture[hole] == (3 * 87 + 2 * 45 + 3 * 3) / 8 + 38);
+		RULE_CHECK(water.Moisture[hole] >= 51 && water.Carried[hole] < 51); // wet enough for grass to spread in (0.2)
+		RULE_CHECK(water.Moisture[(size_t)4 * 13 + 4] > water.Carried[(size_t)4 * 13 + 4]); // the grass inside too
+		RULE_CHECK(water.Moisture[(size_t)5 * 13 + 8] == water.Carried[(size_t)5 * 13 + 8]); // the edge: 3 of 8, not walled in
+		RULE_CHECK(WaterRules::Start(map, land, plain).Moisture[hole] == water.Carried[hole]); // nothing shelters by default
+
+		// Dry grass walls in nothing: without water the hole stays dry.
+		TileMap dryMap = ShelterMap(false, true);
+		RULE_CHECK(WaterRules::Start(dryMap, land, settings).Moisture[hole] == 0);
+
+		// Grass painted in later shelters the same after a few ticks; with the water gone everything dries (no loop holds it).
+		TileMap painted = ShelterMap(true, false);
+		Hydrology paintedWater = WaterRules::Start(painted, land, settings);
+		for (int y = 3; y <= 7; y++)
+		{
+			for (int x = 3; x <= 7; x++)
+			{
+				painted.Set(x, y, x == 5 && y == 5 ? 1 : 2);
+			}
+		}
+		for (int i = 0; i < 5; i++)
+		{
+			WaterRules::Step(painted, paintedWater, land, settings);
+		}
+		RULE_CHECK(paintedWater.Moisture == water.Moisture && paintedWater.Carried == water.Carried);
+		for (int y = 0; y < 11; y++)
+		{
+			painted.Set(0, y, 1);
+		}
+		int wettest = 0;
+		for (int i = 0; i < 40; i++)
+		{
+			WaterRules::Step(painted, paintedWater, land, settings);
+		}
+		for (uint8_t value : paintedWater.Moisture)
+		{
+			wettest = value > wettest ? value : wettest;
+		}
+		RULE_CHECK(wettest == 0);
+
+		// With grass spreading (0.2, a grass neighbour) the hole fills; the dry edge east of the block never moves.
+		TerrainRuleDefinition spread;
+		spread.FromTileId = 1;
+		spread.ToTileId = 2;
+		spread.MinMoisture = 0.2f;
+		spread.NeighbourTileId = 2;
+		spread.Chance = 1.0f;
+		Hydrology growing = WaterRules::Start(map, land, settings);
+		Random random(5);
+		for (int i = 0; i < 100; i++)
+		{
+			GrowthRules::Step(map, growing, land, { spread }, 200, random);
+			WaterRules::Step(map, growing, land, settings);
+		}
+		int east = 0;
+		for (int y = 0; y < 11; y++)
+		{
+			for (int x = 8; x < 13; x++)
+			{
+				east += map.Get(x, y) == 2 ? 1 : 0;
+			}
+		}
+		RULE_CHECK(map.Get(5, 5) == 2 && east == 0);
+		RULE_CHECK(growing.Moisture[hole] >= 51); // filled in, it stays wet enough not to dry back
+	}
+
 	static void TestWaterRules(int& checks)
 	{
 		WaterRules::Settings settings; // water 3, riverbed 5, head 24, loss 1, reach 6
@@ -321,6 +422,29 @@ namespace Hydro
 		RULE_CHECK(wideReach > narrowReach + 10);
 		std::printf("  Water: narrow channel %d tiles, three wide %d tiles\n", narrowReach, wideReach);
 
+		// A wide river's end is rounded: by the banks it needs more head (FillHead), so the middle reaches furthest.
+		RULE_CHECK(WaterRules::FillHead(narrow, 10, 2, settings) == 0.0f);
+		TileMap broad = ChannelMap(120, 9, 15);
+		std::vector<uint8_t> broadLand(broad.GetTiles().size(), 1);
+		for (int y = 0; y < 15; y++)
+		{
+			broadLand[(size_t)y * 121] = 0;
+		}
+		Hydrology broadWater = WaterRules::Start(broad, broadLand, settings);
+		const int middleReach = Flood(broad, broadWater, broadLand, settings, 200);
+		int bankReach = 0;
+		while (bankReach + 1 < broad.GetWidth() && broad.Get(bankReach + 1, 3) == 3)
+		{
+			bankReach++;
+		}
+		int innerReach = 0;
+		while (innerReach + 1 < broad.GetWidth() && broad.Get(innerReach + 1, 4) == 3)
+		{
+			innerReach++;
+		}
+		RULE_CHECK(middleReach < 120 && bankReach + 2 < innerReach && innerReach + 2 < middleReach);
+		std::printf("  Water: nine wide river ends rounded: bank %d, inner %d, middle %d tiles\n", bankReach, innerReach, middleReach);
+
 		// River water wets the land around it, fading over MoistureReach; the dirt far away stays dry.
 		RULE_CHECK(narrowWater.Moisture[(size_t)2 * 61 + 5] == 255);
 		RULE_CHECK(narrowWater.Moisture[(size_t)1 * 61 + 5] > 150 && narrowWater.Moisture[(size_t)1 * 61 + 5] < 255);
@@ -340,6 +464,365 @@ namespace Hydro
 		lake.Set(4, 4, 3);
 		const Hydrology lakeWater = WaterRules::Start(lake, std::vector<uint8_t>(81, 1), settings);
 		RULE_CHECK(lakeWater.Source[40] == 1 && lakeWater.Moisture[40] == 255 && lakeWater.Moisture[41] == 255 - 42);
+
+		// A Melt tile (MountainRules::Meltwater: the raised land below snow) feeds the riverbed next to it with MeltHead; the
+		// meltwater is fresh, and the channel drains when the melt stops.
+		WaterRules::Settings melt = settings;
+		melt.MeltHead = 10.0f;
+		TileMap stream = ChannelMap(30, 1, 5);
+		for (int y = 0; y < 5; y++)
+		{
+			stream.Set(0, y, 6); // rock at the channel's head instead of the sea
+		}
+		stream.TakeChanges();
+		const std::vector<uint8_t> streamLand(stream.GetTiles().size(), 1);
+		TileMap dry(stream);
+		Hydrology dryWater = WaterRules::Start(dry, streamLand, melt);
+		RULE_CHECK(Flood(dry, dryWater, streamLand, melt, 50) == 0); // no meltwater: nothing flows
+		Hydrology streamWater = WaterRules::Start(stream, streamLand, melt);
+		std::vector<uint8_t> meltMask(stream.GetTiles().size(), 0);
+		for (int y = 0; y < 5; y++)
+		{
+			meltMask[(size_t)y * 31] = 1;
+		}
+		WaterRules::UpdateMelt(stream, streamWater, meltMask);
+		const int meltReach = Flood(stream, streamWater, streamLand, melt, 60);
+		RULE_CHECK(meltReach >= 8 && meltReach <= 10);
+		RULE_CHECK(streamWater.Moisture[(size_t)2 * 31 + 3] == 255 && streamWater.Moisture[(size_t)1 * 31 + 3] > 150);
+		WaterRules::UpdateMelt(stream, streamWater, std::vector<uint8_t>(stream.GetTiles().size(), 0));
+		for (int i = 0; i < 60; i++)
+		{
+			WaterRules::Step(stream, streamWater, streamLand, melt);
+		}
+		RULE_CHECK(stream.Get(1, 2) == 5 && stream.Get(5, 2) == 5);
+
+		// Highland rain: raised land gets RainPerLevel a level as moisture, never passed on; ground level none.
+		WaterRules::Settings rainy = settings;
+		rainy.RainPerLevel = 0.1f;
+		TileMap hills(5, 5, 1);
+		HeightMap hillHeights(5, 5);
+		hillHeights.Set(2, 2, 3);
+		const std::vector<uint8_t> hillLand(25, 1);
+		Hydrology hillWater = WaterRules::Start(hills, hillLand, rainy, &hillHeights);
+		RULE_CHECK(hillWater.Moisture[12] == 77 && hillWater.Carried[12] == 0 && hillWater.Moisture[11] == 0);
+		hillHeights.Set(2, 2, 1);
+		hillHeights.Set(0, 0, 10);
+		WaterRules::UpdateRain(hills, hillWater, hillHeights, hillHeights.TakeChanges(), rainy);
+		WaterRules::Step(hills, hillWater, hillLand, rainy);
+		RULE_CHECK(hillWater.Moisture[12] == 26 && hillWater.Moisture[0] == 255 && hillWater.Moisture[1] == 0);
+
+		// Snowmelt wets the land it runs down: Melt times MeltMoisture, never passed on.
+		WaterRules::Settings snowmelt = settings;
+		snowmelt.MeltMoisture = 0.5f;
+		TileMap slope(5, 5, 1);
+		Hydrology slopeWater = WaterRules::Start(slope, hillLand, snowmelt);
+		std::vector<uint8_t> slopeMelt(25, 0);
+		slopeMelt[12] = 255;
+		slopeMelt[13] = 1;
+		WaterRules::UpdateMelt(slope, slopeWater, slopeMelt);
+		WaterRules::Step(slope, slopeWater, hillLand, snowmelt);
+		RULE_CHECK(slopeWater.Moisture[12] == 128 && slopeWater.Moisture[13] == 1 && slopeWater.Moisture[11] == 0);
+		RULE_CHECK(slopeWater.Carried[12] == 0);
+		std::printf("  Meltwater: narrow channel %d tiles at melt head 10\n", meltReach);
+		TestShelter(checks, settings);
+	}
+
+	static int CountTile(const TileMap& map, uint8_t tileId)
+	{
+		return (int)map.GetCount(tileId);
+	}
+
+	// A cone of land: peak levels at (cx, cy), one less per tile away (rounded), 0 beyond.
+	static HeightMap ConeHeights(int width, int height, int cx, int cy, int peak)
+	{
+		HeightMap heights(width, height);
+		for (int y = 0; y < height; y++)
+		{
+			for (int x = 0; x < width; x++)
+			{
+				const float distance = std::sqrt((float)((x - cx) * (x - cx) + (y - cy) * (y - cy)));
+				const int level = peak - (int)std::lround(distance);
+				heights.Set(x, y, (uint8_t)(level > 0 ? level : 0));
+			}
+		}
+		heights.TakeChanges();
+		return heights;
+	}
+
+	// The same heights, cut down to at most `top`.
+	static HeightMap CutHeights(const HeightMap& heights, int top)
+	{
+		HeightMap cut(heights);
+		for (int y = 0; y < cut.GetHeight(); y++)
+		{
+			for (int x = 0; x < cut.GetWidth(); x++)
+			{
+				cut.Set(x, y, (uint8_t)(cut.Get(x, y) > top ? top : cut.Get(x, y)));
+			}
+		}
+		return cut;
+	}
+
+	static void TestHeightRules(int& checks)
+	{
+		// HeightMap: levels per tile, 0 off the map, a revision and a change log like TileMap's.
+		HeightMap heights(4, 3);
+		RULE_CHECK(heights.GetLevels().size() == 12 && heights.Get(3, 2) == 0 && heights.Get(-1, 0) == 0 && heights.Get(4, 0) == 0);
+		const uint64_t revision = heights.GetRevision();
+		RULE_CHECK(heights.Set(1, 2, 5) && heights.Get(1, 2) == 5 && heights.GetRevision() == revision + 1);
+		RULE_CHECK(heights.Set(1, 2, 5) == false && heights.Set(9, 9, 1) == false && heights.GetRevision() == revision + 1);
+		std::vector<uint32_t> changes = heights.TakeChanges();
+		RULE_CHECK(changes.size() == 1 && changes[0] == 9 && heights.TakeChanges().empty());
+		HeightMap bigger(6, 6, 2);
+		heights.Replace(bigger);
+		RULE_CHECK(heights.GetWidth() == 6 && heights.Get(5, 5) == 2 && heights.GetRevision() > revision + 1);
+
+		// Bump: 1 at the rim, one more every 2 tiles in; a small brush always 1.
+		RULE_CHECK(HeightRules::Bump(0.0f, 8.0f) == 5 && HeightRules::Bump(3.0f, 8.0f) == 3 && HeightRules::Bump(7.9f, 8.0f) == 1);
+		RULE_CHECK(HeightRules::Bump(9.0f, 8.0f) == 1 && HeightRules::Bump(0.0f, 0.5f) == 1 && HeightRules::Bump(0.0f, 1.5f) == 1);
+
+		// Move: a stroke moves a tile at most its bump from its level at the press, within 0 and MaxLevel.
+		HeightRules::Settings settings; // max level 15, max step 2, water 3, riverbed 5
+		HeightMap field(5, 5);
+		HeightRules::Stroke stroke;
+		stroke.Begin(25);
+		RULE_CHECK(HeightRules::Move(field, stroke, 2, 2, 2, settings) && field.Get(2, 2) == 2);
+		RULE_CHECK(HeightRules::Move(field, stroke, 2, 2, 2, settings) == false && field.Get(2, 2) == 2); // held: no more
+		stroke.Begin(25);
+		RULE_CHECK(HeightRules::Move(field, stroke, 2, 2, 2, settings) && field.Get(2, 2) == 4); // a new press: 2 more
+		stroke.Begin(25);
+		RULE_CHECK(HeightRules::Move(field, stroke, 2, 2, -3, settings) && field.Get(2, 2) == 1);
+		RULE_CHECK(HeightRules::Move(field, stroke, 2, 2, -3, settings) == false && field.Get(2, 2) == 1);
+		stroke.Begin(25);
+		RULE_CHECK(HeightRules::Move(field, stroke, 2, 2, -5, settings) && field.Get(2, 2) == 0);
+		stroke.Begin(25);
+		RULE_CHECK(HeightRules::Move(field, stroke, 1, 1, 40, settings) && field.Get(1, 1) == 15);
+
+		// Slump raising: a spike lifts the land around it to within MaxStep; the sea and water hold their ground (cliffs).
+		TileMap ground(9, 9, 1);
+		ground.Set(5, 4, 3);
+		std::vector<uint8_t> land(81, 1);
+		land[(size_t)4 * 9 + 3] = 0;
+		HeightMap spike(9, 9);
+		spike.Set(4, 4, 8);
+		std::vector<uint32_t> moved = HeightRules::Slump(spike, ground, land, { 40u }, true, settings);
+		bool gentle = true;
+		for (int y = 0; y < 9; y++)
+		{
+			for (int x = 0; x < 9; x++)
+			{
+				const bool fixed = (x == 5 && y == 4) || (x == 3 && y == 4);
+				for (int oy = -1; oy <= 1 && fixed == false; oy++)
+				{
+					for (int ox = -1; ox <= 1; ox++)
+					{
+						const bool neighbourFixed = (x + ox == 5 && y + oy == 4) || (x + ox == 3 && y + oy == 4);
+						if (spike.InBounds(x + ox, y + oy) && neighbourFixed == false)
+						{
+							gentle = gentle && std::abs((int)spike.Get(x, y) - (int)spike.Get(x + ox, y + oy)) <= 2;
+						}
+					}
+				}
+			}
+		}
+		RULE_CHECK(gentle && spike.Get(4, 3) == 6 && spike.Get(4, 2) == 4 && spike.Get(4, 1) == 2 && spike.Get(4, 0) == 0);
+		RULE_CHECK(spike.Get(5, 4) == 0 && spike.Get(3, 4) == 0 && moved.size() > 20);
+
+		// Slump lowering: a pit dug into a plateau cuts the land around it down to within MaxStep.
+		HeightMap plateau(9, 9, 6);
+		plateau.Set(4, 4, 0);
+		HeightRules::Slump(plateau, TileMap(9, 9, 1), {}, { 40u }, false, settings);
+		RULE_CHECK(plateau.Get(4, 3) == 2 && plateau.Get(4, 2) == 4 && plateau.Get(4, 1) == 6 && plateau.Get(3, 3) == 2);
+
+		// A level stands levelPixels art pixels high on screen.
+		RULE_CHECK(std::abs(HeightRules::LevelHeight(8.0f, 32.0f, 30.0f) - 0.288675f) < 1e-4f);
+
+		// RayToLand: straight down onto a raised tile meets its top, elsewhere the ground; a flat ray meets the wall.
+		HeightMap tower(9, 9);
+		tower.Set(4, 4, 4);
+		glm::vec2 point(0.0f);
+		float z = -1.0f;
+		RULE_CHECK(HeightRules::RayToLand({ 0.0f, 0.0f, 50.0f }, { 0.0f, 0.0f, -1.0f }, tower, 1.0f, 15, point, z));
+		RULE_CHECK(std::abs(point.x - 4.5f) < 1e-3f && std::abs(point.y - 4.5f) < 1e-3f && z == 4.0f);
+		RULE_CHECK(HeightRules::RayToLand({ -3.0f, 3.0f, 50.0f }, { 0.0f, 0.0f, -1.0f }, tower, 1.0f, 15, point, z));
+		RULE_CHECK(std::abs(point.x - 1.5f) < 1e-3f && std::abs(point.y - 1.5f) < 1e-3f && z == 0.0f);
+		RULE_CHECK(HeightRules::RayToLand({ -3.0f, 0.0f, 2.0f }, { 1.0f, 0.0f, -0.01f }, tower, 1.0f, 15, point, z));
+		RULE_CHECK(point.x >= 4.0f && point.x < 4.3f && z == 4.0f);
+		RULE_CHECK(HeightRules::RayToLand({ 0.0f, 0.0f, 5.0f }, { 0.0f, 0.0f, 1.0f }, tower, 1.0f, 15, point, z) == false);
+		RULE_CHECK(HeightRules::RayToLand({ 40.0f, 0.0f, 5.0f }, { 0.0f, 0.0f, -1.0f }, tower, 1.0f, 15, point, z) == false);
+
+		// Generated levels follow the height noise: floor((noise - from) x levelsPerHeight), only where kept.
+		TerrainGenRules::Settings gen;
+		gen.Seed = 3;
+		gen.Width = 16;
+		gen.Height = 16;
+		const HeightMap generated = TerrainGenRules::Levels(gen, 0.0f, 10.0f, 15);
+		bool follows = true;
+		for (int i = 0; i < 16; i++)
+		{
+			const float noise = TerrainGenRules::Noise(i, 15 - i, gen.HeightScale, gen.Octaves, gen.Seed);
+			follows = follows && generated.Get(i, 15 - i) == (int)std::floor(noise * 10.0f);
+		}
+		std::vector<uint8_t> keep(256, 1);
+		keep[0] = 0;
+		const HeightMap kept = TerrainGenRules::Levels(gen, 0.0f, 10.0f, 15, keep);
+		RULE_CHECK(follows && kept.Get(0, 0) == 0 && kept.Get(1, 0) == generated.Get(1, 0) && generated.GetRevision() > 0);
+	}
+
+	static void TestGroundwater(int& checks)
+	{
+		// Generate: patches from the seed, the same every time; a share of the land high enough to spring.
+		GroundwaterRules::Settings settings; // springs from 0.78: heads 6 to 20, damp up to 0.12
+		const std::vector<uint8_t> first = GroundwaterRules::Generate(256, 256, 1, settings);
+		const std::vector<uint8_t> again = GroundwaterRules::Generate(256, 256, 1, settings);
+		const std::vector<uint8_t> other = GroundwaterRules::Generate(256, 256, 2, settings);
+		int springing = 0;
+		for (uint8_t value : first)
+		{
+			springing += GroundwaterRules::Springs(value, settings) ? 1 : 0;
+		}
+		const float share = (float)springing / (float)first.size();
+		RULE_CHECK(first.size() == 65536 && first == again && first != other && share > 0.04f && share < 0.2f);
+
+		// Above SpringFrom: a spring's head, the damp above, the clue (clarity scales it, clueFrom shows weaker spots).
+		RULE_CHECK(GroundwaterRules::Above(255, 0.7f) == 1.0f && GroundwaterRules::Above(178, 0.7f) == 0.0f);
+		RULE_CHECK(GroundwaterRules::Springs(199, settings) && GroundwaterRules::Springs(198, settings) == false);
+		RULE_CHECK(GroundwaterRules::SpringHead(255, settings) == 20.0f && GroundwaterRules::SpringHead(199, settings) < 6.1f);
+		RULE_CHECK(GroundwaterRules::Wetness(255, settings) == 31 && GroundwaterRules::Wetness(150, settings) == 0);
+		RULE_CHECK(GroundwaterRules::Clue(255, 0.25f, 0.7f) == 16 && GroundwaterRules::Clue(255, 1.0f, 0.7f) == 63);
+		RULE_CHECK(GroundwaterRules::Clue(150, 1.0f, 0.7f) == 0 && GroundwaterRules::Clue(150, 1.0f, 0.5f) == 11);
+		RULE_CHECK(GroundwaterRules::Clue(255, 0.0f, 0.7f) == 0);
+
+		// A riverbed dug over high groundwater springs: a source that fills the channel dug from it; over low groundwater
+		// a dug channel stays dry. The land above high groundwater keeps a little damp.
+		TileMap map(40, 7, 1);
+		std::vector<uint8_t> groundwater(map.GetTiles().size(), 60);
+		groundwater[(size_t)3 * 40 + 5] = 255;
+		groundwater[(size_t)0 * 40 + 38] = 255;
+		for (int x = 2; x <= 25; x++)
+		{
+			map.Set(x, 3, 5);
+		}
+		for (int x = 30; x <= 34; x++)
+		{
+			map.Set(x, 6, 5); // dug where the groundwater is low
+		}
+		map.TakeChanges();
+		const std::vector<uint8_t> land(map.GetTiles().size(), 1);
+		WaterRules::Settings water;
+		Hydrology hydrology = WaterRules::Start(map, land, water, nullptr, &groundwater);
+		RULE_CHECK(hydrology.Moisture[38] == 31 && hydrology.Moisture[37] == 0);
+		for (uint32_t i = 0; i < (uint32_t)map.GetTiles().size(); i++)
+		{
+			hydrology.Activate(i);
+		}
+		int sprung = 0;
+		for (int i = 0; i < 40; i++)
+		{
+			sprung += WaterRules::Step(map, hydrology, land, water).Sprung;
+		}
+		const size_t spring = (size_t)3 * 40 + 5;
+		RULE_CHECK(sprung == 1 && map.Get(5, 3) == 3 && hydrology.Source[spring] == 1 && hydrology.Head[spring] == 20.0f);
+		RULE_CHECK(map.Get(2, 3) == 3 && map.Get(24, 3) == 3 && map.Get(25, 3) == 5); // 19 tiles from a head of 20
+		RULE_CHECK(map.Get(30, 6) == 5 && map.Get(34, 6) == 5);
+
+		// Filling the spring in (here: back to dirt) ends it; the channel dries.
+		map.Set(5, 3, 1);
+		for (int i = 0; i < 40; i++)
+		{
+			WaterRules::Step(map, hydrology, land, water);
+		}
+		RULE_CHECK(hydrology.Source[spring] == 0 && map.Get(6, 3) == 5 && map.Get(20, 3) == 5);
+		std::printf("  Groundwater: %.1f%% of a 256 x 256 map springs where dug\n", share * 100.0f);
+	}
+
+	static void TestMountainRules(int& checks)
+	{
+		MountainRules::Settings settings; // rock 6 from level 4, snow 4 from level 9 (ragged 1.5), bare 1, melt reach 16
+		std::vector<TerrainTypeDefinition> roles(2);
+		roles[0].TileId = 9;
+		roles[0].Role = TerrainRole::Rock;
+		roles[0].FromLevel = 3;
+		roles[0].BelowTileId = 2;
+		roles[1].TileId = 8;
+		roles[1].Role = TerrainRole::Snow;
+		roles[1].FromLevel = 7;
+		MountainRules::Settings fromTypes = MountainRules::FromTypes(roles, settings);
+		RULE_CHECK(fromTypes.RockTileId == 9 && fromTypes.RockLevel == 3 && fromTypes.BareTileId == 2);
+		RULE_CHECK(fromTypes.SnowTileId == 8 && fromTypes.SnowLevel == 7);
+		roles[0].FromLevel = 0;
+		roles[0].BelowTileId = -1;
+		fromTypes = MountainRules::FromTypes(roles, settings);
+		RULE_CHECK(fromTypes.RockLevel == 4 && fromTypes.BareTileId == 1);
+
+		// LevelTile: below RockLevel the land keeps its type, rock from it, snow from the snowline.
+		MountainRules::Settings exact = settings;
+		exact.Ragged = 0.0f;
+		RULE_CHECK(MountainRules::LevelTile(0, 3, 3, exact) == -1 && MountainRules::LevelTile(3, 3, 3, exact) == -1);
+		RULE_CHECK(MountainRules::LevelTile(4, 3, 3, exact) == 6 && MountainRules::LevelTile(8, 3, 3, exact) == 6);
+		RULE_CHECK(MountainRules::LevelTile(9, 3, 3, exact) == 4 && MountainRules::LevelTile(15, 3, 3, exact) == 4);
+
+		// A cone of peak 12 on grass settles into a snow cap, a ring of rock and grass below; settling again changes nothing.
+		TileMap map(25, 25, 2);
+		const HeightMap cone = ConeHeights(25, 25, 12, 12, 12);
+		MountainRules::SettleReport report = MountainRules::Settle(map, cone, settings);
+		const int cap = CountTile(map, 4);
+		RULE_CHECK(report.Snowed == cap && report.Rocked == CountTile(map, 6) && report.Melted == 0 && report.Bared == 0);
+		RULE_CHECK(cap >= 13 && cap <= 37 && CountTile(map, 6) > cap);
+		RULE_CHECK(map.Get(12, 12) == 4 && map.Get(12, 6) == 6 && map.Get(12, 3) == 2 && map.Get(0, 0) == 2);
+		report = MountainRules::Settle(map, cone, settings);
+		RULE_CHECK(report.Snowed == 0 && report.Melted == 0 && report.Rocked == 0 && report.Bared == 0);
+
+		// Cut down to level 5 the snow melts to rock; to level 2 the rock goes bare (dirt), not back to grass.
+		report = MountainRules::Settle(map, CutHeights(cone, 5), settings);
+		RULE_CHECK(report.Melted == cap && CountTile(map, 4) == 0 && map.Get(12, 12) == 6);
+		report = MountainRules::Settle(map, CutHeights(cone, 2), settings);
+		RULE_CHECK(report.Bared > 0 && CountTile(map, 6) == 0 && map.Get(12, 12) == 1 && map.Get(12, 3) == 2);
+
+		// SettleTiles looks only at the listed tiles; without heights for the map nothing settles.
+		TileMap partial(25, 25, 2);
+		report = MountainRules::SettleTiles(partial, cone, { (uint32_t)(12 * 25 + 12), (uint32_t)(12 * 25 + 6) }, settings);
+		RULE_CHECK(report.Snowed == 1 && report.Rocked == 1 && partial.Get(12, 12) == 4 && partial.Get(12, 11) == 2);
+		TileMap unmeasured(25, 25, 2);
+		RULE_CHECK(MountainRules::Settle(unmeasured, HeightMap(3, 3, 9), settings).Rocked == 0 && CountTile(unmeasured, 6) == 0);
+
+		// The snowline is ragged by tile but fixed: within half of Ragged either way, the same every time.
+		bool within = true;
+		bool varies = false;
+		for (int i = 0; i < 50; i++)
+		{
+			const float line = MountainRules::SnowLine(i, i * 3, settings);
+			within = within && line >= 8.25f && line <= 9.75f && line == MountainRules::SnowLine(i, i * 3, settings);
+			varies = varies || std::abs(line - MountainRules::SnowLine(0, 0, settings)) > 0.1f;
+		}
+		RULE_CHECK(within && varies);
+
+		// Meltwater runs from the snow down the raised land within MeltReach, fading (255 at the snow, 1 at the reach), never
+		// onto the ground; no snow, none.
+		RULE_CHECK(MountainRules::MeltAt(0, settings) == 255 && MountainRules::MeltAt(8, settings) == 128);
+		RULE_CHECK(MountainRules::MeltAt(16, settings) == 1 && MountainRules::MeltAt(40, settings) == 1);
+		TileMap snowy(25, 25, 1);
+		MountainRules::Settle(snowy, cone, settings);
+		std::vector<uint8_t> melt = MountainRules::Meltwater(snowy, cone, settings);
+		const uint8_t peak = melt[(size_t)12 * 25 + 12];
+		const uint8_t slope = melt[(size_t)12 * 25 + 6];
+		const uint8_t foot = melt[(size_t)12 * 25 + 1];
+		RULE_CHECK(peak == 255 && slope < peak && foot > 0 && foot < slope && melt[(size_t)12 * 25 + 0] == 0);
+		MountainRules::Settings shortReach = settings;
+		shortReach.MeltReach = 2;
+		melt = MountainRules::Meltwater(snowy, cone, shortReach);
+		RULE_CHECK(melt[(size_t)12 * 25 + 12] == 255 && melt[(size_t)12 * 25 + 1] == 0);
+		TileMap bare(25, 25, 1);
+		const HeightMap hill = ConeHeights(25, 25, 12, 12, 6);
+		MountainRules::Settle(bare, hill, settings);
+		melt = MountainRules::Meltwater(bare, hill, settings);
+		int melting = 0;
+		for (uint8_t value : melt)
+		{
+			melting += value;
+		}
+		RULE_CHECK(melting == 0 && CountTile(bare, 6) > 0);
+		std::printf("  Mountains: a cone of 12 levels gets a cap of %d snow tiles from level 9\n", cap);
 	}
 
 	static void TestGrowthRules(int& checks)
@@ -515,6 +998,47 @@ namespace Hydro
 		ObjectRules::Step(dry, map, water, land, objects, byId, 5000, 0.0f, random);
 		RULE_CHECK(dry.GetCount() == 0);
 
+		// Height: MinLevel and MaxLevel bound where it lives (no heights: level 0); ChancePerLevel makes it likelier higher up.
+		HeightMap levels(12, 12);
+		levels.Set(3, 3, 2);
+		levels.Set(4, 4, 5);
+		ObjectDefinition highland = MakeObject(5, 2, 0.0f, -1, 0.0f);
+		highland.MinLevel = 1;
+		highland.MaxLevel = 3;
+		water.Moisture.assign(144, 200);
+		RULE_CHECK(ObjectRules::Fits(highland, map, water, 3, 3, &levels));
+		RULE_CHECK(ObjectRules::Fits(highland, map, water, 4, 4, &levels) == false); // too high
+		RULE_CHECK(ObjectRules::Fits(highland, map, water, 5, 5, &levels) == false); // too low
+		RULE_CHECK(ObjectRules::Fits(highland, map, water, 3, 3) == false); // no heights: level 0
+		ObjectDefinition climber = MakeObject(6, 2, 0.1f, -1, 0.0f);
+		climber.ChancePerLevel = 9.0f;
+		RULE_CHECK(ObjectRules::HeightFactor(climber, 0) == 1.0f && ObjectRules::HeightFactor(climber, 1) == 10.0f);
+		TileMap meadow(12, 12, 2);
+		HeightMap slope(12, 12);
+		for (int y = 0; y < 12; y++)
+		{
+			for (int x = 6; x < 12; x++)
+			{
+				slope.Set(x, y, 1); // the east half one level up: sprouts there at chance 1
+			}
+		}
+		ObjectLayer climbers;
+		climbers.Reset(144);
+		const std::vector<ObjectDefinition> climbing = { climber };
+		ObjectRules::Step(climbers, meadow, water, land, climbing, ObjectRules::IndexById(climbing), 400, 0.0f, random, &slope);
+		int low = 0;
+		int high = 0;
+		for (int y = 0; y < 12; y++)
+		{
+			for (int x = 0; x < 12; x++)
+			{
+				const int grown = climbers.Get((size_t)y * 12 + (size_t)x) != 0 ? 1 : 0;
+				low += x < 6 ? grown : 0;
+				high += x < 6 ? 0 : grown;
+			}
+		}
+		RULE_CHECK(high > 50 && low < high / 2);
+
 		// Scatter: StartDensity 1 places on every land tile that fits.
 		ObjectLayer rocks;
 		rocks.Reset(144);
@@ -525,13 +1049,17 @@ namespace Hydro
 
 	int TestGameRules(int& checks)
 	{
-		std::printf("Game rules: TileMap, TerrainGenRules, BrushRules, CameraRules, SimulationClock, WaterRules, GrowthRules, ObjectRules\n");
+		std::printf("Game rules: TileMap, TerrainGenRules, BrushRules, CameraRules, SimulationClock, WaterRules, HeightRules, "
+			"GroundwaterRules, MountainRules, GrowthRules, ObjectRules\n");
 		TestTileMap(checks);
 		TestTerrainGenRules(checks);
 		TestBrushRules(checks);
 		TestCameraRules(checks);
 		TestSimulationClock(checks);
 		TestWaterRules(checks);
+		TestHeightRules(checks);
+		TestGroundwater(checks);
+		TestMountainRules(checks);
 		TestGrowthRules(checks);
 		TestObjectRules(checks);
 

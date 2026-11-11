@@ -2,6 +2,7 @@
 
 #include "Data/ObjectDefinition.h"
 #include "Rules/BrushRules.h"
+#include "State/HeightMap.h"
 #include "State/ObjectLayer.h"
 
 #include "Hydro/Asset/AssetManager.h"
@@ -15,8 +16,8 @@
 
 namespace Hydro
 {
-	// Draws the object layer as upright sprites standing on their tiles. Only what the primary camera can see gets a sprite:
-	// a pool of entities under one "Objects" entity, reassigned when the view or the layer changes (at most 10 times a second).
+	// The object layer as upright sprites standing on their tiles, at their height. Only what the camera sees gets a sprite: a
+	// pool under one "Objects" entity, reassigned when the view, layer or heights change (at most 10 times a second).
 	class ObjectsView
 	{
 	public:
@@ -36,18 +37,21 @@ namespace Hydro
 				{
 					continue;
 				}
-				Ref<Texture2D> texture = AssetManager::GetAsset<Texture2D>(object.Sprite); // the renderer never loads
 				Look& look = m_Looks[(size_t)object.ObjectId];
-				look.Sprite = object.Sprite;
-				const float pixelsPerTile = object.PixelsPerTile > 0.0f ? object.PixelsPerTile : 24.0f;
-				look.Size = texture != nullptr
-					? glm::vec2((float)texture->GetWidth(), (float)texture->GetHeight()) / pixelsPerTile : glm::vec2(1.0f);
 				look.CastsShadow = object.CastsShadow;
+				const float pixelsPerTile = object.PixelsPerTile > 0.0f ? object.PixelsPerTile : 32.0f;
+				AddVariant(look, object.Sprite, pixelsPerTile);
+				for (AssetHandle variant : object.Variants)
+				{
+					AddVariant(look, variant, pixelsPerTile);
+				}
 			}
 		}
 
-		// centre: the map's centre in the world (the Terrain entity), its ground at centre.z.
-		void Present(const ObjectLayer& layer, int width, int height, const glm::vec3& centre, float deltaTime)
+		// centre: the map's centre in the world (the Terrain entity), its ground at centre.z; heights (nullptr: flat) raise
+		// each sprite levelHeight metres a level.
+		void Present(const ObjectLayer& layer, int width, int height, const glm::vec3& centre, float deltaTime,
+			const HeightMap* heights = nullptr, float levelHeight = 0.0f)
 		{
 			if (m_Scene == nullptr || m_Root.IsValid() == false || width <= 0 || height <= 0)
 			{
@@ -55,8 +59,9 @@ namespace Hydro
 			}
 			m_SinceRefresh += deltaTime;
 			glm::ivec4 rect(0, 0, width - 1, height - 1);
-			VisibleTiles(width, height, centre, rect);
-			const bool same = rect == m_Rect && layer.GetRevision() == m_Revision;
+			VisibleTiles(width, height, centre, heights != nullptr ? 12 : 4, rect); // raised land shows tiles from further down
+			const uint64_t heightRevision = heights != nullptr ? heights->GetRevision() : 0;
+			const bool same = rect == m_Rect && layer.GetRevision() == m_Revision && heightRevision == m_HeightRevision;
 			if (same || m_SinceRefresh < RefreshInterval)
 			{
 				return;
@@ -64,6 +69,7 @@ namespace Hydro
 			m_SinceRefresh = 0.0f;
 			m_Rect = rect;
 			m_Revision = layer.GetRevision();
+			m_HeightRevision = heightRevision;
 
 			int used = 0;
 			for (int y = rect.y; y <= rect.w && used < MaxSprites; y++)
@@ -72,21 +78,23 @@ namespace Hydro
 				{
 					const size_t index = (size_t)y * (size_t)width + (size_t)x;
 					const uint8_t id = layer.Get(index);
-					if (id == 0 || m_Looks[id].Sprite == 0)
+					if (id == 0 || m_Looks[id].Variants.empty())
 					{
 						continue;
 					}
 					Entity sprite = PoolSprite(used++);
-					const Look& look = m_Looks[id];
 					const uint32_t hash = Hash((uint32_t)index);
+					const Look& look = m_Looks[id];
+					const Variant& variant = look.Variants[(size_t)((hash >> 17) % (uint32_t)look.Variants.size())];
 					const glm::vec2 jitter((float)(hash & 255u) / 255.0f - 0.5f, (float)((hash >> 8) & 255u) / 255.0f - 0.5f);
 					TransformComponent& transform = sprite.GetComponent<TransformComponent>();
 					// The quad is centred on its position and stands up about its bottom edge: half its height up in Y.
 					transform.Translation = centre + glm::vec3((float)x + 0.5f - (float)width * 0.5f + jitter.x * 0.4f,
-						(float)height * 0.5f - (float)y - 0.5f + jitter.y * 0.4f + look.Size.y * 0.5f, 0.0f);
-					transform.Scale = glm::vec3(look.Size, 1.0f);
+						(float)height * 0.5f - (float)y - 0.5f + jitter.y * 0.4f + variant.Size.y * 0.5f,
+						heights != nullptr ? (float)heights->Get(x, y) * levelHeight : 0.0f);
+					transform.Scale = glm::vec3(variant.Size, 1.0f);
 					SpriteRendererComponent& renderer = sprite.GetComponent<SpriteRendererComponent>();
-					renderer.Texture = look.Sprite;
+					renderer.Texture = variant.Sprite;
 					renderer.CastShadows = look.CastsShadow;
 					renderer.FlipX = ((hash >> 16) & 1u) != 0;
 					renderer.Opacity = 1.0f;
@@ -113,12 +121,31 @@ namespace Hydro
 		}
 
 	private:
-		struct Look
+		struct Variant
 		{
 			AssetHandle Sprite = 0;
 			glm::vec2 Size{ 1.0f }; // in tiles
+		};
+
+		struct Look
+		{
+			std::vector<Variant> Variants; // a tile picks one by its hash, so it keeps its look
 			bool CastsShadow = true;
 		};
+
+		static void AddVariant(Look& look, AssetHandle sprite, float pixelsPerTile)
+		{
+			if (sprite == 0)
+			{
+				return;
+			}
+			Ref<Texture2D> texture = AssetManager::GetAsset<Texture2D>(sprite); // the renderer never loads
+			Variant variant;
+			variant.Sprite = sprite;
+			variant.Size = texture != nullptr
+				? glm::vec2((float)texture->GetWidth(), (float)texture->GetHeight()) / pixelsPerTile : glm::vec2(1.0f);
+			look.Variants.push_back(variant);
+		}
 
 		static uint32_t Hash(uint32_t value)
 		{
@@ -144,9 +171,9 @@ namespace Hydro
 			return m_Pool[(size_t)index];
 		}
 
-		// The tiles (x0, y0, x1, y1) under the primary camera's view, a few tiles wider for tall sprites; the whole map
-		// when there is no camera or a corner's ray misses the ground.
-		void VisibleTiles(int width, int height, const glm::vec3& centre, glm::ivec4& rect) const
+		// The tiles (x0, y0, x1, y1) under the primary camera's view, `margin` tiles wider for tall sprites and hills; the whole
+		// map when there is no camera or a corner's ray misses the ground.
+		void VisibleTiles(int width, int height, const glm::vec3& centre, int margin, glm::ivec4& rect) const
 		{
 			Entity camera = m_Scene->GetPrimaryCameraEntity();
 			if ((bool)camera == false)
@@ -173,7 +200,6 @@ namespace Hydro
 				low = glm::min(low, point);
 				high = glm::max(high, point);
 			}
-			const int margin = 4;
 			rect.x = Clamp((int)low.x - margin, 0, width - 1);
 			rect.y = Clamp((int)low.y - margin, 0, height - 1);
 			rect.z = Clamp((int)high.x + margin, 0, width - 1);
@@ -191,6 +217,7 @@ namespace Hydro
 		std::vector<Look> m_Looks;
 		glm::ivec4 m_Rect{ -1 };
 		uint64_t m_Revision = ~0ull;
+		uint64_t m_HeightRevision = ~0ull;
 		int m_Shown = 0;
 		float m_SinceRefresh = 1.0f;
 	};

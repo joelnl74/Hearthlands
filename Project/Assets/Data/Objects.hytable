@@ -8,13 +8,17 @@ DataTable:
       ObjectId: 1
       Kind: Shrub
       Sprite: 4676796257053418476
-      PixelsPerTile: 24
+      Variants: [7018627806029147811, 1863535930361540935, 127273197809847269, 419055692889807037, 524203561096052233, 639570316957293590, 6936754996733727546]
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: 2
       MinMoisture: 0.25
       MaxMoisture: 1
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
       SproutChance: 0.006
       MinSpacing: 1
       SpreadFromObjectId: 1
@@ -27,13 +31,17 @@ DataTable:
       ObjectId: 2
       Kind: Shrub
       Sprite: 7753678653474101295
-      PixelsPerTile: 24
+      Variants: [6663697718562803283, 1967786282327510299, 3108256299541671572, 6688826233481176574, 8077679123166048802]
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: 2
       MinMoisture: 0.45
       MaxMoisture: 1
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 3
+      ChancePerLevel: 0
       SproutChance: 0.002
       MinSpacing: 1
       SpreadFromObjectId: 2
@@ -46,36 +54,21 @@ DataTable:
       ObjectId: 3
       Kind: Shrub
       Sprite: 2773745449556954995
-      PixelsPerTile: 24
+      Variants: [4774065763916634904, 1590899515888422659, 2177826625727091568, 8496572301411893021]
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: 2
       MinMoisture: 0.35
       MaxMoisture: 1
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
       SproutChance: 0.002
       MinSpacing: 1
       SpreadFromObjectId: 3
       SpreadChance: 0.01
-      GrowsIntoObjectId: -1
-      GrowDays: 0
-      StartDensity: 0
-    Reeds:
-      Name: Reeds
-      ObjectId: 4
-      Kind: Ground
-      Sprite: 2884120835002945532
-      PixelsPerTile: 24
-      CastsShadow: false
-      GrowsOnTileId: 2
-      MinMoisture: 0
-      MaxMoisture: 1
-      NeighbourTileId: 3
-      MinNeighbours: 1
-      SproutChance: 0.02
-      MinSpacing: 1
-      SpreadFromObjectId: -1
-      SpreadChance: 0
       GrowsIntoObjectId: -1
       GrowDays: 0
       StartDensity: 0
@@ -84,13 +77,17 @@ DataTable:
       ObjectId: 5
       Kind: Tree
       Sprite: 8532669733780234467
-      PixelsPerTile: 24
+      Variants: [1682611982957429524, 7006105588896421788, 6776312961782489639, 7858185484293771132]
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: 2
       MinMoisture: 0.4
       MaxMoisture: 1
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 2
+      ChancePerLevel: 0
       SproutChance: 0.003
       MinSpacing: 1
       SpreadFromObjectId: 7
@@ -103,13 +100,17 @@ DataTable:
       ObjectId: 6
       Kind: Tree
       Sprite: 8338533491197929341
-      PixelsPerTile: 24
+      Variants: [7090466201744778593, 2367580213271555500, 2732428063398774509, 4962886237179460627, 1037799671179777144, 5948309033087771505, 8571154789897144562]
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: 2
       MinMoisture: 0.3
       MaxMoisture: 1
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 2
+      ChancePerLevel: 0
       SproutChance: 0
       MinSpacing: 2
       SpreadFromObjectId: -1
@@ -122,13 +123,17 @@ DataTable:
       ObjectId: 7
       Kind: Tree
       Sprite: 7277771436573438092
-      PixelsPerTile: 24
+      Variants: [5832189581567899596, 775749213752288401, 6405397501426250304, 2471713047330608687, 3123331135868770951, 7358033493471566662, 5519233157081905830]
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: 2
       MinMoisture: 0.25
       MaxMoisture: 1
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 2
+      ChancePerLevel: 0
       SproutChance: 0
       MinSpacing: 2
       SpreadFromObjectId: -1
@@ -141,13 +146,17 @@ DataTable:
       ObjectId: 8
       Kind: Tree
       Sprite: 7552205202730582326
-      PixelsPerTile: 24
+      Variants: [5668128662364617183, 7539873633714786702]
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: 2
       MinMoisture: 0.3
       MaxMoisture: 0.8
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 3
+      ChancePerLevel: 0
       SproutChance: 0.002
       MinSpacing: 1
       SpreadFromObjectId: 10
@@ -160,13 +169,17 @@ DataTable:
       ObjectId: 9
       Kind: Tree
       Sprite: 6232927256167423626
-      PixelsPerTile: 24
+      Variants: []
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: 2
       MinMoisture: 0.25
       MaxMoisture: 0.9
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 3
+      ChancePerLevel: 0
       SproutChance: 0
       MinSpacing: 2
       SpreadFromObjectId: -1
@@ -179,13 +192,17 @@ DataTable:
       ObjectId: 10
       Kind: Tree
       Sprite: 6392540832420470789
-      PixelsPerTile: 24
+      Variants: [7307046814554385134, 1308735029924049225, 613999168883102245, 6564266456404248832, 2211967906256050509, 6467813110055298978, 3523743279701941982]
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: 2
       MinMoisture: 0.2
       MaxMoisture: 1
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 3
+      ChancePerLevel: 0
       SproutChance: 0
       MinSpacing: 2
       SpreadFromObjectId: -1
@@ -198,13 +215,17 @@ DataTable:
       ObjectId: 11
       Kind: Tree
       Sprite: 8031651023633989468
-      PixelsPerTile: 24
+      Variants: [6094133460921349862]
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: 2
       MinMoisture: 0.15
       MaxMoisture: 0.5
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 1.0
       SproutChance: 0.002
       MinSpacing: 1
       SpreadFromObjectId: 12
@@ -217,13 +238,17 @@ DataTable:
       ObjectId: 12
       Kind: Tree
       Sprite: 6262098611372061612
-      PixelsPerTile: 24
+      Variants: [7186043462684984199, 2841764018598193836, 7633957573740987179, 2846269374606397247, 5315142454695340198, 3242092387816268961, 3289730393926851230, 4686210624643891019, 260851752331345346]
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: 2
       MinMoisture: 0.1
       MaxMoisture: 0.6
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
       SproutChance: 0
       MinSpacing: 2
       SpreadFromObjectId: -1
@@ -236,13 +261,17 @@ DataTable:
       ObjectId: 13
       Kind: Rock
       Sprite: 766085472757868230
-      PixelsPerTile: 24
+      Variants: [4873460038171480617, 2191405797690721229, 966167376844388546, 1248732287930367957, 2356339462065705325, 5199699961494223894, 4948529776942455316, 8668629674586678222]
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: -1
       MinMoisture: 0
       MaxMoisture: 1
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
       SproutChance: 0
       MinSpacing: 1
       SpreadFromObjectId: -1
@@ -255,13 +284,17 @@ DataTable:
       ObjectId: 14
       Kind: Rock
       Sprite: 4017436323842899392
-      PixelsPerTile: 24
+      Variants: [1129896216246219917, 5161386448413097135]
+      PixelsPerTile: 32
       CastsShadow: true
       GrowsOnTileId: -1
       MinMoisture: 0
       MaxMoisture: 1
       NeighbourTileId: -1
       MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
       SproutChance: 0
       MinSpacing: 2
       SpreadFromObjectId: -1
@@ -269,3 +302,210 @@ DataTable:
       GrowsIntoObjectId: -1
       GrowDays: 0
       StartDensity: 0.0006
+    FoothillPine:
+      Name: FoothillPine
+      ObjectId: 15
+      Kind: Tree
+      Sprite: 6262098611372061612
+      Variants: [7186043462684984199, 2841764018598193836, 7633957573740987179, 2846269374606397247, 5315142454695340198, 3242092387816268961, 3289730393926851230, 4686210624643891019, 260851752331345346]
+      PixelsPerTile: 32
+      CastsShadow: true
+      GrowsOnTileId: 2
+      MinMoisture: 0.05
+      MaxMoisture: 0.7
+      NeighbourTileId: 6
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0.5
+      SproutChance: 0.01
+      MinSpacing: 1
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      StartDensity: 0
+    RockPine:
+      Name: RockPine
+      ObjectId: 16
+      Kind: Tree
+      Sprite: 6262098611372061612
+      Variants: [7186043462684984199, 2841764018598193836, 7633957573740987179, 2846269374606397247, 5315142454695340198, 3242092387816268961, 3289730393926851230, 4686210624643891019, 260851752331345346]
+      PixelsPerTile: 32
+      CastsShadow: true
+      GrowsOnTileId: 2
+      MinMoisture: 0.15
+      MaxMoisture: 0.7
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 2
+      MaxLevel: 3
+      ChancePerLevel: 0
+      SproutChance: 0.002
+      MinSpacing: 2
+      SpreadFromObjectId: 16
+      SpreadChance: 0.04
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      StartDensity: 0
+    Scree:
+      Name: Scree
+      ObjectId: 17
+      Kind: Rock
+      Sprite: 766085472757868230
+      Variants: [4873460038171480617, 2191405797690721229, 966167376844388546, 1248732287930367957, 2356339462065705325, 5199699961494223894, 4948529776942455316, 8668629674586678222]
+      PixelsPerTile: 32
+      CastsShadow: true
+      GrowsOnTileId: 6
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0.0008
+      MinSpacing: 2
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      StartDensity: 0
+    Crag:
+      Name: Crag
+      ObjectId: 18
+      Kind: Rock
+      Sprite: 4017436323842899392
+      Variants: [1129896216246219917, 5161386448413097135]
+      PixelsPerTile: 32
+      CastsShadow: true
+      GrowsOnTileId: 6
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0.0003
+      MinSpacing: 3
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      StartDensity: 0
+    GrassTuft:
+      Name: GrassTuft
+      ObjectId: 19
+      Kind: Ground
+      Sprite: 5772838441386917702
+      Variants: [852275252815387055, 3748289984286445730]
+      PixelsPerTile: 32
+      CastsShadow: false
+      GrowsOnTileId: 2
+      MinMoisture: 0.2
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0.003
+      MinSpacing: 2
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      StartDensity: 0
+    Fern:
+      Name: Fern
+      ObjectId: 20
+      Kind: Ground
+      Sprite: 994912467015721220
+      Variants: [9031534574695392979, 8492464126493656400]
+      PixelsPerTile: 32
+      CastsShadow: true
+      GrowsOnTileId: 2
+      MinMoisture: 0.65
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0.003
+      MinSpacing: 2
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      StartDensity: 0
+    Willow:
+      Name: Willow
+      ObjectId: 21
+      Kind: Tree
+      Sprite: 2666807322502995905
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      GrowsOnTileId: 2
+      MinMoisture: 0.6
+      MaxMoisture: 1
+      NeighbourTileId: 3
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 0
+      ChancePerLevel: 0
+      SproutChance: 0.0006
+      MinSpacing: 3
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      StartDensity: 0
+    DeadTree:
+      Name: DeadTree
+      ObjectId: 22
+      Kind: Tree
+      Sprite: 6606380482930637734
+      Variants: [7252821678082267258, 2329117106416138486, 7652615576399070770, 3682914596221471265, 5223707974687595954, 3134745671690320554, 3495188552463178050, 7025612418743016725, 3576085421036196692, 3682878238581612683]
+      PixelsPerTile: 32
+      CastsShadow: true
+      GrowsOnTileId: 1
+      MinMoisture: 0
+      MaxMoisture: 0.4
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 3
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      StartDensity: 0.0015
+    DeadBush:
+      Name: DeadBush
+      ObjectId: 23
+      Kind: Shrub
+      Sprite: 5582877885377214030
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      GrowsOnTileId: 1
+      MinMoisture: 0
+      MaxMoisture: 0.4
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 2
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      StartDensity: 0.002

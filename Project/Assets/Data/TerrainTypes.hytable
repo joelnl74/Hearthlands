@@ -12,6 +12,9 @@ DataTable:
       StartsUnlocked: false
       UnlockTileId: -1
       UnlockCount: 0
+      FromLevel: 0
+      BelowTileId: -1
+      CliffColor: [0.72, 0.62, 0.42]
       Generated: true
       MinHeight: 0.35
       MaxHeight: 0.45
@@ -26,6 +29,9 @@ DataTable:
       StartsUnlocked: true
       UnlockTileId: -1
       UnlockCount: 0
+      FromLevel: 0
+      BelowTileId: -1
+      CliffColor: [0.4, 0.29, 0.2]
       Generated: true
       MinHeight: 0.45
       MaxHeight: 0.55
@@ -40,9 +46,13 @@ DataTable:
       StartsUnlocked: false
       UnlockTileId: 2
       UnlockCount: 400
+      Shelter: 0.15
+      FromLevel: 0
+      BelowTileId: -1
+      CliffColor: [0.42, 0.31, 0.21]
       Generated: true
       MinHeight: 0.55
-      MaxHeight: 0.85
+      MaxHeight: 0.7
       MinMoisture: 0
       MaxMoisture: 1
     Water:
@@ -54,6 +64,9 @@ DataTable:
       StartsUnlocked: false
       UnlockTileId: -1
       UnlockCount: 0
+      FromLevel: 0
+      BelowTileId: -1
+      CliffColor: [0.3, 0.3, 0.35]
       Generated: true
       MinHeight: 0.0
       MaxHeight: 0.35
@@ -62,15 +75,18 @@ DataTable:
     Snow:
       Name: Snow
       TileId: 4
-      Role: Land
+      Role: Snow
       Color: [0.91, 0.94, 0.97]
-      Priority: 4
+      Priority: 6
       StartsUnlocked: false
       UnlockTileId: -1
       UnlockCount: 0
-      Generated: true
-      MinHeight: 0.85
-      MaxHeight: 1.0
+      FromLevel: 9
+      BelowTileId: 6
+      CliffColor: [0.8, 0.84, 0.9]
+      Generated: false
+      MinHeight: 0.0
+      MaxHeight: 0.0
       MinMoisture: 0
       MaxMoisture: 1
     Riverbed:
@@ -83,8 +99,29 @@ DataTable:
       StartsUnlocked: true
       UnlockTileId: -1
       UnlockCount: 0
+      FromLevel: 0
+      BelowTileId: -1
+      CliffColor: [0.33, 0.25, 0.19]
       Generated: false
       MinHeight: 0.0
       MaxHeight: 0.0
+      MinMoisture: 0
+      MaxMoisture: 1
+    Rock:
+      Name: Rock
+      BrushName: Raise
+      TileId: 6
+      Role: Rock
+      Color: [0.52, 0.51, 0.5]
+      Priority: 5
+      StartsUnlocked: false
+      UnlockTileId: 2
+      UnlockCount: 1500
+      FromLevel: 4
+      BelowTileId: 1
+      CliffColor: [0.42, 0.41, 0.4]
+      Generated: true
+      MinHeight: 0.7
+      MaxHeight: 1.0
       MinMoisture: 0
       MaxMoisture: 1

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Hydro/Scene/GameSession.h"
+#include "State/HeightMap.h"
 #include "State/Hydrology.h"
 #include "State/ObjectLayer.h"
 #include "State/Random.h"
@@ -30,8 +31,13 @@ namespace Hydro
 		}
 
 		TileMap Map;                        // the world's terrain tile ids
+		HeightMap Heights;                  // the land's height in levels per tile, like Map (sized with it by WorldScript)
+		float LevelHeight = 0.2887f;        // metres a level stands (WorldScript::LevelHeight)
 		std::vector<uint8_t> UnlockedTiles; // the tile ids the player can paint, ascending (empty until the world starts)
 		std::vector<uint8_t> Land;          // per tile like Map's tiles: 1 inside the coast (paintable), 0 for the sea
+		std::vector<uint8_t> Groundwater;   // per tile like Map's tiles: the hidden water under it (GroundwaterRules)
+		float ClueClarity = 0.25f;          // how plainly the surface shows groundwater: 0 not, 1 plainly (talents raise it)
+		float ClueFrom = 0.78f;             // groundwater (0 to 1) from which it shows at all (talents lower it: find more)
 		BrushSettings Brush;
 		SimulationClock Clock;
 		bool PointerOverHud = false;        // this frame's: the pointer is over a HUD panel, so the brush doesn't paint
@@ -39,5 +45,6 @@ namespace Hydro
 		ObjectLayer Objects;                // what stands on each tile (bushes, trees, rocks)
 		Random Rng{ 1 };                    // the simulation's dice, seeded from the world's seed
 		bool ShowMoisture = false;          // the moisture overlay (M)
+		bool MountainsChanged = false;      // the land's height changed: where meltwater runs is worked out again soon
 	};
 }

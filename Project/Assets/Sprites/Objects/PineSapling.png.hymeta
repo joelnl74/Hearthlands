@@ -5,4 +5,4 @@ TextureImport:
   Filter: Nearest
   Wrap: Clamp
   SpriteMode: Single
-  PixelsPerUnit: 24
+  PixelsPerUnit: 32
