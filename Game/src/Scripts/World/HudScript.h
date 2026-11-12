@@ -92,6 +92,10 @@ namespace Hydro
 		void OnUpdate(float deltaTime) override
 		{
 			HearthlandsSession& session = HearthlandsSession::Get();
+			if (session.Loading)
+			{
+				return; // a save was loaded: the scene starts again with it
+			}
 			const TimedScope timed(session.Timings, TimedPart::Hud);
 			if (session.UnlockedTiles != m_Unlocked)
 			{

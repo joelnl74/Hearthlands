@@ -161,6 +161,10 @@ namespace Hydro
 		void OnUpdate(float deltaTime) override
 		{
 			HearthlandsSession& session = HearthlandsSession::Get();
+			if (session.Loading)
+			{
+				return; // a save was loaded: the scene starts again with it
+			}
 			if (session.Map.GetWidth() == 0)
 			{
 				return;

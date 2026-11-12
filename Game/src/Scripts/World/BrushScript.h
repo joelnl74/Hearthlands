@@ -47,6 +47,10 @@ namespace Hydro
 		void OnUpdate([[maybe_unused]] float deltaTime) override
 		{
 			HearthlandsSession& session = HearthlandsSession::Get();
+			if (session.Loading)
+			{
+				return; // a save was loaded: the scene starts again with it
+			}
 			const Scene::UIPointer& pointer = GetEntity().GetScene()->GetUIPointer();
 			glm::vec2 point(0.0f);
 			float pointZ = 0.0f;

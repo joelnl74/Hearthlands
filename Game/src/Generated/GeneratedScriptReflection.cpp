@@ -78,7 +78,8 @@ namespace Hydro
 			.Property("Talents", "Talents", &WorldMenuScript::Talents).Tooltip("What talent points buy").AssetFilter(AssetType::DataTable).DataTypeFilter("TalentDefinition")
 			.Property("Milestones", "Milestones", &WorldMenuScript::Milestones).Tooltip("What gives talent points (the same table as SimulationScript's)").AssetFilter(AssetType::DataTable).DataTypeFilter("MilestoneDefinition")
 			.Property("Animals", "Animals", &WorldMenuScript::Animals).Tooltip("The species (the same table as SimulationScript's)").AssetFilter(AssetType::DataTable).DataTypeFilter("AnimalDefinition")
-			.Property("PauseInMenu", "Pause In Menu", &WorldMenuScript::PauseInMenu).Tooltip("Stop the clock while the menu is open (Settings > Gameplay)");
+			.Property("PauseInMenu", "Pause In Menu", &WorldMenuScript::PauseInMenu).Tooltip("Stop the clock while the menu is open (Settings > Gameplay)")
+			.Property("WorldScene", "World Scene", &WorldMenuScript::WorldScene).Tooltip("The world's scene (its file name): loading a save starts it again with the loaded run");
 
 		ScriptRegistry::Register<WorldScript>("WorldScript")
 			.Property("TerrainTypes", "Terrain Types", &WorldScript::TerrainTypes).Tooltip("The terrain types generation picks from and the shader draws").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")

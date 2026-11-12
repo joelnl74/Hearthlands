@@ -70,6 +70,9 @@ namespace Hydro
 		int RenameRequested = 0;            // a settlement to take the next name from its people's list (SimulationScript)
 		bool FocusRequested = false;        // the camera moves to FocusTile once (CameraScript)
 		glm::vec2 FocusTile{ 0.0f };
+		glm::vec2 CameraTile{ 0.0f };       // the map tile the camera looks at, and its zoom step (CameraScript; saved)
+		int CameraZoom = -1;                // -1: the camera's own starting zoom
+		bool Loading = false;               // a save was just loaded: the world's scene starts again (scripts wait for it)
 		std::vector<std::string> Notices;   // short news for the HUD, oldest first (HudScript shows and clears them)
 		Random Rng{ 1 };                    // the simulation's dice, seeded from the world's seed
 		bool ShowMoisture = false;          // the moisture overlay (M)
