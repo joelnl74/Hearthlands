@@ -78,6 +78,9 @@ namespace Hydro
 		int EvolveHave = 0;      // what that branch needs near, counted (old trees) ...
 		int EvolveWant = 0;      // ... and how many
 		bool EvolveAllowed = false; // a talent lets that branch arise
+		std::vector<int> Buildings; // BuildingIds standing near the centre, found on the last update (BuildingRules)
+		int Planned = 0;            // the BuildingId the builders put up next (0 none): known, allowed and needed
+		int FieldsMost = 0;         // fields the farmers work: their people's FieldsWorked and a barn's (FarmRules)
 	};
 
 	// Where a settlement stood until it emptied: new groups keep away while the memory lasts.

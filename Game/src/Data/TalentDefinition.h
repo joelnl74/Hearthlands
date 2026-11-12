@@ -42,7 +42,8 @@ namespace Hydro
 		GroundwaterView, // 1: the Inspect bar's groundwater overlay (G)
 		OldGrowth,     // 1: grown trees under a closed canopy become ancient in time (old woods)
 		FeudCalm,      // + share less tension between peoples who can't stand each other (0.5 = half as fast)
-		Evolve         // 1: TargetId's people (a branch: EvolvesFromId) may arise from the people it branches from
+		Evolve,        // 1: TargetId's people (a branch: EvolvesFromId) may arise from the people it branches from
+		Building       // TargetId's people may build the building with BuildingId = Amount (Buildings.hytable)
 	};
 
 	HY_DATA(Table, DisplayField(Name))

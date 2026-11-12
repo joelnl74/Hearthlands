@@ -40,6 +40,7 @@ namespace Hydro
 			.Property("TerrainTypes", "Terrain Types", &HudScript::TerrainTypes).Tooltip("The brushes' names and colours").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
 			.Property("Milestones", "Milestones", &HudScript::Milestones).Tooltip("What gives talent points (the same table as SimulationScript's)").AssetFilter(AssetType::DataTable).DataTypeFilter("MilestoneDefinition")
 			.Property("Peoples", "Peoples", &HudScript::Peoples).Tooltip("The peoples, for the settlement panels (as SimulationScript's)").AssetFilter(AssetType::DataTable).DataTypeFilter("PeopleDefinition")
+			.Property("Buildings", "Buildings", &HudScript::Buildings).Tooltip("What the peoples build (the settlement panel lists them)").AssetFilter(AssetType::DataTable).DataTypeFilter("BuildingDefinition")
 			.Property("Animals", "Animals", &HudScript::Animals).Tooltip("The wild animals, for discoveries (the same table as SimulationScript's)").AssetFilter(AssetType::DataTable).DataTypeFilter("AnimalDefinition");
 
 		ScriptRegistry::Register<SimulationScript>("SimulationScript")
@@ -50,6 +51,7 @@ namespace Hydro
 			.Property("Seasons", "Seasons", &SimulationScript::Seasons).Tooltip("The year: rivers, snowline, growth and colours by season").AssetFilter(AssetType::DataTable).DataTypeFilter("SeasonDefinition")
 			.Property("Animals", "Animals", &SimulationScript::Animals).Tooltip("The wild animals: where they live, how they grow and spread").AssetFilter(AssetType::DataTable).DataTypeFilter("AnimalDefinition")
 			.Property("Peoples", "Peoples", &SimulationScript::Peoples).Tooltip("The peoples: what they need, gather, hunt and build").AssetFilter(AssetType::DataTable).DataTypeFilter("PeopleDefinition")
+			.Property("Buildings", "Buildings", &SimulationScript::Buildings).Tooltip("What the peoples build besides shelters, and the talents that allow it").AssetFilter(AssetType::DataTable).DataTypeFilter("BuildingDefinition")
 			.Property("FireObjectId", "Fire Object Id", &SimulationScript::FireObjectId).Range(1.0f, 255.0f).Tooltip("The centre object of a people without their own CentreObjectId (Objects table)")
 			.Property("RegionsPerTick", "Regions Per Tick", &SimulationScript::RegionsPerTick).Range(1.0f, 1024.0f).Tooltip("Regions of the map whose animals are worked out each tick")
 			.Property("BlendDays", "Blend Days", &SimulationScript::BlendDays).Range(0.0f, 10.0f).Tooltip("Days at the end of each season over which it turns into the next")
@@ -78,6 +80,7 @@ namespace Hydro
 			.Property("Talents", "Talents", &WorldMenuScript::Talents).Tooltip("What talent points buy").AssetFilter(AssetType::DataTable).DataTypeFilter("TalentDefinition")
 			.Property("Milestones", "Milestones", &WorldMenuScript::Milestones).Tooltip("What gives talent points (the same table as SimulationScript's)").AssetFilter(AssetType::DataTable).DataTypeFilter("MilestoneDefinition")
 			.Property("Animals", "Animals", &WorldMenuScript::Animals).Tooltip("The species (the same table as SimulationScript's)").AssetFilter(AssetType::DataTable).DataTypeFilter("AnimalDefinition")
+			.Property("Buildings", "Buildings", &WorldMenuScript::Buildings).Tooltip("The buildings talents let a people build (their names)").AssetFilter(AssetType::DataTable).DataTypeFilter("BuildingDefinition")
 			.Property("PauseInMenu", "Pause In Menu", &WorldMenuScript::PauseInMenu).Tooltip("Stop the clock while the menu is open (Settings > Gameplay)")
 			.Property("WorldScene", "World Scene", &WorldMenuScript::WorldScene).Tooltip("The world's scene (its file name): loading a save starts it again with the loaded run");
 

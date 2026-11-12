@@ -197,7 +197,7 @@ namespace Hydro
 		// `farmerDays` of work (carried in settlement.FarmWork): the ripe fields nearest the centre harvested first, then in
 		// a sowing season empty ones sown. A harvest gives CropFood times the field's soil (0.5 to 2) and wears the soil.
 		static Work Tend(const SettlementRules::World& world, const PeopleDefinition& people, Settlement& settlement,
-			const std::vector<size_t>& farmland, float farmerDays)
+			const std::vector<size_t>& farmland, float farmerDays, int most = 1 << 30)
 		{
 			Work work;
 			const int last = (int)people.CropObjectIds.size() - 1;
@@ -224,9 +224,14 @@ namespace Hydro
 				settlement.FarmWork -= 1.0f / harvestDay;
 				work.Harvested++;
 			}
+			int worked = 0; // fields with a crop: they sow no more than `most` (their people's FieldsWorked, more with a barn)
 			for (size_t index : farmland)
 			{
-				if (world.Sowing == false || settlement.FarmWork < 1.0f / sowDay)
+				worked += Stage(people, world.Objects->Get(index)) >= 0 ? 1 : 0;
+			}
+			for (size_t index : farmland)
+			{
+				if (world.Sowing == false || settlement.FarmWork < 1.0f / sowDay || worked >= most)
 				{
 					break;
 				}
@@ -237,6 +242,7 @@ namespace Hydro
 				world.Objects->Set(index, (uint8_t)people.CropObjectIds[0]);
 				settlement.FarmWork -= 1.0f / sowDay;
 				work.Sown++;
+				worked++;
 			}
 			settlement.FarmWork = std::clamp(settlement.FarmWork, 0.0f, 1.0f); // idle farmers don't save up work
 			return work;
@@ -274,7 +280,9 @@ namespace Hydro
 			if (Farms(*people, settlement))
 			{
 				const float farmers = (float)SettlementRules::Workers(settlement, VillagerJob::Farmer);
-				const Work tended = Tend(world, *people, settlement, farmland, farmers * days);
+				const int barn = world.Buildings != nullptr ? BuildingRules::Of(*world.Buildings, settlement).Fields : 0;
+				settlement.FieldsMost = std::max(0, people->FieldsWorked + barn);
+				const Work tended = Tend(world, *people, settlement, farmland, farmers * days, settlement.FieldsMost);
 				work.Sown = tended.Sown;
 				work.Harvested = tended.Harvested;
 				work.Food = tended.Food;

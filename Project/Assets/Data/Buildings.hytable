@@ -1,0 +1,140 @@
+Handle: 5318008417246625193
+DataTable:
+  Version: 1
+  Type: BuildingDefinition
+  Rows:
+    Granary:
+      Name: "Granary"
+      BuildingId: 1
+      PeopleId: 1
+      Kind: Store
+      ObjectId: 75
+      RequiresTalentId: 46
+      MinLevel: 0
+      Wood: 6
+      RingFrom: 2
+      RingTo: 4
+      StoreDays: 6
+      HuntKeep: 0
+      Fields: 0
+      Description: "Holds six more days of food"
+    HuntingLodge:
+      Name: "Hunting lodge"
+      BuildingId: 2
+      PeopleId: 1
+      Kind: HuntingLodge
+      ObjectId: 76
+      RequiresTalentId: 47
+      MinLevel: 0
+      Wood: 6
+      RingFrom: 4
+      RingTo: 7
+      StoreDays: 0
+      HuntKeep: 0.5
+      Fields: 0
+      Description: "Half again as much meat from each animal"
+    Barn:
+      Name: "Barn"
+      BuildingId: 3
+      PeopleId: 1
+      Kind: Barn
+      ObjectId: 77
+      RequiresTalentId: 45
+      MinLevel: 1
+      Wood: 10
+      RingFrom: 3
+      RingTo: 6
+      StoreDays: 0
+      HuntKeep: 0
+      Fields: 24
+      Description: "Farmers work 24 more fields"
+    LarderBower:
+      Name: "Larder bower"
+      BuildingId: 4
+      PeopleId: 4
+      Kind: Store
+      ObjectId: 78
+      RequiresTalentId: 48
+      MinLevel: 0
+      Wood: 4
+      RingFrom: 2
+      RingTo: 4
+      StoreDays: 6
+      HuntKeep: 0
+      Fields: 0
+      Description: "Holds six more days of food"
+    HuntersBlind:
+      Name: "Hunters' blind"
+      BuildingId: 5
+      PeopleId: 4
+      Kind: HuntingLodge
+      ObjectId: 79
+      RequiresTalentId: 49
+      MinLevel: 0
+      Wood: 3
+      RingFrom: 5
+      RingTo: 8
+      StoreDays: 0
+      HuntKeep: 0.5
+      Fields: 0
+      Description: "Half again as much meat from each animal"
+    SeedHollow:
+      Name: "Seed hollow"
+      BuildingId: 6
+      PeopleId: 2
+      Kind: Store
+      ObjectId: 80
+      RequiresTalentId: 50
+      MinLevel: 0
+      Wood: 0
+      RingFrom: 2
+      RingTo: 4
+      StoreDays: 8
+      HuntKeep: 0
+      Fields: 0
+      Description: "Holds eight more days of food"
+    WoodlandBlind:
+      Name: "Woodland blind"
+      BuildingId: 7
+      PeopleId: 2
+      Kind: HuntingLodge
+      ObjectId: 79
+      RequiresTalentId: 51
+      MinLevel: 0
+      Wood: 0
+      RingFrom: 5
+      RingTo: 8
+      StoreDays: 0
+      HuntKeep: 0.5
+      Fields: 0
+      Description: "Half again as much meat from each animal"
+    ColdCellar:
+      Name: "Cold cellar"
+      BuildingId: 8
+      PeopleId: 3
+      Kind: Store
+      ObjectId: 81
+      RequiresTalentId: 52
+      MinLevel: 0
+      Wood: 4
+      RingFrom: 2
+      RingTo: 4
+      StoreDays: 8
+      HuntKeep: 0
+      Fields: 0
+      Description: "Holds eight more days of food"
+    StoneLodge:
+      Name: "Stone lodge"
+      BuildingId: 9
+      PeopleId: 3
+      Kind: HuntingLodge
+      ObjectId: 82
+      RequiresTalentId: 53
+      MinLevel: 0
+      Wood: 4
+      RingFrom: 4
+      RingTo: 7
+      StoreDays: 0
+      HuntKeep: 0.5
+      Fields: 0
+      Description: "Half again as much meat from each animal"

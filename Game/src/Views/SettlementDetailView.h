@@ -1,6 +1,8 @@
 #pragma once
 
+#include "Data/BuildingDefinition.h"
 #include "Data/PeopleDefinition.h"
+#include "Rules/BuildingRules.h"
 #include "Rules/SettlementRules.h"
 #include "State/SettlementState.h"
 #include "Views/MenuArt.h"
@@ -22,13 +24,14 @@
 
 namespace Hydro
 {
-	// The selected settlement in depth (beside the Settlers panel): level, stores, focus, tension, what its next level needs
-	// and every villager's job. Sends "Detail Close", "Rename <id>", "Focus <id> <0-3>".
+	// The selected settlement in depth (beside the Settlers panel): level, stores, focus, tension, what its next level needs,
+	// its people's buildings and every villager's job. Sends "Detail Close", "Rename <id>", "Focus <id> <0-3>".
 	class SettlementDetailView
 	{
 	public:
 		static constexpr int MaxNeeds = 5;
 		static constexpr int MaxVillagers = 28; // two columns
+		static constexpr int MaxBuildings = 4;
 
 		void Bind(Entity root, const UIBuilder& ui)
 		{
@@ -87,6 +90,14 @@ namespace Hydro
 					std::string(), TextStyle::Body, TextAlignH::Right, MenuArt::Ink());
 				m_Needs.push_back(line);
 			}
+			m_BuildingsTitle = ui.Label(m_Panel, "Buildings Title", Inset, 0.0f, Width - 2.0f * Inset, 40.0f, "Buildings",
+				TextStyle::Heading, TextAlignH::Left, MenuArt::Gold());
+			const float half = (Width - 2.0f * Inset) / 2.0f;
+			for (int b = 0; b < MaxBuildings; b++)
+			{
+				m_Buildings.push_back(ui.Label(m_Panel, "Building", Inset + (float)(b % 2) * half, 0.0f, half - 8.0f, VillagerStep,
+					std::string(), TextStyle::Body, TextAlignH::Left, MenuArt::Muted()));
+			}
 			m_VillagersTitle = ui.Label(m_Panel, "Villagers Title", Inset, 0.0f, Width - 2.0f * Inset, 40.0f, std::string(),
 				TextStyle::Heading, TextAlignH::Left, MenuArt::Gold());
 			const float column = (Width - 2.0f * Inset) / 2.0f;
@@ -98,8 +109,9 @@ namespace Hydro
 			UI::SetVisible(m_Panel, false);
 		}
 
-		// The settlement with Id `selected` (0 or gone: the panel hides).
-		void Present(const SettlementState& state, const std::vector<PeopleDefinition>& peoples, int selected)
+		// The settlement with Id `selected` (0 or gone: the panel hides); buildings: the Buildings table, owned: the talents.
+		void Present(const SettlementState& state, const std::vector<PeopleDefinition>& peoples,
+			const std::vector<BuildingDefinition>& buildings, const std::vector<int>& owned, int selected)
 		{
 			const Settlement* settlement = nullptr;
 			for (const Settlement& candidate : state.List)
@@ -116,14 +128,21 @@ namespace Hydro
 				}
 				return;
 			}
-			const std::string key = Key(*settlement, state);
+			const std::vector<BuildingRules::Line> lines = BuildingRules::Lines(buildings, peoples[(size_t)settlement->People],
+				*settlement, owned);
+			std::string key = Key(*settlement, state);
+			for (const BuildingRules::Line& line : lines)
+			{
+				key += "/" + line.State;
+			}
 			if (key == m_Shown)
 			{
 				return;
 			}
 			m_Shown = key;
 			UI::SetVisible(m_Panel, true);
-			Show(*settlement, peoples[(size_t)settlement->People], state);
+			const BuildingRules::Bonus bonus = BuildingRules::Of(buildings, *settlement);
+			Show(*settlement, peoples[(size_t)settlement->People], state, lines, bonus.StoreDays);
 			ShowEvolve(*settlement, peoples);
 		}
 
@@ -163,7 +182,7 @@ namespace Hydro
 				settlement.EvolveAllowed ? 1 : 0, settlement.Fields, settlement.FieldsGrowing, settlement.FieldsRipe,
 				settlement.Level, (int)(settlement.Count + 0.5f), settlement.Room, settlement.Shelters,
 				(int)settlement.Food, (int)settlement.Wood, (int)settlement.Focus, (int)(settlement.Tension * 100.0f), settlement.FeudWith,
-				settlement.Needed, settlement.NeededTiles, (int)state.List.size() };
+				settlement.Needed, settlement.NeededTiles, (int)state.List.size(), settlement.FieldsMost };
 			std::string key = settlement.Name;
 			for (int value : values)
 			{
@@ -176,7 +195,8 @@ namespace Hydro
 			return key;
 		}
 
-		void Show(const Settlement& settlement, const PeopleDefinition& people, const SettlementState& state)
+		void Show(const Settlement& settlement, const PeopleDefinition& people, const SettlementState& state,
+			const std::vector<BuildingRules::Line>& buildings, float storeDays)
 		{
 			const PeopleLevel& level = SettlementRules::LevelOf(people, settlement.Level);
 			const int count = (int)(settlement.Count + 0.5f);
@@ -184,7 +204,7 @@ namespace Hydro
 			UI::SetText(m_Kind, people.Name + "  -  " + (level.Name.empty() ? std::string("Settlement") : level.Name) + " (level "
 				+ std::to_string(settlement.Level + 1) + ")");
 			ButtonEvent(m_Rename, "Rename " + std::to_string(settlement.Id));
-			const float store = std::max(1.0f, settlement.Count) * people.FoodPerPerson * level.StoreDays;
+			const float store = std::max(1.0f, settlement.Count) * people.FoodPerPerson * (level.StoreDays + storeDays);
 			UI::SetText(m_Stats[0], std::to_string(count) + " / " + std::to_string(settlement.Room));
 			UI::SetText(m_Stats[1], std::to_string(settlement.Shelters));
 			UI::SetText(m_Stats[2], std::to_string((int)settlement.Food) + " / " + std::to_string((int)store));
@@ -239,7 +259,27 @@ namespace Hydro
 				m_UI->Art(line.Mark, MenuArt::Sprite::Check, met ? MenuArt::Good() : glm::vec4(1.0f, 1.0f, 1.0f, 0.18f));
 			}
 
-			const float villagersTop = NeedsTop + (float)std::max(1, (int)needs.size()) * NeedStep + 14.0f;
+			// Their buildings, two to a line: built, being built, or what holds them back.
+			const float buildingsTop = NeedsTop + (float)std::max(1, (int)needs.size()) * NeedStep + 14.0f;
+			const size_t built = std::min(buildings.size(), (size_t)MaxBuildings);
+			UI::SetVisible(m_BuildingsTitle, built > 0);
+			UIBuilder::Move(m_BuildingsTitle, Inset, buildingsTop);
+			for (size_t b = 0; b < m_Buildings.size(); b++)
+			{
+				Entity label = m_Buildings[b];
+				UI::SetVisible(label, b < built);
+				if (b >= built)
+				{
+					continue;
+				}
+				const BuildingRules::Line& line = buildings[b];
+				const float half = (Width - 2.0f * Inset) / 2.0f;
+				UIBuilder::Move(label, Inset + (float)(b % 2) * half, buildingsTop + 42.0f + (float)(b / 2) * VillagerStep);
+				UI::SetText(label, line.Name + ": " + line.State);
+				const bool building = line.State == "building";
+				UIBuilder::SetColor(label, line.Standing ? MenuArt::Good() : (building ? MenuArt::Sky() : MenuArt::Muted()));
+			}
+			const float villagersTop = built > 0 ? buildingsTop + 42.0f + (float)((built + 1) / 2) * VillagerStep + 10.0f : buildingsTop;
 			UIBuilder::Move(m_VillagersTitle, Inset, villagersTop);
 			UI::SetText(m_VillagersTitle, "Villagers (" + std::to_string(settlement.Villagers.size()) + ")");
 			const size_t shown = std::min(settlement.Villagers.size(), (size_t)MaxVillagers);
@@ -300,6 +340,11 @@ namespace Hydro
 			else if (settlement.Fields == 0)
 			{
 				text = "No farmland near: paint fields with the Farmland brush";
+			}
+			else if (settlement.FieldsMost > 0 && settlement.Fields > settlement.FieldsMost)
+			{
+				text = "Fields: " + std::to_string(settlement.FieldsMost) + " of " + std::to_string(settlement.Fields) + " worked ("
+					+ std::to_string(settlement.FieldsGrowing) + " growing, " + std::to_string(settlement.FieldsRipe) + " ripe)";
 			}
 			else
 			{
@@ -369,6 +414,8 @@ namespace Hydro
 		Entity m_LevelTitle;
 		Entity m_LevelText;
 		std::vector<NeedLine> m_Needs;
+		Entity m_BuildingsTitle;
+		std::vector<Entity> m_Buildings;
 		Entity m_VillagersTitle;
 		std::vector<Entity> m_Villagers;
 		std::string m_Shown;

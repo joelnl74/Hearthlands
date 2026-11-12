@@ -364,7 +364,7 @@ namespace Hydro
 
 		static void WriteSettlements(SaveWriter& out, const SettlementState& state)
 		{
-			out.Begin(SaveTag("SETL"), 1);
+			out.Begin(SaveTag("SETL"), 2); // 2: buildings
 			out.Value((int32_t)state.NextId);
 			out.Values(state.SearchWait);
 			out.Values(state.Founded);
@@ -408,6 +408,9 @@ namespace Hydro
 				out.Value(villager.HurtDays);
 				out.Value(villager.Days);
 			}
+			out.Values(s.Buildings);
+			out.Value((int32_t)s.Planned);
+			out.Value((int32_t)s.FieldsMost);
 		}
 
 		static void ReadSettlements(SaveReader& in, uint32_t version, SettlementState& state)
@@ -431,7 +434,7 @@ namespace Hydro
 			}
 		}
 
-		static Settlement ReadSettlement(SaveReader& in, [[maybe_unused]] uint32_t version)
+		static Settlement ReadSettlement(SaveReader& in, uint32_t version)
 		{
 			Settlement s;
 			s.Name = in.Text();
@@ -460,6 +463,12 @@ namespace Hydro
 				villager.HurtDays = in.Value<float>();
 				villager.Days = in.Value<float>();
 				s.Villagers.push_back(villager);
+			}
+			if (version >= 2)
+			{
+				s.Buildings = in.Values<int>();
+				s.Planned = in.Value<int32_t>();
+				s.FieldsMost = in.Value<int32_t>();
 			}
 			return s;
 		}

@@ -101,6 +101,26 @@ namespace Hydro
 			m_ShownKey.clear();
 		}
 
+		// The shown tab's next or previous page of cards; its first talent is chosen.
+		void TurnPage(int step)
+		{
+			const int count = (int)m_BranchPages[m_Branch].size();
+			const int page = std::clamp(m_PageOf[m_Branch] + step, 0, std::max(0, count - 1));
+			size_t first = m_Talents.size();
+			for (size_t i = 0; i < m_Talents.size(); i++)
+			{
+				const bool here = (int)m_Talents[i].Branch == m_Branch && m_Cards[i].Page == page;
+				if (here && (first == m_Talents.size() || m_Talents[i].Row < m_Talents[first].Row))
+				{
+					first = i;
+				}
+			}
+			if (first < m_Talents.size())
+			{
+				Select(m_Talents[first].TalentId);
+			}
+		}
+
 		// Chooses a talent and shows its branch.
 		void Select(int talentId)
 		{
@@ -110,6 +130,7 @@ namespace Hydro
 				{
 					m_Selected = i;
 					UIBuilder::Move(m_SelectRing, m_Cards[i].X - 12.0f, m_Cards[i].Y - 12.0f);
+					ShowPage((int)m_Talents[i].Branch, m_Cards[i].Page);
 					m_Notice.clear();
 					m_ShownKey.clear();
 					if ((int)m_Talents[i].Branch != m_Branch)
@@ -193,7 +214,8 @@ namespace Hydro
 			}
 		}
 
-		// What a talent does in a line for the cards and the detail panel; tileName: the brush an UnlockTile talent gives.
+		// What a talent does in a line for the cards and the detail panel; tileName: the brush an UnlockTile talent gives, or
+		// the building a Building talent lets them build.
 		static std::string EffectLine(const TalentDefinition& talent, const std::string& tileName)
 		{
 			char text[96];
@@ -217,6 +239,7 @@ namespace Hydro
 				amount * 100.0f); break;
 			case TalentEffect::FeudCalm: std::snprintf(text, sizeof(text), "Tension between peoples %d%% slower", percent); break;
 			case TalentEffect::Evolve: std::snprintf(text, sizeof(text), "%s arise from their kin", PeopleWord(talent.TargetId)); break;
+			case TalentEffect::Building: return std::string(PeopleWord(talent.TargetId)) + " build a " + tileName;
 			case TalentEffect::ForestCreep: std::snprintf(text, sizeof(text), "Forests spread onto bare ground"); break;
 			case TalentEffect::GroundwaterView: std::snprintf(text, sizeof(text), "See the groundwater (G)"); break;
 			case TalentEffect::OldGrowth: std::snprintf(text, sizeof(text), "Old forests grow ancient trees"); break;
@@ -248,6 +271,7 @@ namespace Hydro
 			Entity State;
 			float X = 0.0f;
 			float Y = 0.0f;
+			int Page = 0; // of its branch (CardsPerPage to a page)
 		};
 
 		struct Path
@@ -264,6 +288,7 @@ namespace Hydro
 		static constexpr float CardHeight = 200.0f;
 		static constexpr float ColumnStep = (1920.0f - 2.0f * UIBuilder::PageMargin - UIBuilder::DetailWidth - 30.0f - CardWidth) / 2.0f;
 		static constexpr float RowStep = CardHeight + 44.0f;
+		static constexpr int CardsPerPage = 9; // three lines of three
 
 		static const char* BranchName(TalentBranch branch)
 		{
@@ -320,14 +345,25 @@ namespace Hydro
 			}
 			std::stable_sort(order.begin(), order.end(), [this](size_t a, size_t b) { return m_Talents[a].Row < m_Talents[b].Row; });
 			m_Cards.resize(m_Talents.size());
+			const int pages = std::max(1, ((int)order.size() + CardsPerPage - 1) / CardsPerPage);
+			for (int page = 0; page < pages; page++)
+			{
+				m_BranchPages[branch].push_back(ui.Fill(m_Branches[branch], "Page " + std::to_string(page + 1)));
+			}
+			if (pages > 1)
+			{
+				MakePager(branch);
+			}
 			for (size_t n = 0; n < order.size(); n++)
 			{
-				const int line = (int)n / 3;
-				const int column = line % 2 == 0 ? (int)n % 3 : 2 - (int)n % 3;
+				const int onPage = (int)n % CardsPerPage;
+				const int line = onPage / 3;
+				const int column = line % 2 == 0 ? onPage % 3 : 2 - onPage % 3;
 				Card& card = m_Cards[order[n]];
 				card.X = UIBuilder::PageMargin + (float)column * ColumnStep;
 				card.Y = CardsTop + (float)line * RowStep;
-				if (n > 0)
+				card.Page = (int)n / CardsPerPage;
+				if (n > 0 && m_Cards[order[n - 1]].Page == card.Page)
 				{
 					const Card& previous = m_Cards[order[n - 1]];
 					Path path;
@@ -336,13 +372,14 @@ namespace Hydro
 					if (previous.Y == card.Y)
 					{
 						const float left = std::min(previous.X, card.X) + CardWidth;
-						path.Line = ui.At(m_Branches[branch], "Path", left - 4.0f, card.Y + CardHeight * 0.5f - 3.0f,
+						path.Line = ui.At(m_BranchPages[branch][(size_t)card.Page], "Path", left - 4.0f, card.Y + CardHeight * 0.5f - 3.0f,
 							std::max(previous.X, card.X) - left + 8.0f, 6.0f);
 					}
 					else
 					{
 						const float top = previous.Y + CardHeight - 4.0f;
-						path.Line = ui.At(m_Branches[branch], "Path", card.X + CardWidth * 0.5f - 3.0f, top, 6.0f, card.Y + 4.0f - top);
+						path.Line = ui.At(m_BranchPages[branch][(size_t)card.Page], "Path", card.X + CardWidth * 0.5f - 3.0f, top, 6.0f,
+							card.Y + 4.0f - top);
 					}
 					UIBuilder::Flat(path.Line, glm::vec4(0.85f, 0.70f, 0.35f, 0.3f));
 					m_Paths.push_back(path);
@@ -352,6 +389,42 @@ namespace Hydro
 			{
 				MakeCard(branch, order[n]);
 			}
+			ShowPage(branch, 0);
+		}
+
+		// "<" and ">" under a tab's cards with the page between (Events "Talents Prev" and "Talents Next").
+		void MakePager(int branch)
+		{
+			const UIBuilder& ui = *m_UI;
+			const float y = CardsTop + 3.0f * RowStep - 26.0f;
+			for (int side = 0; side < 2; side++)
+			{
+				const float x = UIBuilder::PageMargin + (side == 0 ? 0.0f : 2.0f * ColumnStep + CardWidth - 120.0f);
+				Entity button = ui.At(m_Branches[branch], side == 0 ? "Prev" : "Next", x, y, 120.0f, 56.0f);
+				ui.Art(button, MenuArt::Sprite::ButtonDark);
+				UIBuilder::Button(button, side == 0 ? "Talents Prev" : "Talents Next");
+				ui.Text(ui.Fill(button, "Label"), side == 0 ? "<" : ">", TextStyle::Heading, TextAlignH::Center, MenuArt::Ink());
+			}
+			m_PagerText[branch] = ui.Label(m_Branches[branch], "Pager", UIBuilder::PageMargin + 140.0f, y,
+				2.0f * ColumnStep + CardWidth - 280.0f, 56.0f, std::string(), TextStyle::Body, TextAlignH::Center, MenuArt::Muted());
+		}
+
+		void ShowPage(int branch, int page)
+		{
+			if (branch < 0 || branch >= BranchCount || m_BranchPages[branch].empty())
+			{
+				return;
+			}
+			const int count = (int)m_BranchPages[branch].size();
+			m_PageOf[branch] = std::clamp(page, 0, count - 1);
+			for (int p = 0; p < count; p++)
+			{
+				UI::SetVisible(m_BranchPages[branch][(size_t)p], p == m_PageOf[branch]);
+			}
+			if (count > 1)
+			{
+				UI::SetText(m_PagerText[branch], "Page " + std::to_string(m_PageOf[branch] + 1) + " / " + std::to_string(count));
+			}
 		}
 
 		void MakeCard(int branch, size_t index)
@@ -359,7 +432,7 @@ namespace Hydro
 			const UIBuilder& ui = *m_UI;
 			const TalentDefinition& talent = m_Talents[index];
 			Card& card = m_Cards[index];
-			card.Button = ui.At(m_Branches[branch], "Talent " + talent.Name, card.X, card.Y, CardWidth, CardHeight);
+			card.Button = ui.At(m_BranchPages[branch][(size_t)card.Page], "Talent " + talent.Name, card.X, card.Y, CardWidth, CardHeight);
 			ui.Art(card.Button, MenuArt::Sprite::Tile);
 			UIBuilder::Button(card.Button, "Talent " + std::to_string(talent.TalentId));
 			Entity medallion = ui.At(card.Button, "Emblem", 18.0f, 20.0f, 84.0f, 84.0f);
@@ -505,6 +578,9 @@ namespace Hydro
 		std::vector<std::string> m_Effects;
 		Tab m_Tabs[BranchCount];
 		Entity m_Branches[BranchCount]; // a tab's cards and paths
+		std::vector<Entity> m_BranchPages[BranchCount]; // a tab's pages of cards
+		int m_PageOf[BranchCount] = {};                 // the page shown per tab
+		Entity m_PagerText[BranchCount];                // "Page 1 / 2" (none for a tab of one page)
 		std::vector<Card> m_Cards;      // per talent in table order
 		std::vector<Path> m_Paths;
 		Entity m_PointsText;

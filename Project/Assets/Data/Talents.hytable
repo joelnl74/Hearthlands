@@ -362,4 +362,100 @@ DataTable:
       Effect: UnlockTile
       Amount: 7
       TargetId: -1
-      Description: "Paint farmland near a hamlet: its farmers sow in spring and summer and harvest what ripens"
+      Description: "Paint farmland near a hamlet: its farmers sow in spring and summer and harvest what ripens; with more fields than they work, they build a barn"
+    Storehouses:
+      Name: "Storehouses"
+      TalentId: 46
+      Branch: Peoples
+      Row: 10
+      Cost: 1
+      RequiresTalentId: 14
+      RequiresMilestoneId: -1
+      Effect: Building
+      Amount: 1
+      TargetId: 1
+      Description: "Humans build a granary when their store is nearly full: food lasts longer into winter"
+    HuntingLodges:
+      Name: "Hunting lodges"
+      TalentId: 47
+      Branch: Peoples
+      Row: 11
+      Cost: 1
+      RequiresTalentId: 14
+      RequiresMilestoneId: -1
+      Effect: Building
+      Amount: 2
+      TargetId: 1
+      Description: "Humans who hunt build a hunting lodge: half again as much meat from each animal"
+    Larders:
+      Name: "Larders"
+      TalentId: 48
+      Branch: Peoples
+      Row: 12
+      Cost: 1
+      RequiresTalentId: 44
+      RequiresMilestoneId: -1
+      Effect: Building
+      Amount: 4
+      TargetId: 4
+      Description: "Elves build a larder bower when their store is nearly full"
+    HuntersBlinds:
+      Name: "Hunters' blinds"
+      TalentId: 49
+      Branch: Peoples
+      Row: 13
+      Cost: 1
+      RequiresTalentId: 44
+      RequiresMilestoneId: -1
+      Effect: Building
+      Amount: 5
+      TargetId: 4
+      Description: "Elves who hunt build a blind of woven leaves: more meat from each animal"
+    SeedHollows:
+      Name: "Seed hollows"
+      TalentId: 50
+      Branch: Peoples
+      Row: 14
+      Cost: 1
+      RequiresTalentId: 27
+      RequiresMilestoneId: -1
+      Effect: Building
+      Amount: 6
+      TargetId: 2
+      Description: "Wood elves keep seeds and nuts in a hollow old stump: food lasts longer"
+    WoodlandBlinds:
+      Name: "Woodland blinds"
+      TalentId: 51
+      Branch: Peoples
+      Row: 15
+      Cost: 1
+      RequiresTalentId: 27
+      RequiresMilestoneId: -1
+      Effect: Building
+      Amount: 7
+      TargetId: 2
+      Description: "Wood elves who hunt build a blind: more meat from each animal"
+    ColdCellars:
+      Name: "Cold cellars"
+      TalentId: 52
+      Branch: Peoples
+      Row: 16
+      Cost: 1
+      RequiresTalentId: 16
+      RequiresMilestoneId: -1
+      Effect: Building
+      Amount: 8
+      TargetId: 3
+      Description: "Dwarves dig a cold cellar when their store is nearly full"
+    StoneLodges:
+      Name: "Stone lodges"
+      TalentId: 53
+      Branch: Peoples
+      Row: 17
+      Cost: 1
+      RequiresTalentId: 16
+      RequiresMilestoneId: -1
+      Effect: Building
+      Amount: 9
+      TargetId: 3
+      Description: "Dwarves who hunt build a stone lodge: more meat from each animal"

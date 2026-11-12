@@ -10,7 +10,7 @@ namespace Hydro
 	// The run's talents: points from milestones, what they bought, and what the owned talents add up to (TalentRules).
 	struct TalentState
 	{
-		static constexpr int EffectCount = (int)TalentEffect::Evolve + 1;
+		static constexpr int EffectCount = (int)TalentEffect::Building + 1;
 
 		int Points = 0;           // unspent
 		int Earned = 0;           // given by milestones so far
