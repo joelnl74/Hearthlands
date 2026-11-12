@@ -27,5 +27,7 @@ namespace Hydro
 		int MinNeighbours = 1;
 		HY_PROPERTY(Range(0, 1), Tooltip("The chance it happens each time the tile is looked at"))
 		float Chance = 0.1f;
+		HY_PROPERTY(Range(-1, 1), Tooltip("How much the soil moves the chance: + more on rich soil (up to 1 + this), - more on poor"))
+		float SoilEffect = 0.0f;
 	};
 }

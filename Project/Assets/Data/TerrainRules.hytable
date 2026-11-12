@@ -12,6 +12,7 @@ DataTable:
       NeighbourTileId: 2
       MinNeighbours: 1
       Chance: 0.25
+      SoilEffect: 0.8
     GrassSprouts:
       Name: GrassSprouts
       FromTileId: 1
@@ -21,6 +22,7 @@ DataTable:
       NeighbourTileId: -1
       MinNeighbours: 1
       Chance: 0.02
+      SoilEffect: 0.8
     GrassDries:
       Name: GrassDries
       FromTileId: 2
@@ -30,3 +32,4 @@ DataTable:
       NeighbourTileId: -1
       MinNeighbours: 1
       Chance: 0.1
+      SoilEffect: -0.6

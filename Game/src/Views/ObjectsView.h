@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Data/ObjectDefinition.h"
-#include "Rules/BrushRules.h"
 #include "State/HeightMap.h"
 #include "State/ObjectLayer.h"
+#include "Views/ViewArea.h"
 
 #include "Hydro/Asset/AssetManager.h"
 #include "Hydro/Renderer/Texture2D.h"
@@ -39,6 +39,7 @@ namespace Hydro
 				}
 				Look& look = m_Looks[(size_t)object.ObjectId];
 				look.CastsShadow = object.CastsShadow;
+				look.Deciduous = object.Deciduous;
 				const float pixelsPerTile = object.PixelsPerTile > 0.0f ? object.PixelsPerTile : 32.0f;
 				AddVariant(look, object.Sprite, pixelsPerTile);
 				for (AssetHandle variant : object.Variants)
@@ -51,17 +52,20 @@ namespace Hydro
 		// centre: the map's centre in the world (the Terrain entity), its ground at centre.z; heights (nullptr: flat) raise
 		// each sprite levelHeight metres a level.
 		void Present(const ObjectLayer& layer, int width, int height, const glm::vec3& centre, float deltaTime,
-			const HeightMap* heights = nullptr, float levelHeight = 0.0f)
+			const HeightMap* heights = nullptr, float levelHeight = 0.0f, const glm::vec3& leafTint = glm::vec3(1.0f))
 		{
+			const glm::vec3 leaves = glm::round(leafTint * 32.0f) / 32.0f; // Deciduous sprites' colour, in steps
 			if (m_Scene == nullptr || m_Root.IsValid() == false || width <= 0 || height <= 0)
 			{
 				return;
 			}
 			m_SinceRefresh += deltaTime;
 			glm::ivec4 rect(0, 0, width - 1, height - 1);
-			VisibleTiles(width, height, centre, heights != nullptr ? 12 : 4, rect); // raised land shows tiles from further down
+			// Raised land shows tiles from further down.
+			ViewArea::VisibleTiles(*m_Scene, width, height, centre, heights != nullptr ? 12 : 4, rect);
 			const uint64_t heightRevision = heights != nullptr ? heights->GetRevision() : 0;
-			const bool same = rect == m_Rect && layer.GetRevision() == m_Revision && heightRevision == m_HeightRevision;
+			const bool same = rect == m_Rect && layer.GetRevision() == m_Revision && heightRevision == m_HeightRevision
+				&& leaves == m_Leaves;
 			if (same || m_SinceRefresh < RefreshInterval)
 			{
 				return;
@@ -70,6 +74,7 @@ namespace Hydro
 			m_Rect = rect;
 			m_Revision = layer.GetRevision();
 			m_HeightRevision = heightRevision;
+			m_Leaves = leaves;
 
 			int used = 0;
 			for (int y = rect.y; y <= rect.w && used < MaxSprites; y++)
@@ -98,6 +103,7 @@ namespace Hydro
 					renderer.CastShadows = look.CastsShadow;
 					renderer.FlipX = ((hash >> 16) & 1u) != 0;
 					renderer.Opacity = 1.0f;
+					renderer.Color = look.Deciduous ? glm::vec4(leaves, 1.0f) : glm::vec4(1.0f);
 				}
 			}
 			for (int i = used; i < m_Shown; i++)
@@ -131,6 +137,7 @@ namespace Hydro
 		{
 			std::vector<Variant> Variants; // a tile picks one by its hash, so it keeps its look
 			bool CastsShadow = true;
+			bool Deciduous = false;
 		};
 
 		static void AddVariant(Look& look, AssetHandle sprite, float pixelsPerTile)
@@ -171,46 +178,6 @@ namespace Hydro
 			return m_Pool[(size_t)index];
 		}
 
-		// The tiles (x0, y0, x1, y1) under the primary camera's view, `margin` tiles wider for tall sprites and hills; the whole
-		// map when there is no camera or a corner's ray misses the ground.
-		void VisibleTiles(int width, int height, const glm::vec3& centre, int margin, glm::ivec4& rect) const
-		{
-			Entity camera = m_Scene->GetPrimaryCameraEntity();
-			if ((bool)camera == false)
-			{
-				return;
-			}
-			const glm::mat4 projection = camera.GetComponent<CameraComponent>().Camera.GetProjection(m_Scene->GetViewportAspectRatio());
-			const glm::mat4 inverse = glm::inverse(projection * glm::inverse(m_Scene->GetWorldTransform(camera)));
-			glm::vec2 low(1e9f);
-			glm::vec2 high(-1e9f);
-			const glm::vec2 corners[4] = { { -1.0f, -1.0f }, { 1.0f, -1.0f }, { -1.0f, 1.0f }, { 1.0f, 1.0f } };
-			for (const glm::vec2& corner : corners)
-			{
-				glm::vec4 nearPoint = inverse * glm::vec4(corner, 0.0f, 1.0f);
-				glm::vec4 farPoint = inverse * glm::vec4(corner, 1.0f, 1.0f);
-				nearPoint /= nearPoint.w;
-				farPoint /= farPoint.w;
-				glm::vec3 hit(0.0f);
-				if (BrushRules::RayToGround(glm::vec3(nearPoint), glm::vec3(farPoint - nearPoint), centre.z, hit) == false)
-				{
-					return;
-				}
-				const glm::vec2 point = BrushRules::MapPoint(glm::vec2(hit.x - centre.x, hit.y - centre.y), width, height);
-				low = glm::min(low, point);
-				high = glm::max(high, point);
-			}
-			rect.x = Clamp((int)low.x - margin, 0, width - 1);
-			rect.y = Clamp((int)low.y - margin, 0, height - 1);
-			rect.z = Clamp((int)high.x + margin, 0, width - 1);
-			rect.w = Clamp((int)high.y + margin, 0, height - 1);
-		}
-
-		static int Clamp(int value, int low, int high)
-		{
-			return value < low ? low : (value > high ? high : value);
-		}
-
 		Scene* m_Scene = nullptr;
 		Entity m_Root;
 		std::vector<Entity> m_Pool;
@@ -218,6 +185,7 @@ namespace Hydro
 		glm::ivec4 m_Rect{ -1 };
 		uint64_t m_Revision = ~0ull;
 		uint64_t m_HeightRevision = ~0ull;
+		glm::vec3 m_Leaves{ -1.0f };
 		int m_Shown = 0;
 		float m_SinceRefresh = 1.0f;
 	};

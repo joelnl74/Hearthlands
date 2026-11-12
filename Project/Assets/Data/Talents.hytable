@@ -1,0 +1,365 @@
+Handle: 3307419921861244467
+DataTable:
+  Version: 1
+  Type: TalentDefinition
+  Rows:
+    WetterBanks:
+      Name: Wetter banks
+      TalentId: 1
+      Branch: Water
+      Row: 1
+      Cost: 1
+      RequiresTalentId: -1
+      RequiresMilestoneId: -1
+      Effect: MoistureReach
+      Amount: 1
+      TargetId: -1
+      Description: Water wets the land a tile further
+    Floodplains:
+      Name: Floodplains
+      TalentId: 2
+      Branch: Water
+      Row: 2
+      Cost: 2
+      RequiresTalentId: 1
+      RequiresMilestoneId: -1
+      Effect: MoistureReach
+      Amount: 2
+      TargetId: -1
+      Description: "Two tiles further again: wide green banks"
+    StrongSprings:
+      Name: Strong springs
+      TalentId: 3
+      Branch: Water
+      Row: 3
+      Cost: 1
+      RequiresTalentId: -1
+      RequiresMilestoneId: -1
+      Effect: SpringHead
+      Amount: 8
+      TargetId: -1
+      Description: Springs fill 8 more tiles of channel
+    DeepDigging:
+      Name: Deep digging
+      TalentId: 4
+      Branch: Water
+      Row: 4
+      Cost: 2
+      RequiresTalentId: 3
+      RequiresMilestoneId: -1
+      Effect: SpringFrom
+      Amount: 0.1
+      TargetId: -1
+      Description: Weaker groundwater springs too
+    Sand:
+      Name: Sand
+      TalentId: 10
+      Branch: Land
+      Row: 1
+      Cost: 1
+      RequiresTalentId: -1
+      RequiresMilestoneId: -1
+      Effect: UnlockTile
+      Amount: 0
+      TargetId: -1
+      Description: "The Sand brush: beaches and dunes"
+    WideBrush:
+      Name: Wide brush
+      TalentId: 11
+      Branch: Land
+      Row: 2
+      Cost: 1
+      RequiresTalentId: -1
+      RequiresMilestoneId: -1
+      Effect: BrushSize
+      Amount: 4
+      TargetId: -1
+      Description: Brush sizes up to 12 tiles
+    GreatBrush:
+      Name: Great brush
+      TalentId: 12
+      Branch: Land
+      Row: 3
+      Cost: 2
+      RequiresTalentId: 11
+      RequiresMilestoneId: -1
+      Effect: BrushSize
+      Amount: 4
+      TargetId: -1
+      Description: Brush sizes up to 16 tiles
+    FertileSoil:
+      Name: Fertile soil
+      TalentId: 20
+      Branch: Life
+      Row: 1
+      Cost: 1
+      RequiresTalentId: -1
+      RequiresMilestoneId: -1
+      Effect: GrowthSpeed
+      Amount: 0.5
+      TargetId: -1
+      Description: Grass and land change half again as fast
+    RichSoil:
+      Name: Rich soil
+      TalentId: 21
+      Branch: Life
+      Row: 2
+      Cost: 2
+      RequiresTalentId: 20
+      RequiresMilestoneId: -1
+      Effect: GrowthSpeed
+      Amount: 0.5
+      TargetId: -1
+      Description: And faster still
+    SeedWind:
+      Name: Seed wind
+      TalentId: 22
+      Branch: Life
+      Row: 3
+      Cost: 1
+      RequiresTalentId: -1
+      RequiresMilestoneId: -1
+      Effect: LifeSpeed
+      Amount: 0.5
+      TargetId: -1
+      Description: Plants and trees spread half again as fast
+    LushGrowth:
+      Name: Lush growth
+      TalentId: 23
+      Branch: Life
+      Row: 4
+      Cost: 2
+      RequiresTalentId: 22
+      RequiresMilestoneId: -1
+      Effect: LifeSpeed
+      Amount: 0.5
+      TargetId: -1
+      Description: "Faster still: forests close in"
+    ForestEdge:
+      Name: Forest edge
+      TalentId: 25
+      Branch: Life
+      Row: 6
+      Cost: 2
+      RequiresTalentId: 22
+      RequiresMilestoneId: -1
+      Effect: ForestCreep
+      Amount: 1
+      TargetId: -1
+      Description: A forest's shade keeps bare ground damp, so forests creep out on their own
+    SenseWater:
+      Name: Sense water
+      TalentId: 30
+      Branch: Insight
+      Row: 1
+      Cost: 1
+      RequiresTalentId: -1
+      RequiresMilestoneId: -1
+      Effect: ClueClarity
+      Amount: 0.25
+      TargetId: -1
+      Description: Groundwater shows a little plainer
+    ReadTheLand:
+      Name: Read the land
+      TalentId: 31
+      Branch: Insight
+      Row: 2
+      Cost: 1
+      RequiresTalentId: 30
+      RequiresMilestoneId: -1
+      Effect: ClueClarity
+      Amount: 0.25
+      TargetId: -1
+      Description: Plainer still
+    WaterSight:
+      Name: Water sight
+      TalentId: 32
+      Branch: Insight
+      Row: 3
+      Cost: 2
+      RequiresTalentId: 31
+      RequiresMilestoneId: -1
+      Effect: ClueClarity
+      Amount: 0.25
+      TargetId: -1
+      Description: Groundwater shows plainly
+    FaintTraces:
+      Name: Faint traces
+      TalentId: 33
+      Branch: Insight
+      Row: 4
+      Cost: 1
+      RequiresTalentId: 30
+      RequiresMilestoneId: -1
+      Effect: ClueFrom
+      Amount: 0.1
+      TargetId: -1
+      Description: Weaker groundwater shows too
+    WildLands:
+      Name: Wild lands
+      TalentId: 24
+      Branch: Life
+      Row: 5
+      Cost: 2
+      RequiresTalentId: -1
+      RequiresMilestoneId: -1
+      Effect: AnimalRoom
+      Amount: 0.5
+      TargetId: -1
+      Description: The land holds half again as many animals
+    Tracker:
+      Name: Tracker
+      TalentId: 34
+      Branch: Insight
+      Row: 5
+      Cost: 1
+      RequiresTalentId: -1
+      RequiresMilestoneId: -1
+      Effect: AnimalSight
+      Amount: 0.5
+      TargetId: -1
+      Description: See half again as many of the animals
+    Humus:
+      Name: Humus
+      TalentId: 13
+      Branch: Land
+      Row: 4
+      Cost: 1
+      RequiresTalentId: -1
+      RequiresMilestoneId: -1
+      Effect: SoilRichness
+      Amount: 0.1
+      TargetId: -1
+      Description: Soil under grass, shrubs and trees grows richer
+    GroundwaterSight:
+      Name: Groundwater sight
+      TalentId: 35
+      Branch: Insight
+      Row: 6
+      Cost: 1
+      RequiresTalentId: 30
+      RequiresMilestoneId: -1
+      Effect: GroundwaterView
+      Amount: 1
+      TargetId: -1
+      Description: "Shows the hidden water (G): where painted grass holds and forests grow"
+    OldWoods:
+      Name: Old woods
+      TalentId: 26
+      Branch: Life
+      Row: 7
+      Cost: 2
+      RequiresTalentId: 23
+      RequiresMilestoneId: -1
+      Effect: OldGrowth
+      Amount: 1
+      TargetId: -1
+      Description: Oaks and pines deep in closed, untouched forest grow ancient in about a year and a half
+    FirstFire:
+      Name: First fire
+      TalentId: 14
+      Branch: Peoples
+      Row: 1
+      Cost: 1
+      RequiresTalentId: -1
+      RequiresMilestoneId: -1
+      Effect: Settlers
+      Amount: 0.06
+      TargetId: 1
+      Description: "Humans settle on their own: first where the land suits them best, later now and then elsewhere"
+    Wanderers:
+      Name: Wanderers
+      TalentId: 40
+      Branch: Peoples
+      Row: 2
+      Cost: 2
+      RequiresTalentId: 14
+      RequiresMilestoneId: -1
+      Effect: Settlers
+      Amount: 0.15
+      TargetId: 1
+      Description: New groups of humans come far more often
+    ElvenKin:
+      Name: Elven kin
+      TalentId: 44
+      Branch: Peoples
+      Row: 3
+      Cost: 1
+      RequiresTalentId: -1
+      RequiresMilestoneId: -1
+      Effect: Settlers
+      Amount: 0.06
+      TargetId: 4
+      Description: Elves settle on their own by forest and water; foresters plant saplings round them
+    ElvenPaths:
+      Name: Elven paths
+      TalentId: 41
+      Branch: Peoples
+      Row: 4
+      Cost: 2
+      RequiresTalentId: 44
+      RequiresMilestoneId: -1
+      Effect: Settlers
+      Amount: 0.15
+      TargetId: 4
+      Description: New groups of elves come far more often
+    CallOfTheWoods:
+      Name: Call of the woods
+      TalentId: 27
+      Branch: Peoples
+      Row: 5
+      Cost: 2
+      RequiresTalentId: 26
+      RequiresMilestoneId: -1
+      Effect: Evolve
+      Amount: 1
+      TargetId: 2
+      Description: Elves living by old woods become wood elves (4 ancient trees near)
+    MountainHalls:
+      Name: Mountain halls
+      TalentId: 16
+      Branch: Peoples
+      Row: 6
+      Cost: 2
+      RequiresTalentId: 14
+      RequiresMilestoneId: -1
+      Effect: Settlers
+      Amount: 0.05
+      TargetId: 3
+      Description: Dwarves settle up in the hills by big mountains
+    DeepDelving:
+      Name: Deep delving
+      TalentId: 42
+      Branch: Peoples
+      Row: 7
+      Cost: 2
+      RequiresTalentId: 16
+      RequiresMilestoneId: -1
+      Effect: Settlers
+      Amount: 0.12
+      TargetId: 3
+      Description: New groups of dwarves come far more often
+    Peacemakers:
+      Name: Peacemakers
+      TalentId: 43
+      Branch: Peoples
+      Row: 8
+      Cost: 1
+      RequiresTalentId: 14
+      RequiresMilestoneId: -1
+      Effect: FeudCalm
+      Amount: 0.5
+      TargetId: -1
+      Description: Peoples who can not stand each other grow tense half as fast
+    Farming:
+      Name: Farming
+      TalentId: 45
+      Branch: Peoples
+      Row: 9
+      Cost: 2
+      RequiresTalentId: 14
+      RequiresMilestoneId: 39
+      Effect: UnlockTile
+      Amount: 7
+      TargetId: -1
+      Description: "Paint farmland near a hamlet: its farmers sow in spring and summer and harvest what ripens"

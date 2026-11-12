@@ -20,7 +20,8 @@ namespace Hydro
 			int SnowTileId = 4;
 			int BareTileId = 1; // what rock turns back into (the rock type's BelowTileId)
 			int RockLevel = 4;  // the types' FromLevel
-			int SnowLevel = 9;  // seasons can move it
+			int SnowLevel = 9;
+			float SnowShift = 0.0f; // the season's move of the snowline (SeasonState::SnowShift)
 			float Ragged = 1.5f; // how much the snowline wobbles from tile to tile, in levels (both ways together)
 			int MeltReach = 16; // tiles of raised land below the snow that meltwater runs down
 		};
@@ -53,16 +54,18 @@ namespace Hydro
 			return settings;
 		}
 
-		// The level at which the tile (x, y) turns to snow: SnowLevel moved by up to half of Ragged either way, fixed per tile.
+		// The level at which the tile (x, y) turns to snow: SnowLevel moved by the season and by up to half of Ragged either
+		// way, fixed per tile.
 		static float SnowLine(int x, int y, const Settings& settings)
 		{
-			return (float)settings.SnowLevel + (Hash(x, y) - 0.5f) * settings.Ragged;
+			return (float)settings.SnowLevel + settings.SnowShift + (Hash(x, y) - 0.5f) * settings.Ragged;
 		}
 
-		// The type the height alone gives the tile (x, y) at `level`: snow, rock, or -1 (the land keeps its own type).
+		// The type the height alone gives the tile (x, y) at `level`: snow, rock, or -1 (the land keeps its own type). Snow
+		// only on rock heights, however low a winter brings the snowline: grass under it stays grass.
 		static int LevelTile(int level, int x, int y, const Settings& settings)
 		{
-			if (settings.SnowTileId >= 0 && (float)level >= SnowLine(x, y, settings))
+			if (settings.SnowTileId >= 0 && (float)level >= SnowLine(x, y, settings) && level >= settings.RockLevel)
 			{
 				return settings.SnowTileId;
 			}

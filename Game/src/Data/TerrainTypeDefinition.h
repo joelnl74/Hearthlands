@@ -48,6 +48,14 @@ namespace Hydro
 		int FromLevel = 0;
 		HY_PROPERTY(Range(-1, 255), Tooltip("What it turns back into when the land drops below FromLevel; -1 none"))
 		int BelowTileId = -1;
+		HY_PROPERTY(Range(0, 1), Tooltip("Soil: how rich a tile of this type is without life on it (plants and trees add to it)"))
+		float Fertility = 0.3f;
+		HY_PROPERTY(Range(0, 1), Tooltip("Soil: the share of sand it brings; painted over another type it mixes half and half"))
+		float Sand = 0.2f;
+		HY_PROPERTY(Tooltip("Soil: a living cover (grass): the talents' soil richness builds up under it"))
+		bool Living = false;
+		HY_PROPERTY(Range(0, 1), Tooltip("Share of the hidden groundwater its plants reach: painted grass holds over groundwater"))
+		float Roots = 0.0f;
 		HY_PROPERTY(Color, Tooltip("The cliff face under a raised tile of this type"))
 		glm::vec3 CliffColor{ 0.45f, 0.36f, 0.27f };
 		HY_PROPERTY(Tooltip("Generation: placed where the height (0 to 1) and moisture (0 to 1) are both in range"))

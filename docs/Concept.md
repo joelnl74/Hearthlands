@@ -163,6 +163,16 @@ running downhill (real depth below the ground, waterfalls at the steps), and dig
 - **Seasons are part of the game** from the start: sources weaken in summer (droughts, rivers shrink, grass dries),
   rains and fuller rivers in spring, growth slows in winter; the snowline moves with them. Height per tile is in (Nov
   10); later water runs downhill. Mountains are sources already (meltwater at their foot, Nov 10).
+- **Seasons (built Nov 11)**: `Seasons.hytable`, a 20-day year (four seasons of 5 days, each turning into the next over
+  its last 1.5 days; the clock shows "Spring, day 3"). Per season: the snowline's move (spring -1, summer +2, winter -3
+  levels; snow never on land below rock), how far rivers and springs reach (`Flow`: spring 1.25, summer 0.85, winter
+  0.8), meltwater (`Melt`: a spring flood 1.6, winter 0.2), how fast the land and plants grow (`Growth`, `Life`: spring
+  1.4, autumn 0.6, winter 0.1), and the look: the land's tint, green fading to straw (`Fade`: autumn 0.45), snow lying
+  on the ground in drifts, thickest up high (`GroundSnow`: winter 0.55), ice from the shores (`Ice`: winter 0.5), leaf
+  colours on leafy objects (`LeafTint` on `Deciduous` objects: orange autumn, bare grey winter; pines stay). Snow and
+  ice are a look only: grass under the snow is still grass. `terrain_blend.py` renders `terrain_seasons.png`.
+  Next for the look: real seasonal sprites from PixelLab (autumn trees, bare winter trees, snowy pines) as object
+  data; snow on cliff walls; falling leaves and snowflakes as particles.
 
 ### Life
 
@@ -171,7 +181,75 @@ running downhill (real depth below the ground, waterfalls at the steps), and dig
   plus the type's `Shelter` (grass 0.15), so holes and bays in a meadow fill in. Only if the grass is wet (dry grass holds
   nothing), and the bonus is never passed on: with 5 of 8 a straight edge never advances, grass stays inside its own
   convex outline, and it all still dries when the water goes.
+- **Forests away from rivers (built Nov 11), led by the player**: the hidden groundwater does nothing by itself until
+  the player paints grass on it. Grass's roots reach a little of it (`Roots` 0.1), so grass painted where the
+  groundwater is good (about 0.5 and up: the clues and the Insight talents show where) holds instead of drying, while
+  over poor groundwater it dries as before. On that grass trees come up from their own roots (`Roots`: saplings about
+  0.45, grown trees 0.5-0.65 of the groundwater): mostly pine (it needs least), birch and oak only over strong
+  groundwater or near water. A forest's canopy (`Canopy`, within 2 tiles) keeps its trees' water in the living ground
+  around it (up to 0.9 of it under a closed canopy), so the grass under and beside a forest never dries and gaps fill
+  in. Oak saplings come up under trees, birch and pine saplings prefer the open; ferns grow in the shade. Forests don't
+  march over bare ground by themselves: the Life talent **Forest edge** (row 6, 2 points) lets the shade keep bare
+  ground damp too, so forests creep out on their own (about half a tile a day over medium groundwater, stopping where
+  it is poor). Headless run (60 days): a painted 12 x 12 patch over groundwater 0.65 holds and grows about 22 trees,
+  one over 0.35 dries; the river's band stays about 10 tiles without the talent and grows to about 30 with it.
+- **Groundwater sight (built Nov 11)**: the Insight talent Groundwater sight (row 6, 1 point, after Sense water) adds a
+  Groundwater button (G) to the Inspect bar: grey-tan where painted grass dries, teal from 0.5 where it holds and
+  forest can grow, deep blue with bright dots from 0.78 where a dug bed springs. The faint clues stay for finding it
+  without the talent.
+- **Dry creeks (built Nov 11, dry since 22:45)**: a new world gets about 1.2 creeks per 100 x 100 tiles of land
+  (`WorldScript::Creeks`; about 21 on the 512 island): a narrow riverbed of 6 to 14 tiles winding over the low ground
+  from a head on the strongest groundwater (0.8 and up), at least 10 tiles from other water (`CreekRules`). They start
+  **dry** (the user, Nov 11 22:45: flowing creeks greened the land by themselves and paid milestones for free): their
+  beds are sealed (`Hydrology::Sealed`) and never spring on their own; digging the head (Dig brush) opens the spring,
+  which counts as a spring found and fills the creek as far as its head carries (about 7 tiles; Strong springs further).
+  A hint at the start says so. A sealed bed filled in and dug again is an ordinary bed.
+- **Old woods (built Nov 11)**: with the Life talent Old woods (row 7, 2 points, after Lush growth) a grown oak or pine
+  deep inside closed forest (its canopy and its neighbours' within 2 tiles adding up to 7: an edge tree has about 6)
+  becomes an ancient oak or old pine in about 30 days (a year and a half). Felling nearby or gaps hold it back, so old
+  woods need the player to grow a forest and leave it alone. Ancient trees give more food (acorns, mushrooms) and wood
+  (humans love to fell them). Milestone Old growth (5 ancient trees, 2 points). Art: the grown sprites made larger,
+  darker and mossy (`scripts/art/make_temp_oldwoods_art.py`), temporary.
 - **Fauna as populations per region** (a predator-prey model per area), with only a sample of animals drawn.
+- **Wildlife (built Nov 11)**: `Animals.hytable`, one row per species. The map is cut into 16 x 16 regions; per region
+  `WildlifeRules` works out what the land holds of each species (tiles that suit it by type, moisture and height, times
+  `Density`; none when the region's cover (shrubs and trees) or water share is out of range) and moves the number there
+  towards it: births (`BirthsPerDay` times the season's `Life`), leaving above it, spreading to a neighbour with room,
+  newcomers from outside into a region with room and none. Hunters (`PreyId`, the wolf on deer) live only where their
+  prey feeds them and eat it. `Migrates` species follow the season's `Migrants` share (birds, insects away in winter),
+  `Hibernates` ones the `Burrowed` share out of sight (badgers). 16 regions a tick: the whole map every 16 world seconds.
+  `AnimalsView` shows a share of each region's number near the camera: walkers (deer, boar, wolf, badger) and birds
+  (sparrow, robin, cardinal, bluejay, eagle, egret, crow) as sprite sheets that idle, wander, fly, land and run from
+  the painting brush, fading in and out; fish (shadows in the water), butterflies, fireflies and starling flocks as
+  particles. Milestones: first tracks, herds (40 deer), living land (8 species); talents: Wild lands (+50% room),
+  Tracker (+50% shown). Art: free packs, credited in `Art/Animals/CREDITS.md`; fox, rabbit and bear to come (PixelLab).
+- **Water life (built Nov 12, placeholder art)**: fish and water birds come only to water the **player** made (the user,
+  Nov 11 23:08: unlock species by large rivers, rivers joined to the sea, streams). `HabitatRules` gives every water
+  tile its habitats a few seconds after the water changed: the sea (outside the coast); of the water the world didn't
+  start with (`Hydrology::Native`) a **stream** (at most 20 water tiles in its 9 x 9 square: 1 or 2 across), a **big
+  river** (21 to 48: about 3 to 5 across) or a **lake** (49 and up: 6 across or more); **joined to the sea** (through
+  any water) and its **mouth** (within 8 water steps of the sea); **cold** (meltwater, or level 4 and up). The world's
+  own lakes are none of these, so nothing is free at the start. A species' `Habitat` (`WaterHabitat`): fish live in
+  its tiles, birds need `MinHabitat` tiles of it in their region. New, all `Hidden` (not on the map until the first
+  settle, then a "New species" notice): minnows (stream), brook trout (cold stream), pike (big river), salmon (river
+  or stream joined to the sea: they leap a lot), eels (mouth), carp (lake); kingfisher (stream, bushes, hunts
+  minnows), grey heron (big river, hunts fish), osprey (salmon river, hunts salmon), gulls (mouth), mallards (lake),
+  dipper (cold stream). Fish show as their shapes drifting in the water, ripple rings and (`LeapsPerMinute`) leaps out
+  of it, from `FishShapes.png`; the birds are the pack's sheets recoloured. All temporary
+  (`scripts/art/make_temp_water_life_art.py`).
+- **Discoveries (Nov 12)**: only the intro milestones show (first meadow, hidden water, first grove, highlands, first
+  tracks, first settlers); the rest are `Hidden`: a ? card with a riddle (`Hint`) and the reward, no name or numbers,
+  until reached ("Discovery: ..." notice). 19 new ones (37 in all, 12 a page): running water (30 stream tiles), a big
+  river (80), to the sea (2 points), still waters, mountain stream; each new fish and bird; teeming waters (5 kinds of
+  fish, 2 points), birdsong (10 kinds of birds, 2 points). Tracks: All, Land, Water, Woods, Wildlife, Peoples.
+- **Soil (built Nov 11)**: under each tile its richness and its sand share (`SoilState`). Richness drifts towards the
+  type's `Fertility` (sand 0.1, dirt 0.3, grass 0.45, riverbed 0.35) plus humus (shrubs +0.1, trees +0.2), silt from
+  fresh water beside it (+0.25 at the bank) and the Humus talent where life is (grass, shrubs, trees); it builds up
+  faster than it wears out. Painting a new type mixes half of its soil in, so dirt painted over sand makes loam (sand
+  share about 0.55); quality = richness times texture (best at 0.4 sand). Plain dirt is neutral: terrain rules and
+  objects have a `SoilEffect` (grass spreading and sprouting 0.8, drying -0.6; shrubs and broadleaf trees 0.6, pines
+  0.2, dead wood -0.6) that makes them likelier on rich soil and less on poor. F shows the soil (pale poor to green
+  rich). Milestone Rich earth (300 tiles at 60%); farming comes later as a talent with the settlers' area marks.
 - **Disturbances** that test the balance: drought, flood, wildfire through dry grass, disease.
 
 ### Peoples and ages (evolution)
@@ -190,6 +268,30 @@ running downhill (real depth below the ground, waterfalls at the steps), and dig
   choose talents.
 - **Regions are shared and contested**: peoples can live side by side (elves in the forest next to human fields) and
   also compete for the same land (humans fell the forest the elves need); the player tips the balance by shaping it.
+- **Elves and their branches** (the user, Nov 12): the first elves are like humans but live by the forest: they settle
+  by forest and water (no old woods needed) and their foresters plant saplings. As they come to live by old forest they
+  become **wood elves** (built: the talent Call of the woods allows it). Later branches, planning only: **high elves**
+  in open land, relying on magic; **dark elves** in corruption zones (corruption is still to be designed). Each branch
+  is a people row with `EvolvesFromId`; no group of a branch arrives on its own, settlements of its kin turn into it.
+- **Magic (planning, the user Nov 12; not built)**: how magic shapes the world is still to be found, but it should be
+  an early discovery. Every people may use it; they differ in how much they rely on it: humans use it but don't need it
+  to grow, high elves rely on it for growth. Ideas to discuss: a magic discovery milestone and an Insight or Peoples
+  talent; places of power on the map (old woods, springs, peaks) that magic draws on; corruption as magic gone wrong,
+  where dark elves live.
+- **Ages (planning, the user Nov 11; not built)**: a people climbs to its next age when its settlements hold enough
+  people, food and materials for long enough, and the player has learned that age's talent (a Peoples branch). An age
+  unlocks what the people does and builds, so the player's land and talents decide what each people becomes. First
+  ladders to discuss:
+  - **Humans**: camp (foraging, hunting, tents) -> village (farming unlocks: fields on rich soil, the soil system pays
+    off; wooden houses; area marks for fields) -> town (tools and weapons from stone and later metal: quarries in the
+    hills, smiths; better houses of timber and stone; roads) -> later ages (walls, mills, trade between settlements).
+  - **Wood elves**: grove camp (lanterns, leaf huts, gathering) -> grove (tree homes in ancient trees, tending the
+    forest: they plant saplings and protect old woods, forestry marks) -> tree city (bridges between ancient trees,
+    healing magic over the land around: faster growth, soil richness) -> later (moonwells, spirits).
+  - **Dwarves** (later): camp in the hills -> stone hall (mining, quarries) -> mountain hold.
+  - Each age raises `MaxPeople`, adds shelter types (tent -> hut -> house) and work (fields, quarries, forestry),
+    and can change what they need (elves need more old woods as they grow; humans need farmland). Weapons come with
+    hunting and with the first conflicts between peoples over land (later, still no fail state).
 
 ### Talents
 
@@ -198,10 +300,137 @@ running downhill (real depth below the ground, waterfalls at the steps), and dig
   age. The milestones are data, so new ones are a row. Later ideas: points from variety and stability (species and
   types present, populations steady over days), so painting one huge field earns nothing.
 - **Branches**: Water (wider dig, sense groundwater, wells, dams), Land (sand, stone, raise and lower), Life
-  (introduce species, nurseries), Insight (overlays: fertility, populations, minerals; forecasts), Peoples (ages,
-  per-people traits).
+  (introduce species, nurseries), Insight (overlays: fertility, populations, minerals; forecasts), Peoples (who
+  settles and how often, peace between peoples; later ages and per-people traits; built Nov 12, see Settlers).
 - **The world decides what is possible, talents decide which tools**: no wolf talent before there are deer.
+- **Built (Nov 11)**: `Milestones.hytable` (9 first-time events, a point each: 50 / 400 / 1,500 grass, the first and
+  fifth spring, 25 and 300 trees, land at rock level, the first snow) and `Talents.hytable` (15 talents in four
+  branches, 21 points in all, so a run chooses): **Water** wetter banks and floodplains (moisture reach +1, +2), strong
+  springs (+8 head), deep digging (springs from groundwater 0.1 weaker); **Land** the Sand brush, wide and great
+  brushes (sizes up to 12 and 16); **Life** fertile and rich soil (land changes +50% each), seed wind and lush growth
+  (plants spread +50% each; "lush growth" was "old woods" until Nov 11, that name is kept for ancient forests), forest
+  edge (forests creep onto bare ground); **Insight** sense water, read the land, water sight (groundwater clues +0.25 each), faint
+  traces (clues from 0.1 weaker groundwater). Some need the one above them. They are bought on the World Menu's
+  Technology page (T); the brush bar's Grass and Raise still come by themselves.
 - **Energy**: brushes cost energy (digging more than dirt) that refills with the world's health, so tools are choices.
+
+### World Menu (Nov 11, 2026)
+
+- **Tab opens it** (also the Menu button at the top right, purple while points wait; Esc opens it too): the world dims
+  and the clock stops (Settings > Gameplay can leave it running). Tiles: **Technology** (T: the talent tree, a tab per
+  branch with its talents as cards along a path, choose one and Learn), **Milestones** (cards with progress, by track,
+  Spend points), **Settings** (Gameplay: overlays, pause; Controls; Audio, Graphics, Interface later), **Codex** and **Map Overview** (placeholders),
+  **Return to World**; beside them Island Progress (season, points, talents, milestones, species, animals, brushes, a
+  tip). Esc goes back to the tiles, then closes; the keys move between the buttons while it is open.
+- **Look** (from the user's mock-ups, Nov 11): dark navy panels with gold rims, purple accents (ribbons, main buttons),
+  parchment detail panels on the right, a serif for titles (Cormorant Garamond) over Open Sans. The art is drawn in code
+  for now (`scripts/art/make_ui_art.py`); tile pictures are tinted placeholders until painted. The mock-ups' top bar of
+  tabs and bottom resource bar are left out for now. The HUD (brush bar, clock, notices, settlements) uses the same look;
+  top left only the Inspect bar (moisture M, soil F overlays); every key is in Settings > Controls, and a tutorial level
+  will teach them later (the user, Nov 11). From the user's HUD mock-up (Nov 11): settlement cards with icon stats,
+  brush pictures, toasts at the top right; its top tab bar, bottom stats bar and objective banner are not built yet.
+
+### Settlers (Nov 11, 2026; settling on their own Nov 12)
+
+- **Indirect control** (agreed Nov 11, made stricter Nov 12): the player shapes the land and picks talents; settlers
+  choose for themselves where to live and what to do. The player doesn't place settlements or mark work areas: they
+  learn talents that let a people settle, select a settlement to see it in depth, rename it and set its focus.
+- **Settling on their own** (the user, Nov 12): a Peoples talent lets a people settle. First fire (humans), Elven kin
+  (elves), Mountain halls (dwarves, after First fire). Their first group soon comes to the best place on the map for them
+  (`SettlingRules::Find`: meets their needs, keeps `SettleSpacing` from others and from fresh ruins, liked most by
+  `LikesWater/Forest/Meadow`). After that a new group now and then comes to another best place, half as likely for each
+  settlement they have (`SettleDecay`); a later talent replaces the earlier and raises the chance (Wanderers, Elven
+  paths, Deep delving), so the player chooses which people to favour and shapes the land for them. A full settlement of
+  level 2 or more branches out: it sends a group to the best place within `BranchReach`. No land that suits them: the
+  news says so and they look again in a few days. **Wood elves** never come as a group: an elf settlement with 4 ancient
+  trees within 32 tiles becomes wood elves once Call of the woods (after Old woods) is learned (`SettlingRules::Evolve`:
+  its hearth turns into a lantern, bowers into leaf huts, lodges into tree houses; name and villagers stay); the
+  settlement panel shows how near they are.
+- **Villagers and jobs**: every person is a villager with a name. Each day the settlement gives each one a job from what
+  it needs: gatherers and hunters for food (whichever gives more: dwarves hunt, elves gather), guards while tension is
+  high, a woodcutter and a builder while it needs shelters, foresters who plant saplings (elves, wood elves); then the
+  player's **focus** (food, wood or building) takes
+  the rest, else they rest. The hurt can't work. The gatherers' and hunters' work is what they eat; the land caps it
+  (berries within reach, game in the region), so a settlement stops growing where its land runs out.
+- **Levels** (each people's own, data in `Peoples.hytable`): humans camp (tents) -> hamlet (timber huts) -> village;
+  elves camp (bowers) -> glen (elven lodges) -> village; wood elves grove (leaf huts) -> glade (tree houses, 8 old trees) -> elder hold (14); dwarves delving (stone huts) -> hold
+  (stone halls, 60 rock) -> deep hall (90). A level needs people, shelters, days of food in store and the people's own
+  needs; it gives a new shelter, more room and a bigger store. Ages (above) build on this later.
+- **The settlement panel**: the HUD's Settlers list (level or tension per card; people / room, shelters, food, wood), and
+  a click on a card or on a settlement's centre in the world opens its detail: people and level, stores, focus buttons,
+  tension, what the next level needs (have / need, green when met) and every villager with their job.
+- **Feuds** (the user, Nov 12: hostile, "not immediately murder" but much faster violence the closer they live): no
+  limits on where peoples live. A people that dislikes another (`Dislikes`: elves and dwarves) builds tension living
+  within `DislikeRadius` (32) of it, much faster the closer (by closeness squared), fading when apart. Quarrels from 25%,
+  raids from 50% (food stolen or a shelter burned; guards drive raiders off), fights from 75% (villagers hurt for days),
+  deaths only at the very top. Violence vents the attackers' tension and angers the victims, so it comes in waves; new
+  groups prefer places away from peoples they dislike, but settle there when the land is much better. The talent
+  Peacemakers halves the tension. In the sim, a dwarf hold beside an elf grove had its first quarrel after about ten
+  days and its first death about a month later.
+- **Look**: centres (fire, lantern, mine) with their light, shelters per level (on reaching a level one older shelter is
+  rebuilt as the new level's at once, then the builders rebuild the rest with spare wood), villagers as small sprites doing their
+  job (at bushes, at trees, out hunting, at shelters, on guard round the centre). Temporary art drawn in code
+  (`scripts/art/make_temp_settler_art.py`: Hut, TreeHouse and StoneHall added Nov 12).
+- **Farming** (the user, Nov 12): once a human settlement becomes a hamlet (milestone First hamlet), the Peoples talent
+  Farming unlocks the **Farmland** brush. The player paints where fields may go; the villagers decide when to work
+  them. **Farmers** sow empty fields in spring and summer and harvest ripe ones (`FarmRules`). Crops grow from sown to
+  ripe over about `CropDays`, faster on rich (soil quality) and moist ground and in a growing season; winter frost
+  withers what is still growing. A harvest gives `CropFood` by the soil's fertility and wears the soil a little, so the
+  soil system matters to the peoples. Wild plant food is now seasonal too (`Harvest`: winter 0.25), so the store has to
+  last the winter. A hamlet is no longer capped by berries and game: in the sim, humans with 40 painted fields reached
+  village within a season or two, those without stayed hamlets for 120 days; stores still ran out by late winter, so
+  more field, better soil and water are the player's levers. Nothing is built on farmland. Art is temporary.
+  The brush paints only within reach of a settlement that farms (a hamlet's Radius; the user, Nov 12: anywhere else feels
+  wrong); elsewhere nothing is laid and a notice says why.
+- **Next**: tune in play; ages (planning above); more ways the peoples meet (trade, peace talents); a tutorial.
+
+### Plan (agreed ideas, Nov 12, 2026; not built yet)
+
+In rough order. Each is discussed again briefly before it is built.
+
+1. **Third-level art**: a shelter for every people's third level (humans a longhouse, elves a great hall, wood elves an
+   elder tree, dwarves a carved gate); the centres grow a step with the levels (a bigger fire, a mine with a headframe).
+   Temporary art drawn in code, as before.
+2. **Each people farms its own way** (same `FarmRules`, growth per people as data): elves and wood elves an **Orchard**
+   brush (fruit trees their foresters plant: slow, a year to the first fruit, then fruit each autumn without sowing;
+   little soil wear; like moisture and old woods near); dwarves **mushroom beds** on rock or dug ground near their
+   mine (no soil, need moisture, no frost: steady in winter, less food). Each unlocked by a talent after that people's
+   own first level-up.
+3. **Fishing** (the user, Nov 12): a talent unlocked once a human or dwarf settlement builds its first lasting building
+   (hut or stone hall). **Fishers** sit at the shore, or later go out in **boats** on lakes, rivers and the sea (a
+   dock on the shore; the boat sprite moves on water tiles). The catch comes from the water life the player made
+   (`HabitatRules`, the fish species): fishing thins a habitat's fish, so the player's rivers and lakes feed people.
+4. **The settlement's area grows with its level** (the user, Nov 12): a reach per `PeopleLevel` instead of one
+   `Radius`, used by the survey (food, wood, farmland), jobs and where villagers walk; bigger places work more land.
+   Villagers may walk further out as it grows, and always find their way home **without pathfinding** (the user, Nov
+   12): they steer towards a heading (out to the work spot, back to the centre), step round water and steep height by
+   trying a turned heading, and give up a spot they can't reach. Cheap for many walkers.
+5. **Work parties for large towns** (the user, Nov 12, like Total War): villagers with the same job walk as a group;
+   one leader picks where to go, the others follow at a set offset and spread round the spot when they arrive. Walking
+   is already only for show (the simulation counts jobs, nobody pathfinds), so this cuts the per-sprite work in
+   `SettlersView`; the party heads home the same way. Agreed by the user, Nov 12. With it: a sprite stands for several people in big towns, and far-off settlements update less often.
+6. **Naming** (the user, Nov 12): the player names settlements and renames villagers. Needs a text field in Hydro's UI
+   first (an engine change: `UIInputFieldComponent`, focus by click, typed characters, Backspace, Enter, Escape, the
+   keyboard captured while a field has focus); then the panel's name and each villager become editable, Rename stays
+   as "suggest a name". ASCII at first (bitmap fonts); Japanese input (IME) and more letters later.
+7. **Hidden species with a loop** (the user, Nov 12): every species (and later faction) starts hidden, like the fish and
+   water birds: **hint** (? card, silhouette, riddle; Insight talents sharpen hints or show where it could live),
+   **discovery** (it appears, the card flips, an entry with what it needs), **influence** (only then its talents:
+   attract, protect, spread), **upgrade** (hidden variants by habitat: deer in snowy hills become red deer, wolves in
+   old woods grey wolves). Factions can arise the same way (a warlike people where land is scarce beside rich
+   neighbours; a people that builds defences after surviving raids). Always a few visible goals; Dev mode reveals all.
+8. **Pacing profiles** (the user, Nov 12: Dev fast, a release slower): `Pacing.hytable` with Dev and Release rows that
+   scale day and season length, milestone targets, talent costs and points, settling, births and level needs; the
+   Dist build uses Release, Oxygen and Debug use Dev, Settings can switch. Milestone times are logged and the headless
+   sim prints a timeline per profile (first people, first village, half the talents) to tune against targets. Later a
+   pace choice per world (Relaxed, Standard, Long).
+9. **Brush energy** (from the design above): brushes cost energy that refills with the world's health, so shaping is a
+   choice; instant in Dev.
+11. **Saving and loading with several slots** (the user, Nov 12; also makes testing easier): the whole session (map,
+    heights, water, soil, objects, wildlife, settlements and villagers, talents, milestones, clock and season) to a file
+    per slot with a name, date and a small picture; quick save and load keys in Dev; a version number so old saves load.
+10. **More factions** (the user, Nov 12): warlike peoples that raid, peoples that build defences (walls, towers), more
+    ways to steer peoples indirectly; with the ages.
 
 ### Structure
 
@@ -242,9 +471,10 @@ a free sandbox; seeded islands; saving and loading.
 4. The art pass: rough edges, foam, decorations, repainted tiles, animated water; real height with stepped cliffs (Nov
    10; cliff art still to come).
 5. Hidden groundwater and springs (built Nov 10; talents to sharpen the clues come with 7).
-6. Fauna populations.
-7. Talents and energy.
-8. One people (camp and first age), then the others.
+6. Fauna populations (built Nov 11: wildlife), soil (built Nov 11: richness, sand, loam; drainage still to come).
+   Farming as a talent once there are peoples: built Nov 12 (Farmland brush, farmers, crops).
+7. Talents (built Nov 11) and energy. Seasons built Nov 11.
+8. One people (camp and first age), then the others. The Humans' camp built Nov 11 (settlers); the first age next.
 
 ## First milestone
 

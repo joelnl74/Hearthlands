@@ -122,3 +122,13 @@ Entities:
           Properties:
             UIFont: 7311820458392716001
             TerrainTypes: 4392505292887402202
+  - Entity: 6435231546561427396
+    TagComponent:
+      Tag: World Menu
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    NativeScriptComponent:
+      Scripts:
+        - Name: WorldMenuScript

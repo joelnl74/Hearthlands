@@ -1,0 +1,401 @@
+Handle: 3987286432867960408
+DataTable:
+  Version: 1
+  Type: PeopleDefinition
+  Rows:
+    Humans:
+      Name: Humans
+      PeopleId: 1
+      SettlementNames: [Ashford, Emberhollow, Riverstead, Stonewell, Oakrest, Willowmere, Fernbrook, Hearthmoor, Redfire, Elmwick]
+      VillagerNames: [Aldric, Maren, Tobin, Elsa, Garrick, Wynn, Hilda, Bram, Isolde, Cedric, Rowena, Osric, Ada, Finn, Greta, Ulric, Mira, Edwin, Sigrid, Hal]
+      Sprite: 816922904342397002
+      PixelsPerTile: 32
+      IdleFrames: 2
+      WalkFrames: 4
+      WorkFrames: 2
+      WalkSpeed: 0.8
+      CentreObjectId: 60
+      CentreName: fire
+      GlowColor: [1, 0.72, 0.25]
+      Smoke: true
+      CentreMinLevel: 0
+      Radius: 10
+      NeedWater: 0.3
+      NeedFood: 0.4
+      NeedWood: 0.2
+      NeedObjectIds: []
+      NeedObjects: 0
+      NeedObjectsName: ""
+      NeedTileIds: []
+      NeedTiles: 0
+      NeedTilesName: ""
+      LikesWater: 1
+      LikesForest: 0.5
+      LikesMeadow: 1
+      ArrivePerDay: 0.5
+      EvolvesFromId: 0
+      EvolvePerDay: 0.1
+      SettleDecay: 0.5
+      SettleSpacing: 18
+      GroupMin: 3
+      GroupMax: 5
+      BranchFromLevel: 1
+      BranchPerDay: 0.06
+      BranchReach: 40
+      FoodPerPerson: 1
+      GatherPerPerson: 2
+      HuntPerPerson: 0.25
+      MeatPerAnimal: 6
+      HuntAnimalIds: [1, 2, 20]
+      FellPerDay: 1
+      PlantObjectIds: []
+      PlantPerDay: 0
+      ForesterShare: 0
+      FarmTileId: 7
+      FarmFromLevel: 1
+      CropObjectIds: [72, 73, 74]
+      CropDays: 8
+      CropFood: 6
+      SowPerDay: 4
+      HarvestPerDay: 6
+      SoilWear: 0.04
+      BirthsPerDay: 0.08
+      LeavePerDay: 0.5
+      Levels:
+        - Name: Camp
+          People: 0
+          Shelters: 0
+          FoodDays: 0
+          NeedObjects: 0
+          NeedTiles: 0
+          ShelterObjectId: 61
+          PeoplePerShelter: 3
+          WoodPerShelter: 6
+          MaxPeople: 9
+          StoreDays: 4
+          Description: Tents of hides round a fire
+        - Name: Hamlet
+          People: 8
+          Shelters: 2
+          FoodDays: 3
+          NeedObjects: 0
+          NeedTiles: 0
+          ShelterObjectId: 66
+          PeoplePerShelter: 4
+          WoodPerShelter: 10
+          MaxPeople: 16
+          StoreDays: 6
+          Description: "Timber huts that hold 4: room for 16"
+        - Name: Village
+          People: 14
+          Shelters: 4
+          FoodDays: 5
+          NeedObjects: 0
+          NeedTiles: 0
+          ShelterObjectId: 66
+          PeoplePerShelter: 4
+          WoodPerShelter: 10
+          MaxPeople: 24
+          StoreDays: 8
+          Description: Room for 24; a full village sends settlers out
+      Dislikes: []
+      DislikeRadius: 32
+      TensionPerDay: 0.12
+      GuardShare: 0.3
+    Elves:
+      Name: Elves
+      PeopleId: 4
+      SettlementNames: [Aelindor, Fennhollow, Sylmara, Lirendel, Tamarin, Wilwen, Cerelind, Ithrael]
+      VillagerNames: [Aeris, Faelan, Lyra, Taren, Elowyn, Sorin, Nessa, Calen, Mirel, Ithan, Selene, Rowan, Ilya, Daelin, Arwen, Kael]
+      Sprite: 652863538213208253
+      PixelsPerTile: 32
+      IdleFrames: 2
+      WalkFrames: 4
+      WorkFrames: 2
+      WalkSpeed: 0.75
+      CentreObjectId: 70
+      CentreName: hearth
+      GlowColor: [0.72, 0.86, 1]
+      Smoke: true
+      CentreMinLevel: 0
+      Radius: 12
+      NeedWater: 0.3
+      NeedFood: 0.4
+      NeedWood: 0.5
+      NeedObjectIds: []
+      NeedObjects: 0
+      NeedObjectsName: ""
+      NeedTileIds: []
+      NeedTiles: 0
+      NeedTilesName: ""
+      LikesWater: 1
+      LikesForest: 2
+      LikesMeadow: 0.5
+      ArrivePerDay: 0.5
+      EvolvesFromId: 0
+      EvolvePerDay: 0.1
+      SettleDecay: 0.5
+      SettleSpacing: 18
+      GroupMin: 3
+      GroupMax: 5
+      BranchFromLevel: 1
+      BranchPerDay: 0.05
+      BranchReach: 40
+      FoodPerPerson: 0.9
+      GatherPerPerson: 2
+      HuntPerPerson: 0.2
+      MeatPerAnimal: 6
+      HuntAnimalIds: [1, 2]
+      FellPerDay: 0.6
+      PlantObjectIds: [5, 8]
+      PlantPerDay: 0.5
+      ForesterShare: 0.2
+      FarmTileId: -1
+      FarmFromLevel: 1
+      CropObjectIds: []
+      CropDays: 8
+      CropFood: 6
+      SowPerDay: 4
+      HarvestPerDay: 6
+      SoilWear: 0.04
+      BirthsPerDay: 0.07
+      LeavePerDay: 0.45
+      Levels:
+        - Name: Camp
+          People: 0
+          Shelters: 0
+          FoodDays: 0
+          NeedObjects: 0
+          NeedTiles: 0
+          ShelterObjectId: 69
+          PeoplePerShelter: 3
+          WoodPerShelter: 3
+          MaxPeople: 9
+          StoreDays: 4
+          Description: Bowers of woven boughs round a hearth
+        - Name: Glen
+          People: 7
+          Shelters: 2
+          FoodDays: 3
+          NeedObjects: 0
+          NeedTiles: 0
+          ShelterObjectId: 71
+          PeoplePerShelter: 4
+          WoodPerShelter: 6
+          MaxPeople: 16
+          StoreDays: 6
+          Description: "Elven lodges that hold 4: room for 16"
+        - Name: Village
+          People: 13
+          Shelters: 4
+          FoodDays: 5
+          NeedObjects: 0
+          NeedTiles: 0
+          ShelterObjectId: 71
+          PeoplePerShelter: 4
+          WoodPerShelter: 6
+          MaxPeople: 24
+          StoreDays: 7
+          Description: Room for 24; a full village sends elves out
+      Dislikes: [3]
+      DislikeRadius: 32
+      TensionPerDay: 0.12
+      GuardShare: 0.3
+    WoodElves:
+      Name: Wood elves
+      PeopleId: 2
+      SettlementNames: [Silverglade, Moonwhisper, Elderhollow, Thistledown, Lindenmere, Starfall, Mistvale, Brightleaf]
+      VillagerNames: [Aerin, Liriel, Thalion, Elowen, Faelar, Nimue, Caladrel, Sylvi, Irian, Melian, Orophin, Yavanna, Lorien, Aranel, Ithil, Saelind]
+      Sprite: 722561558195642944
+      PixelsPerTile: 32
+      IdleFrames: 2
+      WalkFrames: 4
+      WorkFrames: 2
+      WalkSpeed: 0.7
+      CentreObjectId: 62
+      CentreName: lantern
+      GlowColor: [0.62, 1, 0.82]
+      Smoke: false
+      CentreMinLevel: 0
+      Radius: 32
+      NeedWater: 0.3
+      NeedFood: 0.4
+      NeedWood: 0
+      NeedObjectIds: [24, 25]
+      NeedObjects: 4
+      NeedObjectsName: old trees
+      NeedTileIds: []
+      NeedTiles: 0
+      NeedTilesName: ""
+      LikesWater: 1
+      LikesForest: 3
+      LikesMeadow: 0.2
+      ArrivePerDay: 0.4
+      EvolvesFromId: 4
+      EvolvePerDay: 0.15
+      SettleDecay: 0.5
+      SettleSpacing: 20
+      GroupMin: 2
+      GroupMax: 4
+      BranchFromLevel: 1
+      BranchPerDay: 0.04
+      BranchReach: 36
+      FoodPerPerson: 0.8
+      GatherPerPerson: 2.2
+      HuntPerPerson: 0.15
+      MeatPerAnimal: 6
+      HuntAnimalIds: [1]
+      FellPerDay: 0
+      PlantObjectIds: [5, 11]
+      PlantPerDay: 0.5
+      ForesterShare: 0.2
+      FarmTileId: -1
+      FarmFromLevel: 1
+      CropObjectIds: []
+      CropDays: 8
+      CropFood: 6
+      SowPerDay: 4
+      HarvestPerDay: 6
+      SoilWear: 0.04
+      BirthsPerDay: 0.05
+      LeavePerDay: 0.4
+      Levels:
+        - Name: Grove
+          People: 0
+          Shelters: 0
+          FoodDays: 0
+          NeedObjects: 0
+          NeedTiles: 0
+          ShelterObjectId: 63
+          PeoplePerShelter: 3
+          WoodPerShelter: 0
+          MaxPeople: 8
+          StoreDays: 5
+          Description: Leaf huts under the old trees
+        - Name: Glade
+          People: 7
+          Shelters: 2
+          FoodDays: 3
+          NeedObjects: 8
+          NeedTiles: 0
+          ShelterObjectId: 67
+          PeoplePerShelter: 4
+          WoodPerShelter: 0
+          MaxPeople: 14
+          StoreDays: 6
+          Description: "Tree houses in the boughs: room for 14"
+        - Name: Elder hold
+          People: 12
+          Shelters: 4
+          FoodDays: 4
+          NeedObjects: 14
+          NeedTiles: 0
+          ShelterObjectId: 67
+          PeoplePerShelter: 4
+          WoodPerShelter: 0
+          MaxPeople: 20
+          StoreDays: 7
+          Description: The heart of the old woods; a full hold sends elves out
+      Dislikes: [3]
+      DislikeRadius: 32
+      TensionPerDay: 0.12
+      GuardShare: 0.3
+    Dwarves:
+      Name: Dwarves
+      PeopleId: 3
+      SettlementNames: [Ironhold, Deepdelve, Stonebeard, Khazgrim, Copperhall, Granitegate, Emberforge, Hammerdeep]
+      VillagerNames: [Thorin, Dagna, Borin, Helga, Durin, Brunhild, Gimli, Katla, Balin, Runa, Dwalin, Ingrid, Gloin, Freya, Nali, Bera]
+      Sprite: 549859738743462080
+      PixelsPerTile: 32
+      IdleFrames: 2
+      WalkFrames: 4
+      WorkFrames: 2
+      WalkSpeed: 0.6
+      CentreObjectId: 64
+      CentreName: mine
+      GlowColor: [1, 0.6, 0.2]
+      Smoke: true
+      CentreMinLevel: 1
+      Radius: 12
+      NeedWater: 0.2
+      NeedFood: 0.3
+      NeedWood: 0.1
+      NeedObjectIds: []
+      NeedObjects: 0
+      NeedObjectsName: ""
+      NeedTileIds: [6, 4]
+      NeedTiles: 40
+      NeedTilesName: mountain rock
+      LikesWater: 0.5
+      LikesForest: 0.3
+      LikesMeadow: 0.3
+      ArrivePerDay: 0.4
+      EvolvesFromId: 0
+      EvolvePerDay: 0.1
+      SettleDecay: 0.5
+      SettleSpacing: 20
+      GroupMin: 3
+      GroupMax: 5
+      BranchFromLevel: 1
+      BranchPerDay: 0.04
+      BranchReach: 44
+      FoodPerPerson: 1
+      GatherPerPerson: 1
+      HuntPerPerson: 0.3
+      MeatPerAnimal: 6
+      HuntAnimalIds: [1, 2, 4]
+      FellPerDay: 1
+      PlantObjectIds: []
+      PlantPerDay: 0
+      ForesterShare: 0
+      FarmTileId: -1
+      FarmFromLevel: 1
+      CropObjectIds: []
+      CropDays: 8
+      CropFood: 6
+      SowPerDay: 4
+      HarvestPerDay: 6
+      SoilWear: 0.04
+      BirthsPerDay: 0.06
+      LeavePerDay: 0.4
+      Levels:
+        - Name: Delving
+          People: 0
+          Shelters: 0
+          FoodDays: 0
+          NeedObjects: 0
+          NeedTiles: 0
+          ShelterObjectId: 65
+          PeoplePerShelter: 4
+          WoodPerShelter: 0
+          MaxPeople: 8
+          StoreDays: 6
+          Description: Stone huts dug into the hill
+        - Name: Hold
+          People: 7
+          Shelters: 1
+          FoodDays: 4
+          NeedObjects: 0
+          NeedTiles: 60
+          ShelterObjectId: 68
+          PeoplePerShelter: 6
+          WoodPerShelter: 4
+          MaxPeople: 16
+          StoreDays: 8
+          Description: Halls cut into the rock that hold 6
+        - Name: Deep hall
+          People: 14
+          Shelters: 3
+          FoodDays: 5
+          NeedObjects: 0
+          NeedTiles: 90
+          ShelterObjectId: 68
+          PeoplePerShelter: 6
+          WoodPerShelter: 4
+          MaxPeople: 26
+          StoreDays: 9
+          Description: Deep halls; a full one sends dwarves to new mountains
+      Dislikes: [2, 4]
+      DislikeRadius: 32
+      TensionPerDay: 0.12
+      GuardShare: 0.35

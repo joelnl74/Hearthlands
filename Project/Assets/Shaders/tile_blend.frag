@@ -17,7 +17,8 @@
 //              level of the fragment's own tile blend: cliffs keep their edges (ReliefView). It has a ring of the outside
 //              tile (water) around the map; lookups clamp to it, so a plane larger than the texture shows it beyond the map.
 //   Tiling.x = art pixels per tile (32), Tiling.y = edge noise (e.g. 0.18)
-//   Tint     = rgb multiplies the colour (white = as drawn); alpha below 0.5 shows the moisture overlay (the map's alpha)
+//   Tint     = rgb multiplies the colour (white = as drawn); alpha 0 shows the moisture overlay, 0.25 the soil, 0.375 the
+//              groundwater (map alpha)
 // Up to MaxTypes ids; other ids draw as id 0.
 
 #include "lighting.glsl"
@@ -38,6 +39,17 @@ const vec2 Drift = vec2(1.5, 0.75); // art pixels a second the water's texture d
 float Hash(vec2 cell, float seed)
 {
 	return fract(sin(dot(cell, vec2(12.9898, 78.233)) + seed * 37.7) * 43758.5453);
+}
+
+// Smooth noise: hashes on a grid of whole numbers, blended between them (drifts of snow).
+float ValueNoise(vec2 q, float seed)
+{
+	vec2 i = floor(q);
+	vec2 f = fract(q);
+	f = f * f * (3.0 - 2.0 * f);
+	float bottom = mix(Hash(i, seed), Hash(i + vec2(1.0, 0.0), seed), f.x);
+	float top = mix(Hash(i + vec2(0.0, 1.0), seed), Hash(i + vec2(1.0, 1.0), seed), f.x);
+	return mix(bottom, top, f.y);
 }
 
 void main()
@@ -178,14 +190,54 @@ void main()
 		vec3 damp = mix(albedo, vec3(0.06, 0.10, 0.14), 0.6);
 		albedo = pick < clue * 0.04 ? vec3(0.26, 0.43, 0.61) : (pick < specks ? damp : mix(albedo, albedo * vec3(0.85, 0.9, 1.0), clue * 0.5));
 	}
+	// The season (TerrainView::SetSeason; the emission colour, never added as light): r = snow lying on the ground, in
+	// drifts and thickest up high; g = ice on the water, growing out from the shores; b = green fading to straw.
+	float groundSnow = material.emission.r;
+	float ice = material.emission.g;
+	float fade = material.emission.b;
+	if (water == false && fade > 0.0 && albedo.g > albedo.r && albedo.g > albedo.b)
+	{
+		albedo = mix(albedo, vec3(albedo.g * 1.05, albedo.g * 0.82, albedo.g * 0.32), fade); // greens only
+	}
+	if (water == false && groundSnow > 0.0)
+	{
+		vec2 at = artPixel / artPixels; // in tiles, stepped to the art pixels
+		float drift = ValueNoise(at * 0.45, 21.0) * 0.75 + ValueNoise(at * 1.3, 26.0) * 0.17 + Hash(artPixel, 22.0) * 0.08;
+		if (drift < groundSnow * (1.0 + 0.12 * float(baseLevel)))
+		{
+			float shade = Hash(artPixel, 23.0);
+			albedo = shade < 0.12 ? vec3(0.70, 0.76, 0.86) : (shade < 0.3 ? vec3(0.80, 0.84, 0.90) : vec3(0.88, 0.90, 0.94));
+		}
+	}
+	if (water && ice > 0.0 && landShare * 2.0 + Hash(cluster, 24.0) * 0.3 > 1.0 - ice)
+	{
+		albedo = Hash(artPixel, 25.0) < 0.08 ? vec3(0.62, 0.72, 0.80) : vec3(0.32, 0.45, 0.56);
+	}
 	albedo *= material.tint.rgb * fragColor.rgb;
 
-	// The moisture overlay (tint alpha below 0.5): the tile's moisture (the map's alpha), dry orange to wet blue, over its art.
-	if (material.tint.a < 0.5)
+	// The overlays (tint alpha below 0.5) show the map's alpha over the art: at 0 the moisture, dry orange to wet blue, with
+	// groundwater dots; at 0.25 the soil's quality, pale to green; at 0.375 the groundwater (water stays as drawn).
+	if (material.tint.a < 0.125)
 	{
 		float wet = hereValue.a;
 		albedo = mix(albedo, mix(vec3(0.85, 0.55, 0.25), vec3(0.15, 0.45, 1.0), wet), 0.6);
 		albedo = water == false && Hash(artPixel, 13.0) < clue * 1.5 ? vec3(0.2, 0.55, 1.0) : albedo; // groundwater dots
+	}
+	else if (material.tint.a < 0.3125 && water == false)
+	{
+		float rich = hereValue.a;
+		vec3 soil = rich < 0.5 ? mix(vec3(0.86, 0.80, 0.62), vec3(0.62, 0.52, 0.30), rich * 2.0)
+			: mix(vec3(0.62, 0.52, 0.30), vec3(0.18, 0.48, 0.14), rich * 2.0 - 1.0);
+		albedo = mix(albedo, soil, 0.65);
+	}
+	else if (material.tint.a < 0.5 && water == false)
+	{
+		// Grey-tan where painted grass dries, teal from 0.5 where it holds, deep blue and bright dots where a dug bed springs.
+		float deep = hereValue.a;
+		vec3 ground = deep < 0.5 ? mix(vec3(0.66, 0.60, 0.52), vec3(0.56, 0.70, 0.70), deep * 2.0)
+			: mix(vec3(0.22, 0.66, 0.70), vec3(0.10, 0.26, 0.78), deep * 2.0 - 1.0);
+		albedo = mix(albedo, ground, 0.65);
+		albedo = deep > 0.78 && Hash(artPixel, 14.0) < 0.06 ? vec3(0.75, 0.92, 1.0) : albedo; // spring dots
 	}
 
 	if (IsForwardLit() == false)

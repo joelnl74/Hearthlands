@@ -30,11 +30,11 @@ namespace Hydro
 			m_Terrain = terrain;
 		}
 
-		// Uploads changes at most every UploadInterval. art: the atlas (0: palette); moisture (nullptr: dry), heights (flat) and
-		// groundwater clues per tile 0 to 63 (none; cluesRevision moves when they change) are optional.
+		// Uploads changes at most every UploadInterval. art: the atlas (0: palette); moisture (nullptr: dry; the soil's quality
+		// with showSoil, the groundwater with showGroundwater), heights (flat) and clues per tile 0 to 63 are optional.
 		void Present(const TileMap& map, const std::vector<TerrainTypeDefinition>& types, uint8_t outsideTileId, AssetHandle art,
 			const std::vector<uint8_t>* moisture, bool showMoisture, float deltaTime, const HeightMap* heights = nullptr,
-			const std::vector<uint8_t>* clues = nullptr, uint64_t cluesRevision = 0)
+			const std::vector<uint8_t>* clues = nullptr, uint64_t cluesRevision = 0, bool showSoil = false, bool showGroundwater = false)
 		{
 			MeshComponent* mesh = m_Terrain.IsValid() ? m_Terrain.TryGetComponent<MeshComponent>() : nullptr;
 			if (mesh == nullptr || mesh->Materials.empty() || map.GetWidth() == 0 || map.GetHeight() == 0)
@@ -112,10 +112,32 @@ namespace Hydro
 			MaterialData& material = mesh->Materials[0].Inline;
 			material.Albedo = art != 0 ? art : m_Palette;
 			material.Emissive = m_Tiles;
-			material.Tint.a = showMoisture ? 0.0f : 1.0f; // tile_blend.frag: alpha below 0.5 shows the moisture overlay
+			// tile_blend.frag: alpha below 0.5 shows an overlay of the map's alpha: 0 moisture, 0.25 soil, 0.375 groundwater
+			// (those given as moisture).
+			material.Tint.a = showGroundwater ? 0.375f : (showSoil ? 0.25f : (showMoisture ? 0.0f : 1.0f));
 			mesh->Shape = MeshShape::Plane;
 			const float margin = 2.0f * (float)OutsideMargin;
 			mesh->Size = glm::vec3((float)map.GetWidth() + margin, (float)map.GetHeight() + margin, 1.0f); // 1 tile = 1 m
+		}
+
+		// The season's look on the material: the land's colour (Tint); snow on the ground, ice on the water and green fading to
+		// straw (tile_blend.frag reads them from the emission colour, never added). In 1/32 steps: a new GPU material per step.
+		void SetSeason(const glm::vec3& tint, float groundSnow, float ice, float fade)
+		{
+			MeshComponent* mesh = m_Terrain.IsValid() ? m_Terrain.TryGetComponent<MeshComponent>() : nullptr;
+			if (mesh == nullptr || mesh->Materials.empty())
+			{
+				return;
+			}
+			MaterialData& material = mesh->Materials[0].Inline;
+			const glm::vec3 season = glm::round(glm::vec3(tint) * 32.0f) / 32.0f;
+			const glm::vec3 weather = glm::round(glm::vec3(groundSnow, ice, fade) * 32.0f) / 32.0f;
+			if (glm::vec3(material.Tint) != season || material.EmissionColor != weather || material.EmissionIntensity != 1.0f)
+			{
+				material.Tint = glm::vec4(season, material.Tint.a);
+				material.EmissionColor = weather;
+				material.EmissionIntensity = 1.0f;
+			}
 		}
 
 		// Drops the textures and clears the slot, so nothing names a removed handle.
@@ -126,7 +148,8 @@ namespace Hydro
 			{
 				mesh->Materials[0].Inline.Albedo = 0;
 				mesh->Materials[0].Inline.Emissive = 0;
-				mesh->Materials[0].Inline.Tint.a = 1.0f;
+				mesh->Materials[0].Inline.Tint = glm::vec4(1.0f);
+				mesh->Materials[0].Inline.EmissionColor = glm::vec3(0.0f);
 			}
 			RemoveTiles();
 			if (m_Palette != 0)

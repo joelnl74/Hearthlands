@@ -1,0 +1,61 @@
+Handle: 4973082495598781234
+Type: Texture2D
+TextureImport:
+  Format: SRGB
+  Filter: Linear
+  Wrap: Clamp
+  SpriteMode: Multiple
+  PixelsPerUnit: 100
+  Slicing:
+    Mode: Manual
+    CellSize: [32, 32]
+    Offset: [0, 0]
+    Spacing: [0, 0]
+    Columns: 0
+    Rows: 0
+    RowNames: []
+    DefaultPivot: [0.5, 0.5]
+  Sprites:
+    - {Name: Panel, Rect: [464, 4, 96, 96], Pivot: [0.5, 0.5]}
+    - {Name: Tile, Rect: [564, 4, 96, 96], Pivot: [0.5, 0.5]}
+    - {Name: TileGreen, Rect: [664, 4, 96, 96], Pivot: [0.5, 0.5]}
+    - {Name: Select, Rect: [764, 4, 96, 96], Pivot: [0.5, 0.5]}
+    - {Name: Parchment, Rect: [4, 4, 128, 128], Pivot: [0.5, 0.5]}
+    - {Name: ParchmentHeader, Rect: [848, 136, 96, 48], Pivot: [0.5, 0.5]}
+    - {Name: ButtonPurple, Rect: [4, 204, 96, 48], Pivot: [0.5, 0.5]}
+    - {Name: ButtonDark, Rect: [104, 204, 96, 48], Pivot: [0.5, 0.5]}
+    - {Name: ButtonBlue, Rect: [204, 204, 96, 48], Pivot: [0.5, 0.5]}
+    - {Name: NodeLocked, Rect: [864, 4, 96, 64], Pivot: [0.5, 0.5]}
+    - {Name: NodeOpen, Rect: [4, 136, 96, 64], Pivot: [0.5, 0.5]}
+    - {Name: NodeOwned, Rect: [104, 136, 96, 64], Pivot: [0.5, 0.5]}
+    - {Name: NodeSelect, Rect: [204, 136, 96, 64], Pivot: [0.5, 0.5]}
+    - {Name: Ribbon, Rect: [304, 204, 128, 48], Pivot: [0.5, 0.5]}
+    - {Name: BarTrack, Rect: [576, 256, 32, 16], Pivot: [0.5, 0.5]}
+    - {Name: BarFill, Rect: [612, 256, 32, 16], Pivot: [0.5, 0.5]}
+    - {Name: BarFillGold, Rect: [648, 256, 32, 16], Pivot: [0.5, 0.5]}
+    - {Name: Ornament, Rect: [4, 256, 512, 24], Pivot: [0.5, 0.5]}
+    - {Name: Diamond, Rect: [520, 256, 24, 24], Pivot: [0.5, 0.5]}
+    - {Name: DiamondBlue, Rect: [548, 256, 24, 24], Pivot: [0.5, 0.5]}
+    - {Name: ArtSlot, Rect: [136, 4, 192, 128], Pivot: [0.5, 0.5]}
+    - {Name: Medallion, Rect: [332, 4, 128, 128], Pivot: [0.5, 0.5]}
+    - {Name: Check, Rect: [436, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: Lock, Rect: [480, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: IconPeople, Rect: [524, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: IconTent, Rect: [568, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: IconFood, Rect: [612, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: IconWood, Rect: [656, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: IconHouse, Rect: [700, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: IconHourglass, Rect: [744, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: IconFire, Rect: [788, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: IconTrophy, Rect: [832, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: IconLeaf, Rect: [876, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: IconDrop, Rect: [920, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: IconSprout, Rect: [964, 204, 40, 40], Pivot: [0.5, 0.5]}
+    - {Name: Brush0, Rect: [304, 136, 64, 64], Pivot: [0.5, 0.5]}
+    - {Name: Brush1, Rect: [372, 136, 64, 64], Pivot: [0.5, 0.5]}
+    - {Name: Brush2, Rect: [440, 136, 64, 64], Pivot: [0.5, 0.5]}
+    - {Name: Brush3, Rect: [508, 136, 64, 64], Pivot: [0.5, 0.5]}
+    - {Name: Brush4, Rect: [576, 136, 64, 64], Pivot: [0.5, 0.5]}
+    - {Name: Brush5, Rect: [644, 136, 64, 64], Pivot: [0.5, 0.5]}
+    - {Name: Brush6, Rect: [712, 136, 64, 64], Pivot: [0.5, 0.5]}
+    - {Name: Brush7, Rect: [780, 136, 64, 64], Pivot: [0.5, 0.5]}

@@ -190,6 +190,11 @@ namespace Hydro
 				{
 					water.Source[index] = 0; // a lake filled in by the player stops being a source
 				}
+				const bool sealed = index < water.Sealed.size() && water.Sealed[index] != 0;
+				if (sealed && tile != settings.BedTileId && tile != settings.WaterTileId)
+				{
+					water.Sealed[index] = 0; // filled in by the player: dug again it is an ordinary bed
+				}
 
 				Update update{ index, tile, water.Head[index], water.Carried[index], water.Moisture[index], water.Source[index] };
 				if (tile == settings.WaterTileId && water.Source[index] == 0)
@@ -199,7 +204,7 @@ namespace Hydro
 					update.Tile = holds ? tile : settings.BedTileId;
 					update.Head = holds ? head : 0.0f;
 				}
-				else if (tile == settings.BedTileId && index < water.Groundwater.size()
+				else if (tile == settings.BedTileId && sealed == false && index < water.Groundwater.size()
 					&& GroundwaterRules::Springs(water.Groundwater[index], settings.Groundwater))
 				{
 					update.Tile = settings.WaterTileId; // dug down to the groundwater: a spring

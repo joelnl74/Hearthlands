@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Data/ObjectDefinition.h"
+#include "Rules/ForestRules.h"
+#include "Rules/SoilRules.h"
 #include "State/HeightMap.h"
 #include "State/Hydrology.h"
 #include "State/ObjectLayer.h"
@@ -38,10 +40,10 @@ namespace Hydro
 			return byId;
 		}
 
-		// Whether an object can live on the tile (x, y): its tile, its height (heights: nullptr flat), its moisture, its
-		// neighbouring tiles.
+		// Whether an object can live on the tile (x, y): its tile, its height (heights: nullptr flat), its moisture (the
+		// ground's, its roots' from the groundwater or the canopy's `shade`, whichever is most), its neighbouring tiles.
 		static bool Fits(const ObjectDefinition& object, const TileMap& map, const Hydrology& water, int x, int y,
-			const HeightMap* heights = nullptr)
+			const HeightMap* heights = nullptr, float shade = 0.0f)
 		{
 			const int level = heights != nullptr ? heights->Get(x, y) : 0;
 			if (level < object.MinLevel || level > object.MaxLevel)
@@ -55,7 +57,8 @@ namespace Hydro
 			{
 				return false;
 			}
-			const float moisture = index < water.Moisture.size() ? (float)water.Moisture[index] / 255.0f : 0.0f;
+			const float rooted = ForestRules::Rooted(object, water, index);
+			const float moisture = shade > rooted ? shade : rooted;
 			if (moisture < object.MinMoisture - 1e-4f || moisture > object.MaxMoisture + 1e-4f)
 			{
 				return false;
@@ -87,12 +90,18 @@ namespace Hydro
 			return placed;
 		}
 
-		// Looks at `samples` random land tiles: empty ones may sprout or be spread to (HeightFactor higher up), objects grow a
-		// stage (1 / (GrowDays x visitsPerDay) a look, so GrowDays holds on average) or die where they no longer fit.
+		// Looks at `samples` random land tiles: empty ones may sprout or be spread to (HeightFactor, SoilEffect, ShadeEffect),
+		// objects grow a stage (1 / (GrowDays x visitsPerDay) a look) or die where unfit; this layer's shade counts (`forest`).
 		static TickReport Step(ObjectLayer& layer, const TileMap& map, const Hydrology& water, const std::vector<uint8_t>& land,
 			const std::vector<ObjectDefinition>& objects, const std::vector<int>& byId, int samples, float visitsPerDay,
-			Random& random, const HeightMap* heights = nullptr)
+			Random& random, const HeightMap* heights = nullptr, const SoilRules::Lookup& soil = {},
+			const ForestRules::Settings& forest = {})
 		{
+			ForestRules::Canopy canopy;
+			canopy.Layer = &layer;
+			canopy.Objects = &objects;
+			canopy.ById = &byId;
+			canopy.Forest = forest;
 			TickReport report;
 			const uint32_t count = (uint32_t)map.GetTiles().size();
 			for (int i = 0; i < samples && count > 0; i++)
@@ -105,12 +114,14 @@ namespace Hydro
 				const int x = (int)(index % (uint32_t)map.GetWidth());
 				const int y = (int)(index / (uint32_t)map.GetWidth());
 				const uint8_t current = layer.Get(index);
+				const float shade = canopy.Shade(map, water, x, y);
 				if (current == 0)
 				{
+					const float cover = canopy.Cover(map, x, y);
 					for (const ObjectDefinition& object : objects)
 					{
 						const bool active = object.SproutChance > 0.0f || object.SpreadChance > 0.0f;
-						if (active == false || Fits(object, map, water, x, y, heights) == false
+						if (active == false || Fits(object, map, water, x, y, heights, shade) == false
 							|| Crowded(object, layer, map, objects, byId, x, y))
 						{
 							continue;
@@ -122,6 +133,8 @@ namespace Hydro
 							chance += object.SpreadChance;
 						}
 						chance *= HeightFactor(object, heights != nullptr ? heights->Get(x, y) : 0);
+						chance *= object.SoilEffect != 0.0f ? SoilRules::Factor(object.SoilEffect, soil.Quality(index)) : 1.0f;
+						chance *= object.ShadeEffect != 0.0f ? ForestRules::ShadeFactor(object.ShadeEffect, cover) : 1.0f;
 						if (chance > 0.0f && random.Float() < chance)
 						{
 							layer.Set(index, (uint8_t)object.ObjectId);
@@ -133,14 +146,19 @@ namespace Hydro
 				}
 
 				const int row = byId[current];
-				if (row < 0 || Fits(objects[(size_t)row], map, water, x, y, heights) == false)
+				if (row < 0 || Fits(objects[(size_t)row], map, water, x, y, heights, shade) == false)
 				{
 					layer.Set(index, 0);
 					report.Died++;
 					continue;
 				}
 				const ObjectDefinition& object = objects[(size_t)row];
-				const bool grows = object.GrowsIntoObjectId > 0 && object.GrowDays > 0.0f && visitsPerDay > 0.0f;
+				const int next = object.GrowsIntoObjectId > 0 && object.GrowsIntoObjectId < 256 ? byId[(size_t)object.GrowsIntoObjectId]
+					: -1;
+				// An ancient stage only with Old woods and deep in a closed forest: felling or a gap nearby holds it back.
+				const bool old = next >= 0 && objects[(size_t)next].Ancient;
+				const bool allowed = old == false || (forest.OldGrowth && canopy.Total(map, x, y) >= forest.AncientCanopy);
+				const bool grows = next >= 0 && allowed && object.GrowDays > 0.0f && visitsPerDay > 0.0f;
 				if (grows && random.Float() < 1.0f / (object.GrowDays * visitsPerDay))
 				{
 					layer.Set(index, (uint8_t)object.GrowsIntoObjectId);

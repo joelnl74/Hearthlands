@@ -17,6 +17,9 @@ namespace Hydro
 		std::vector<uint8_t> Rain;     // moisture the land's height alone gives it (highland rain); empty = none
 		std::vector<uint8_t> Groundwater; // the hidden water under each tile (GroundwaterRules); empty = none
 		std::vector<uint8_t> Melt;     // meltwater running there, 255 at the snow (MountainRules::Meltwater); empty = none
+		std::vector<uint8_t> Sealed;   // 1: a dry creek bed that never springs by itself (dig its head open); empty = none
+		std::vector<uint8_t> Native;   // 1: water the world began with (sea, its own lakes); the rest the player made
+		std::vector<uint8_t> Habitat;  // per tile the HabitatRules bits (stream, river, lake, sea, ...); empty = none
 		std::vector<uint32_t> Active;  // tiles to look at on the next tick
 		std::vector<uint8_t> Queued;   // 1 while a tile is in Active
 

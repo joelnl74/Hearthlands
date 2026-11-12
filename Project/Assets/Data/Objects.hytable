@@ -11,6 +11,7 @@ DataTable:
       Variants: [7018627806029147811, 1863535930361540935, 127273197809847269, 419055692889807037, 524203561096052233, 639570316957293590, 6936754996733727546]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: true
       GrowsOnTileId: 2
       MinMoisture: 0.25
       MaxMoisture: 1
@@ -25,6 +26,13 @@ DataTable:
       SpreadChance: 0.02
       GrowsIntoObjectId: -1
       GrowDays: 0
+      SoilEffect: 0.6
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0.15
+      Wood: 0
       StartDensity: 0
     BerryBush:
       Name: BerryBush
@@ -34,6 +42,7 @@ DataTable:
       Variants: [6663697718562803283, 1967786282327510299, 3108256299541671572, 6688826233481176574, 8077679123166048802]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: true
       GrowsOnTileId: 2
       MinMoisture: 0.45
       MaxMoisture: 1
@@ -48,6 +57,13 @@ DataTable:
       SpreadChance: 0.01
       GrowsIntoObjectId: -1
       GrowDays: 0
+      SoilEffect: 0.6
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0.8
+      Wood: 0
       StartDensity: 0
     FlowerBush:
       Name: FlowerBush
@@ -57,6 +73,7 @@ DataTable:
       Variants: [4774065763916634904, 1590899515888422659, 2177826625727091568, 8496572301411893021]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: true
       GrowsOnTileId: 2
       MinMoisture: 0.35
       MaxMoisture: 1
@@ -71,6 +88,13 @@ DataTable:
       SpreadChance: 0.01
       GrowsIntoObjectId: -1
       GrowDays: 0
+      SoilEffect: 0.6
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0.15
+      Wood: 0
       StartDensity: 0
     OakSapling:
       Name: OakSapling
@@ -80,6 +104,7 @@ DataTable:
       Variants: [1682611982957429524, 7006105588896421788, 6776312961782489639, 7858185484293771132]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: true
       GrowsOnTileId: 2
       MinMoisture: 0.4
       MaxMoisture: 1
@@ -94,6 +119,13 @@ DataTable:
       SpreadChance: 0.05
       GrowsIntoObjectId: 6
       GrowDays: 2
+      SoilEffect: 0.6
+      Roots: 0.5
+      Canopy: 0.2
+      ShadeEffect: 0.6
+      Ancient: false
+      Food: 0
+      Wood: 0
       StartDensity: 0
     YoungOak:
       Name: YoungOak
@@ -103,6 +135,7 @@ DataTable:
       Variants: [7090466201744778593, 2367580213271555500, 2732428063398774509, 4962886237179460627, 1037799671179777144, 5948309033087771505, 8571154789897144562]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: true
       GrowsOnTileId: 2
       MinMoisture: 0.3
       MaxMoisture: 1
@@ -117,6 +150,13 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: 7
       GrowDays: 4
+      SoilEffect: 0.6
+      Roots: 0.55
+      Canopy: 0.6
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 1
       StartDensity: 0
     Oak:
       Name: Oak
@@ -126,6 +166,7 @@ DataTable:
       Variants: [5832189581567899596, 775749213752288401, 6405397501426250304, 2471713047330608687, 3123331135868770951, 7358033493471566662, 5519233157081905830]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: true
       GrowsOnTileId: 2
       MinMoisture: 0.25
       MaxMoisture: 1
@@ -138,8 +179,15 @@ DataTable:
       MinSpacing: 2
       SpreadFromObjectId: -1
       SpreadChance: 0
-      GrowsIntoObjectId: -1
-      GrowDays: 0
+      GrowsIntoObjectId: 24
+      GrowDays: 30
+      SoilEffect: 0.6
+      Roots: 0.65
+      Canopy: 1
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 3
       StartDensity: 0
     BirchSapling:
       Name: BirchSapling
@@ -149,6 +197,7 @@ DataTable:
       Variants: [5668128662364617183, 7539873633714786702]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: true
       GrowsOnTileId: 2
       MinMoisture: 0.3
       MaxMoisture: 0.8
@@ -163,6 +212,13 @@ DataTable:
       SpreadChance: 0.05
       GrowsIntoObjectId: 9
       GrowDays: 1.5
+      SoilEffect: 0.6
+      Roots: 0.45
+      Canopy: 0.15
+      ShadeEffect: -0.5
+      Ancient: false
+      Food: 0
+      Wood: 0
       StartDensity: 0
     YoungBirch:
       Name: YoungBirch
@@ -172,6 +228,7 @@ DataTable:
       Variants: []
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: true
       GrowsOnTileId: 2
       MinMoisture: 0.25
       MaxMoisture: 0.9
@@ -186,6 +243,13 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: 10
       GrowDays: 3
+      SoilEffect: 0.6
+      Roots: 0.45
+      Canopy: 0.5
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 1
       StartDensity: 0
     Birch:
       Name: Birch
@@ -195,6 +259,7 @@ DataTable:
       Variants: [7307046814554385134, 1308735029924049225, 613999168883102245, 6564266456404248832, 2211967906256050509, 6467813110055298978, 3523743279701941982]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: true
       GrowsOnTileId: 2
       MinMoisture: 0.2
       MaxMoisture: 1
@@ -209,6 +274,13 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: -1
       GrowDays: 0
+      SoilEffect: 0.6
+      Roots: 0.5
+      Canopy: 0.8
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 2
       StartDensity: 0
     PineSapling:
       Name: PineSapling
@@ -218,6 +290,7 @@ DataTable:
       Variants: [6094133460921349862]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: false
       GrowsOnTileId: 2
       MinMoisture: 0.15
       MaxMoisture: 0.5
@@ -232,6 +305,13 @@ DataTable:
       SpreadChance: 0.06
       GrowsIntoObjectId: 12
       GrowDays: 3
+      SoilEffect: 0.2
+      Roots: 0.45
+      Canopy: 0.2
+      ShadeEffect: -0.4
+      Ancient: false
+      Food: 0
+      Wood: 0
       StartDensity: 0
     Pine:
       Name: Pine
@@ -241,6 +321,7 @@ DataTable:
       Variants: [7186043462684984199, 2841764018598193836, 7633957573740987179, 2846269374606397247, 5315142454695340198, 3242092387816268961, 3289730393926851230, 4686210624643891019, 260851752331345346]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: false
       GrowsOnTileId: 2
       MinMoisture: 0.1
       MaxMoisture: 0.6
@@ -253,8 +334,15 @@ DataTable:
       MinSpacing: 2
       SpreadFromObjectId: -1
       SpreadChance: 0
-      GrowsIntoObjectId: -1
-      GrowDays: 0
+      GrowsIntoObjectId: 25
+      GrowDays: 30
+      SoilEffect: 0.2
+      Roots: 0.6
+      Canopy: 0.9
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 2
       StartDensity: 0
     Rock:
       Name: Rock
@@ -264,6 +352,7 @@ DataTable:
       Variants: [4873460038171480617, 2191405797690721229, 966167376844388546, 1248732287930367957, 2356339462065705325, 5199699961494223894, 4948529776942455316, 8668629674586678222]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: false
       GrowsOnTileId: -1
       MinMoisture: 0
       MaxMoisture: 1
@@ -278,6 +367,8 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: -1
       GrowDays: 0
+      Food: 0
+      Wood: 0
       StartDensity: 0.002
     Boulder:
       Name: Boulder
@@ -287,6 +378,7 @@ DataTable:
       Variants: [1129896216246219917, 5161386448413097135]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: false
       GrowsOnTileId: -1
       MinMoisture: 0
       MaxMoisture: 1
@@ -301,6 +393,8 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: -1
       GrowDays: 0
+      Food: 0
+      Wood: 0
       StartDensity: 0.0006
     FoothillPine:
       Name: FoothillPine
@@ -310,6 +404,7 @@ DataTable:
       Variants: [7186043462684984199, 2841764018598193836, 7633957573740987179, 2846269374606397247, 5315142454695340198, 3242092387816268961, 3289730393926851230, 4686210624643891019, 260851752331345346]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: false
       GrowsOnTileId: 2
       MinMoisture: 0.05
       MaxMoisture: 0.7
@@ -324,6 +419,13 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: -1
       GrowDays: 0
+      SoilEffect: 0.2
+      Roots: 0.6
+      Canopy: 0.9
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 2
       StartDensity: 0
     RockPine:
       Name: RockPine
@@ -333,6 +435,7 @@ DataTable:
       Variants: [7186043462684984199, 2841764018598193836, 7633957573740987179, 2846269374606397247, 5315142454695340198, 3242092387816268961, 3289730393926851230, 4686210624643891019, 260851752331345346]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: false
       GrowsOnTileId: 2
       MinMoisture: 0.15
       MaxMoisture: 0.7
@@ -347,6 +450,13 @@ DataTable:
       SpreadChance: 0.04
       GrowsIntoObjectId: -1
       GrowDays: 0
+      SoilEffect: 0.2
+      Roots: 0.6
+      Canopy: 0.8
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 1
       StartDensity: 0
     Scree:
       Name: Scree
@@ -356,6 +466,7 @@ DataTable:
       Variants: [4873460038171480617, 2191405797690721229, 966167376844388546, 1248732287930367957, 2356339462065705325, 5199699961494223894, 4948529776942455316, 8668629674586678222]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: false
       GrowsOnTileId: 6
       MinMoisture: 0
       MaxMoisture: 1
@@ -370,6 +481,8 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: -1
       GrowDays: 0
+      Food: 0
+      Wood: 0
       StartDensity: 0
     Crag:
       Name: Crag
@@ -379,6 +492,7 @@ DataTable:
       Variants: [1129896216246219917, 5161386448413097135]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: false
       GrowsOnTileId: 6
       MinMoisture: 0
       MaxMoisture: 1
@@ -393,6 +507,8 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: -1
       GrowDays: 0
+      Food: 0
+      Wood: 0
       StartDensity: 0
     GrassTuft:
       Name: GrassTuft
@@ -402,6 +518,7 @@ DataTable:
       Variants: [852275252815387055, 3748289984286445730]
       PixelsPerTile: 32
       CastsShadow: false
+      Deciduous: true
       GrowsOnTileId: 2
       MinMoisture: 0.2
       MaxMoisture: 1
@@ -416,6 +533,13 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: -1
       GrowDays: 0
+      SoilEffect: 0.4
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: -0.5
+      Ancient: false
+      Food: 0.03
+      Wood: 0
       StartDensity: 0
     Fern:
       Name: Fern
@@ -425,8 +549,9 @@ DataTable:
       Variants: [9031534574695392979, 8492464126493656400]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: true
       GrowsOnTileId: 2
-      MinMoisture: 0.65
+      MinMoisture: 0.3
       MaxMoisture: 1
       NeighbourTileId: -1
       MinNeighbours: 1
@@ -439,6 +564,13 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: -1
       GrowDays: 0
+      SoilEffect: 0.4
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0.9
+      Ancient: false
+      Food: 0.03
+      Wood: 0
       StartDensity: 0
     Willow:
       Name: Willow
@@ -448,6 +580,7 @@ DataTable:
       Variants: []
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: true
       GrowsOnTileId: 2
       MinMoisture: 0.6
       MaxMoisture: 1
@@ -462,6 +595,13 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: -1
       GrowDays: 0
+      SoilEffect: 0.6
+      Roots: 0.3
+      Canopy: 1
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 2
       StartDensity: 0
     DeadTree:
       Name: DeadTree
@@ -471,6 +611,7 @@ DataTable:
       Variants: [7252821678082267258, 2329117106416138486, 7652615576399070770, 3682914596221471265, 5223707974687595954, 3134745671690320554, 3495188552463178050, 7025612418743016725, 3576085421036196692, 3682878238581612683]
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: false
       GrowsOnTileId: 1
       MinMoisture: 0
       MaxMoisture: 0.4
@@ -485,6 +626,13 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: -1
       GrowDays: 0
+      SoilEffect: -0.6
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 1.5
       StartDensity: 0.0015
     DeadBush:
       Name: DeadBush
@@ -494,6 +642,7 @@ DataTable:
       Variants: []
       PixelsPerTile: 32
       CastsShadow: true
+      Deciduous: false
       GrowsOnTileId: 1
       MinMoisture: 0
       MaxMoisture: 0.4
@@ -508,4 +657,538 @@ DataTable:
       SpreadChance: 0
       GrowsIntoObjectId: -1
       GrowDays: 0
+      SoilEffect: -0.6
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0.5
       StartDensity: 0.002
+    Campfire:
+      Name: Campfire
+      ObjectId: 60
+      Kind: Building
+      Sprite: 160796613625438208
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    Tent:
+      Name: Tent
+      ObjectId: 61
+      Kind: Building
+      Sprite: 661497336230539854
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    AncientOak:
+      Name: AncientOak
+      ObjectId: 24
+      Kind: Tree
+      Sprite: 34335002587327331
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: true
+      GrowsOnTileId: 2
+      MinMoisture: 0.2
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 2
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 2
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0.6
+      Roots: 0.7
+      Canopy: 1
+      ShadeEffect: 0
+      Ancient: true
+      Food: 0.4
+      Wood: 8
+      StartDensity: 0
+    OldPine:
+      Name: OldPine
+      ObjectId: 25
+      Kind: Tree
+      Sprite: 922593178618180732
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: 2
+      MinMoisture: 0.1
+      MaxMoisture: 0.6
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 2
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0.2
+      Roots: 0.65
+      Canopy: 0.9
+      ShadeEffect: 0
+      Ancient: true
+      Food: 0.1
+      Wood: 7
+      StartDensity: 0
+    ElvenLantern:
+      Name: ElvenLantern
+      ObjectId: 62
+      Kind: Building
+      Sprite: 186005252726694195
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    LeafHut:
+      Name: LeafHut
+      ObjectId: 63
+      Kind: Building
+      Sprite: 440924916420167652
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    MineEntrance:
+      Name: MineEntrance
+      ObjectId: 64
+      Kind: Building
+      Sprite: 180462987726440565
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    StoneHut:
+      Name: StoneHut
+      ObjectId: 65
+      Kind: Building
+      Sprite: 1100893748126165912
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    Hut:
+      Name: Hut
+      ObjectId: 66
+      Kind: Building
+      Sprite: 26389248039099767
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    TreeHouse:
+      Name: TreeHouse
+      ObjectId: 67
+      Kind: Building
+      Sprite: 685844343550061698
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    StoneHall:
+      Name: StoneHall
+      ObjectId: 68
+      Kind: Building
+      Sprite: 102527512466740039
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    Bower:
+      Name: Bower
+      ObjectId: 69
+      Kind: Building
+      Sprite: 110573237000587877
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    ElfHearth:
+      Name: ElfHearth
+      ObjectId: 70
+      Kind: Building
+      Sprite: 509779524242311658
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    ElvenLodge:
+      Name: ElvenLodge
+      ObjectId: 71
+      Kind: Building
+      Sprite: 558151958377802957
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    CropSown:
+      Name: CropSown
+      ObjectId: 72
+      Kind: Ground
+      Sprite: 907581565480821652
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: false
+      Deciduous: false
+      GrowsOnTileId: 7
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    CropGrowing:
+      Name: CropGrowing
+      ObjectId: 73
+      Kind: Ground
+      Sprite: 674076301914718951
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: 7
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    CropRipe:
+      Name: CropRipe
+      ObjectId: 74
+      Kind: Ground
+      Sprite: 181792451255808669
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: 7
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0

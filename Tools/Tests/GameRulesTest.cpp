@@ -1047,6 +1047,18 @@ namespace Hydro
 		RULE_CHECK(ObjectRules::Scatter(rocks, map, water, { rock }, random) == 142 && rocks.Get(143) == 0);
 	}
 
+	int TestTalentRules(int& checks); // TalentRulesTest.cpp
+	int TestSeasonRules(int& checks); // SeasonRulesTest.cpp
+	int TestWildlifeRules(int& checks); // WildlifeRulesTest.cpp
+	int TestSoilRules(int& checks); // SoilRulesTest.cpp
+	int TestSettlementRules(int& checks); // SettlementRulesTest.cpp
+	int TestSettlingRules(int& checks);   // SettlingRulesTest.cpp
+	int TestFarmRules(int& checks);       // FarmRulesTest.cpp
+	int TestForestRules(int& checks); // ForestRulesTest.cpp
+	int TestCreekRules(int& checks); // CreekRulesTest.cpp
+	int TestOldWoodsRules(int& checks); // OldWoodsRulesTest.cpp
+	int TestWaterLifeRules(int& checks); // WaterLifeRulesTest.cpp
+
 	int TestGameRules(int& checks)
 	{
 		std::printf("Game rules: TileMap, TerrainGenRules, BrushRules, CameraRules, SimulationClock, WaterRules, HeightRules, "
@@ -1062,6 +1074,17 @@ namespace Hydro
 		TestMountainRules(checks);
 		TestGrowthRules(checks);
 		TestObjectRules(checks);
+		s_RuleFailures += TestTalentRules(checks);
+		s_RuleFailures += TestSeasonRules(checks);
+		s_RuleFailures += TestWildlifeRules(checks);
+		s_RuleFailures += TestSoilRules(checks);
+		s_RuleFailures += TestSettlementRules(checks);
+		s_RuleFailures += TestSettlingRules(checks);
+		s_RuleFailures += TestFarmRules(checks);
+		s_RuleFailures += TestForestRules(checks);
+		s_RuleFailures += TestCreekRules(checks);
+		s_RuleFailures += TestOldWoodsRules(checks);
+		s_RuleFailures += TestWaterLifeRules(checks);
 
 		return s_RuleFailures;
 	}

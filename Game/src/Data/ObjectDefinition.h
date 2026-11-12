@@ -19,7 +19,8 @@ namespace Hydro
 		Ground, // reeds, flowers
 		Shrub,  // bushes
 		Tree,
-		Rock
+		Rock,
+		Building  // what settlers make (fire, shelters): never sprouts, nothing grows right beside it
 	};
 
 	HY_DATA(Table, DisplayField(Name))
@@ -39,6 +40,8 @@ namespace Hydro
 		float PixelsPerTile = 32.0f;
 		HY_PROPERTY()
 		bool CastsShadow = true;
+		HY_PROPERTY(Tooltip("Takes the season's leaf colours (autumn, bare winter); evergreens and rocks don't"))
+		bool Deciduous = false;
 		HY_PROPERTY(Range(-1, 255), Tooltip("The tile it lives on; -1 any land (not water or riverbed). It dies elsewhere"))
 		int GrowsOnTileId = 2;
 		HY_PROPERTY(Range(0, 1), Tooltip("The tile's moisture it lives in, at least ..."))
@@ -67,6 +70,20 @@ namespace Hydro
 		int GrowsIntoObjectId = -1;
 		HY_PROPERTY(Range(0, 100), Tooltip("World days (on average) before it grows into the next stage"))
 		float GrowDays = 0.0f;
+		HY_PROPERTY(Range(-1, 1), Tooltip("How much the soil moves sprouting and spreading: + more on rich soil, - more on poor"))
+		float SoilEffect = 0.0f;
+		HY_PROPERTY(Range(0, 1), Tooltip("Share of the hidden groundwater its roots reach: trees live away from rivers on it"))
+		float Roots = 0.0f;
+		HY_PROPERTY(Range(0, 1), Tooltip("How much it shades the tile and its neighbours; a forest keeps its trees' water there"))
+		float Canopy = 0.0f;
+		HY_PROPERTY(Range(-1, 1), Tooltip("How much shade moves sprouting: + more under trees (oaks, ferns), - more in the open"))
+		float ShadeEffect = 0.0f;
+		HY_PROPERTY(Tooltip("An old-woods stage: trees grow into it only with the Old woods talent, under a closed canopy"))
+		bool Ancient = false;
+		HY_PROPERTY(Range(0, 10), Tooltip("Plant food it gives settlers' gatherers a day (berries)"))
+		float Food = 0.0f;
+		HY_PROPERTY(Range(0, 20), Tooltip("Wood it gives when settlers fell it; 0: never felled"))
+		float Wood = 0.0f;
 		HY_PROPERTY(Range(0, 1), Tooltip("Placed on this share of the tiles that suit it when the world is made"))
 		float StartDensity = 0.0f;
 	};

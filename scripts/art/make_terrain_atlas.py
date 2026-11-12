@@ -1,6 +1,6 @@
 # Makes Project/Assets/Textures/TerrainAtlas.png, tile_blend.frag's atlas, from the 32 x 32 textures in Art/Terrain.
-# One row per terrain id (0 sand, 1 dirt, 2 grass, 3 water, 4 snow, 5 riverbed, 6 rock), Columns variants per row: the shader picks
-# one per tile, so a texture listed more often shows up more. Rows WetRow + id hold the wet look: land with high moisture,
+# One row per terrain id (0 sand, 1 dirt, 2 grass, 3 water, 4 snow, 5 riverbed, 6 rock, 7 farmland), Columns variants
+# per row: the shader picks one per tile, so a texture listed more often shows up more. Rows WetRow + id hold the wet look: land with high moisture,
 # water next to land (shallow). A row left out repeats the dry one. Every variant's main colour becomes its row's first
 # texture's, so tiles of one type meet without a seam. Pillow only.
 #   py scripts/art/make_terrain_atlas.py [--preview]   (--preview also writes scripts/art/out/atlas_preview.png)
@@ -27,12 +27,14 @@ DRY = {
     4: [("snow_01", 4), ("snow_02", 2), ("snow_03", 2)],
     5: [("riverbed_01", 3), ("riverbed_02", 3), ("riverbed_03", 2)],
     6: [("Temp/rock_01", 4), ("Temp/rock_02", 3), ("Temp/rock_cracked_01", 1)],
+    7: [("Temp/farmland_01", 5), ("Temp/farmland_02", 3)],
 }
 WET = {
     0: [("darker:sand_01", 4), ("darker:sand_02", 4)],
     1: [("Temp/bank_wet_01", 5), ("darker:dirt_02", 3)],
     2: [("grass_lush_01", 3), ("grass_dark_01", 3), ("grass_plain_01", 1), ("grass_meadow_01", 1)],
     3: [("Temp/water_shallow_01", 8)],
+    7: [("Temp/farmland_wet_01", 8)],
 }
 
 

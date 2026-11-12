@@ -1,0 +1,81 @@
+Handle: 6640277151823094117
+DataTable:
+  Version: 1
+  Type: SeasonDefinition
+  Rows:
+    Spring:
+      Name: Spring
+      Order: 0
+      Days: 5
+      SnowShift: -1
+      Flow: 1.25
+      Melt: 1.6
+      Growth: 1.4
+      Life: 1.4
+      Harvest: 0.7
+      Sowing: true
+      Frost: false
+      Migrants: 0.8
+      Burrowed: 0.2
+      GroundSnow: 0
+      Ice: 0
+      Fade: 0
+      Tint: [1, 1.03, 0.98]
+      LeafTint: [0.95, 1.05, 0.92]
+    Summer:
+      Name: Summer
+      Order: 1
+      Days: 5
+      SnowShift: 2
+      Flow: 0.85
+      Melt: 1.0
+      Growth: 1.0
+      Life: 1.0
+      Harvest: 1.2
+      Sowing: true
+      Frost: false
+      Migrants: 1
+      Burrowed: 0
+      GroundSnow: 0
+      Ice: 0
+      Fade: 0.1
+      Tint: [1.04, 1.02, 0.94]
+      LeafTint: [1, 1, 1]
+    Autumn:
+      Name: Autumn
+      Order: 2
+      Days: 5
+      SnowShift: 0
+      Flow: 1.0
+      Melt: 0.5
+      Growth: 0.6
+      Life: 0.6
+      Harvest: 1.0
+      Sowing: false
+      Frost: false
+      Migrants: 0.6
+      Burrowed: 0.3
+      GroundSnow: 0
+      Ice: 0
+      Fade: 0.45
+      Tint: [1.06, 0.96, 0.86]
+      LeafTint: [1.3, 0.78, 0.42]
+    Winter:
+      Name: Winter
+      Order: 3
+      Days: 5
+      SnowShift: -3
+      Flow: 0.8
+      Melt: 0.2
+      Growth: 0.1
+      Life: 0.1
+      Harvest: 0.25
+      Sowing: false
+      Frost: true
+      Migrants: 0.1
+      Burrowed: 0.85
+      GroundSnow: 0.55
+      Ice: 0.5
+      Fade: 0.6
+      Tint: [0.92, 0.96, 1.06]
+      LeafTint: [0.72, 0.68, 0.66]

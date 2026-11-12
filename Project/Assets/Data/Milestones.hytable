@@ -1,0 +1,434 @@
+Handle: 5179923417704519381
+DataTable:
+  Version: 1
+  Type: MilestoneDefinition
+  Rows:
+    FirstMeadow:
+      Name: The first meadow
+      MilestoneId: 1
+      Kind: Tiles
+      TargetId: 2
+      Count: 50
+      Points: 1
+      Description: Grow 50 tiles of grass
+      Hidden: false
+      Hint: ""
+      Track: Auto
+    Meadows:
+      Name: Meadows
+      MilestoneId: 2
+      Kind: Tiles
+      TargetId: 2
+      Count: 400
+      Points: 1
+      Description: 400 tiles of grass (the Grass brush)
+      Hidden: true
+      Hint: "The grass wants more room."
+      Track: Auto
+    GreenLand:
+      Name: Green land
+      MilestoneId: 3
+      Kind: Tiles
+      TargetId: 2
+      Count: 1500
+      Points: 1
+      Description: 1,500 tiles of grass (the Raise brush)
+      Hidden: true
+      Hint: "Raise the land and let it green."
+      Track: Auto
+    HiddenWater:
+      Name: Hidden water
+      MilestoneId: 4
+      Kind: Springs
+      TargetId: -1
+      Count: 1
+      Points: 1
+      Description: Dig a riverbed onto groundwater
+      Hidden: false
+      Hint: ""
+      Track: Auto
+    SpringFinder:
+      Name: Spring finder
+      MilestoneId: 5
+      Kind: Springs
+      TargetId: -1
+      Count: 5
+      Points: 1
+      Description: Five springs
+      Hidden: true
+      Hint: "Water waits under more than one place."
+      Track: Auto
+    FirstGrove:
+      Name: The first grove
+      MilestoneId: 6
+      Kind: Objects
+      TargetId: 2
+      Count: 25
+      Points: 1
+      Description: 25 trees
+      Hidden: false
+      Hint: ""
+      Track: Auto
+    OldForest:
+      Name: Old forest
+      MilestoneId: 7
+      Kind: Objects
+      TargetId: 2
+      Count: 300
+      Points: 1
+      Description: 300 trees
+      Hidden: true
+      Hint: "A grove is only a beginning."
+      Track: Auto
+    Highlands:
+      Name: Highlands
+      MilestoneId: 8
+      Kind: Level
+      TargetId: -1
+      Count: 4
+      Points: 1
+      Description: Raise the land to rock (level 4)
+      Hidden: false
+      Hint: ""
+      Track: Auto
+    SnowCap:
+      Name: Snow cap
+      MilestoneId: 9
+      Kind: Tiles
+      TargetId: 4
+      Count: 1
+      Points: 1
+      Description: Raise a mountain into the snow
+      Hidden: true
+      Hint: "Climb higher than the rock."
+      Track: Auto
+    FirstTracks:
+      Name: First tracks
+      MilestoneId: 10
+      Kind: Species
+      TargetId: -1
+      Count: 1
+      Points: 1
+      Description: "Animals move in: grass with some bushes or trees"
+      Hidden: false
+      Hint: ""
+      Track: Auto
+    Herds:
+      Name: Herds
+      MilestoneId: 11
+      Kind: Animals
+      TargetId: 1
+      Count: 40
+      Points: 1
+      Description: Forty deer on the meadows and woods
+      Hidden: true
+      Hint: "Grazers gather where the grass is long and the woods near."
+      Track: Auto
+    LivingLand:
+      Name: Living land
+      MilestoneId: 12
+      Kind: Species
+      TargetId: -1
+      Count: 8
+      Points: 2
+      Description: "Eight kinds of animals: water, woods, hills"
+      Hidden: true
+      Hint: "Many kinds of life: in the water, the woods and the hills."
+      Track: Auto
+    RichEarth:
+      Name: Rich earth
+      MilestoneId: 13
+      Kind: RichSoil
+      TargetId: 60
+      Count: 300
+      Points: 1
+      Description: "300 tiles of rich soil (F shows it): woods, loam, riverbanks"
+      Hidden: true
+      Hint: "What grows on the land feeds it."
+      Track: Auto
+    FirstSettlers:
+      Name: First settlers
+      MilestoneId: 14
+      Kind: Settlers
+      TargetId: -1
+      Count: 1
+      Points: 1
+      Description: People settle by a fire you lit
+      Hidden: false
+      Hint: ""
+      Track: Auto
+    AVillage:
+      Name: A village
+      MilestoneId: 15
+      Kind: Settlers
+      TargetId: -1
+      Count: 12
+      Points: 2
+      Description: Twelve people living in your settlements
+      Hidden: true
+      Hint: "A fire becomes a home."
+      Track: Auto
+    OldGrowth:
+      Name: Old growth
+      MilestoneId: 16
+      Kind: Ancient
+      TargetId: -1
+      Count: 5
+      Points: 2
+      Description: "Five ancient trees: forest left to grow old (Old woods)"
+      Hidden: true
+      Hint: "Leave a forest be for a long while."
+      Track: Auto
+    WoodElves:
+      Name: Wood elves
+      MilestoneId: 17
+      Kind: Settlers
+      TargetId: 2
+      Count: 1
+      Points: 2
+      Description: Elves by old woods become wood elves
+      Hidden: true
+      Hint: "Elves who live by the oldest woods change."
+      Track: Auto
+    MountainFolk:
+      Name: Mountain folk
+      MilestoneId: 18
+      Kind: Settlers
+      TargetId: 3
+      Count: 1
+      Points: 2
+      Description: Dwarves settle by big mountains, up in the hills
+      Hidden: true
+      Hint: "Someone digs under the highest peaks."
+      Track: Auto
+    RunningWater:
+      Name: Running water
+      MilestoneId: 19
+      Kind: Habitat
+      TargetId: 2
+      Count: 30
+      Points: 1
+      Description: "Thirty tiles of stream: dig a channel and let it run"
+      Hidden: true
+      Hint: "Water that moves is not water that waits."
+      Track: Water
+    BigRiver:
+      Name: A big river
+      MilestoneId: 20
+      Kind: Habitat
+      TargetId: 3
+      Count: 80
+      Points: 1
+      Description: "Widen a river to three tiles or more"
+      Hidden: true
+      Hint: "Make the water broader."
+      Track: Water
+    ToTheSea:
+      Name: To the sea
+      MilestoneId: 21
+      Kind: Habitat
+      TargetId: 7
+      Count: 1
+      Points: 2
+      Description: "A river you made reaches the sea"
+      Hidden: true
+      Hint: "Every river wants to meet the sea."
+      Track: Water
+    StillWaters:
+      Name: Still waters
+      MilestoneId: 22
+      Kind: Habitat
+      TargetId: 4
+      Count: 25
+      Points: 1
+      Description: "Broad water, six tiles across or more"
+      Hidden: true
+      Hint: "Water broad enough to hold the sky."
+      Track: Water
+    MountainStream:
+      Name: Mountain stream
+      MilestoneId: 23
+      Kind: Habitat
+      TargetId: 8
+      Count: 10
+      Points: 1
+      Description: "A stream fed by snowmelt or up in the hills"
+      Hidden: true
+      Hint: "Cold water runs where the snow melts."
+      Track: Water
+    Minnows:
+      Name: Minnows
+      MilestoneId: 24
+      Kind: Animals
+      TargetId: 30
+      Count: 10
+      Points: 1
+      Description: "Minnows living in your streams"
+      Hidden: true
+      Hint: "Small silver lives in small waters."
+      Track: Water
+    BrookTrout:
+      Name: Brook trout
+      MilestoneId: 25
+      Kind: Animals
+      TargetId: 31
+      Count: 5
+      Points: 1
+      Description: "Trout in a cold mountain stream"
+      Hidden: true
+      Hint: "Something speckled likes it cold."
+      Track: Water
+    Pike:
+      Name: Pike
+      MilestoneId: 26
+      Kind: Animals
+      TargetId: 32
+      Count: 2
+      Points: 1
+      Description: "Pike in a big river"
+      Hidden: true
+      Hint: "A hunter waits in the deep, slow water."
+      Track: Water
+    SalmonRun:
+      Name: Salmon run
+      MilestoneId: 27
+      Kind: Animals
+      TargetId: 33
+      Count: 10
+      Points: 2
+      Description: "Salmon swimming up a river joined to the sea"
+      Hidden: true
+      Hint: "Something silver waits where fresh water meets the salt."
+      Track: Water
+    Eels:
+      Name: Eels
+      MilestoneId: 28
+      Kind: Animals
+      TargetId: 34
+      Count: 5
+      Points: 1
+      Description: "Eels at a river's mouth"
+      Hidden: true
+      Hint: "Something slips in where the river ends."
+      Track: Water
+    CarpPond:
+      Name: Carp pond
+      MilestoneId: 29
+      Kind: Animals
+      TargetId: 35
+      Count: 5
+      Points: 1
+      Description: "Carp in broad water"
+      Hidden: true
+      Hint: "Golden backs in broad, still water."
+      Track: Water
+    TeemingWaters:
+      Name: Teeming waters
+      MilestoneId: 30
+      Kind: Species
+      TargetId: 2
+      Count: 5
+      Points: 2
+      Description: "Five kinds of fish"
+      Hidden: true
+      Hint: "Fill your waters with many kinds of life."
+      Track: Water
+    Kingfisher:
+      Name: Kingfisher
+      MilestoneId: 31
+      Kind: Animals
+      TargetId: 40
+      Count: 1
+      Points: 1
+      Description: "A kingfisher by your stream"
+      Hidden: true
+      Hint: "A flash of blue where small fish swim past bushes."
+      Track: Wildlife
+    GreyHeron:
+      Name: Grey heron
+      MilestoneId: 32
+      Kind: Animals
+      TargetId: 41
+      Count: 1
+      Points: 1
+      Description: "A heron at a big river"
+      Hidden: true
+      Hint: "A patient fisher wades the big river."
+      Track: Wildlife
+    Osprey:
+      Name: Osprey
+      MilestoneId: 33
+      Kind: Animals
+      TargetId: 42
+      Count: 1
+      Points: 2
+      Description: "An osprey over the salmon"
+      Hidden: true
+      Hint: "Where the silver fish run, a hunter circles."
+      Track: Wildlife
+    Gulls:
+      Name: Gulls
+      MilestoneId: 34
+      Kind: Animals
+      TargetId: 43
+      Count: 3
+      Points: 1
+      Description: "Gulls at a river's mouth"
+      Hidden: true
+      Hint: "Cries over the river's mouth."
+      Track: Wildlife
+    Ducks:
+      Name: Ducks
+      MilestoneId: 35
+      Kind: Animals
+      TargetId: 44
+      Count: 2
+      Points: 1
+      Description: "Ducks on broad water"
+      Hidden: true
+      Hint: "Broad water draws a noisy crowd."
+      Track: Wildlife
+    Dipper:
+      Name: Dipper
+      MilestoneId: 36
+      Kind: Animals
+      TargetId: 45
+      Count: 1
+      Points: 1
+      Description: "A dipper on a mountain stream"
+      Hidden: true
+      Hint: "A little bird bobs on the cold stones."
+      Track: Wildlife
+    Birdsong:
+      Name: Birdsong
+      MilestoneId: 37
+      Kind: Species
+      TargetId: 1
+      Count: 10
+      Points: 2
+      Description: "Ten kinds of birds"
+      Hidden: true
+      Hint: "Many songs, many kinds of wings."
+      Track: Wildlife
+    FairFolk:
+      Name: Fair folk
+      MilestoneId: 38
+      Kind: Settlers
+      TargetId: 4
+      Count: 1
+      Points: 1
+      Description: Elves settle by forest and water
+      Hidden: true
+      Hint: "Forest folk look for trees by water."
+      Track: Auto
+    FirstHamlet:
+      Name: First hamlet
+      MilestoneId: 39
+      Kind: SettlementLevel
+      TargetId: 1
+      Count: 1
+      Points: 1
+      Description: A human camp grows into a hamlet
+      Hidden: false
+      Hint: ""
+      Track: Peoples

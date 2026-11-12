@@ -4,8 +4,11 @@
 #include "Hydro/Scene/UI/UI.h"
 #include "Data/TerrainTypeDefinition.h"
 #include "Rules/BrushRules.h"
+#include "Rules/FarmRules.h"
 #include "Rules/HeightRules.h"
 #include "Rules/MountainRules.h"
+#include "Rules/SeasonRules.h"
+#include "Rules/SoilRules.h"
 #include "State/HearthlandsSession.h"
 #include "Views/BrushCursorView.h"
 
@@ -37,6 +40,7 @@ namespace Hydro
 				types.push_back(type);
 			}
 			m_Mountains = MountainRules::FromTypes(types, MountainRules::Settings{});
+			m_Soil = SoilRules::FromTypes(types, SoilRules::Settings{});
 			m_Heights.MaxStep = MaxStep;
 		}
 
@@ -46,24 +50,41 @@ namespace Hydro
 			const Scene::UIPointer& pointer = GetEntity().GetScene()->GetUIPointer();
 			glm::vec2 point(0.0f);
 			float pointZ = 0.0f;
-			const bool overLand = pointer.Inside && session.PointerOverHud == false && PointUnderPointer(session, point, pointZ)
-				&& IsLand(session, point);
-			const float radius = session.Brush.Radius;
+			const bool overUI = session.PointerOverHud || session.PointerOverMenu;
+			const bool overLand = pointer.Inside && overUI == false && PointUnderPointer(session, point, pointZ) && IsLand(session, point);
+			// A settlement's centre under the pointer: a small ring, and a new press there selects it instead of painting.
+			const int hovered = overLand ? SettlementAt(session, point) : 0;
+			const float radius = hovered != 0 ? 0.75f : session.Brush.Radius;
 			m_Cursor.Present(overLand, GroundPoint(session.Map, point) + glm::vec3(0.0f, 0.0f, pointZ), radius);
-
-			const bool painting = overLand && pointer.Down && UI::CapturesInput(*GetEntity().GetScene()) == false;
+			const bool press = overLand && pointer.Down && m_WasDown == false && UI::CapturesInput(*GetEntity().GetScene()) == false;
+			m_WasDown = pointer.Down;
+			if (press && hovered != 0)
+			{
+				session.SelectedSettlement = hovered;
+				m_HeldSinceSelect = true;
+			}
+			m_HeldSinceSelect = m_HeldSinceSelect && pointer.Down; // the press that selected a settlement paints nothing
+			const bool painting = overLand && pointer.Down && UI::CapturesInput(*GetEntity().GetScene()) == false
+				&& m_HeldSinceSelect == false;
+			session.PointerOnLand = overLand;
+			session.PointerTile = point;
+			session.Painting = painting && session.UnlockedTiles.empty() == false;
 			if (painting == false || session.UnlockedTiles.empty())
 			{
 				m_Stroking = false;
+				m_ToldReach = false;
 				return;
 			}
 
 			const uint8_t tileId = BrushRules::BrushTile(session.Brush.TileId, session.UnlockedTiles);
+			m_Mountains.SnowShift = SeasonRules::Step(session.Season.SnowShift, 4.0f); // as SimulationScript settles it
 			const bool raise = (int)tileId == m_Mountains.RockTileId;
 			const bool dig = tileId == session.Water.BedTileId;
 			if (m_Stroking == false)
 			{
 				m_Stroke.Begin(session.Map.GetTiles().size()); // a new press: every tile moves at most its bump from here
+				m_OutOfReach = false;
+				m_PaintedInReach = false;
 			}
 			m_Heights.WaterTileId = session.Water.WaterTileId;
 			m_Heights.BedTileId = session.Water.BedTileId;
@@ -77,10 +98,20 @@ namespace Hydro
 					{
 						Shape(session, at, step, radius, raise, moved);
 					}
+					else if (FarmRules::MayPaint(session.FarmReach, session.FieldTileId, tileId, at.x, at.y, session.Map.GetWidth())
+						== false)
+					{
+						m_OutOfReach = true; // farmland only near a settlement that farms
+					}
 					else if (MountainRules::LevelTile(session.Heights.Get(at.x, at.y), at.x, at.y, m_Mountains) < 0
 						&& BrushRules::CanPaint(session.Map.Get(at.x, at.y), tileId, session.Water.WaterTileId, session.Water.BedTileId))
 					{
-						session.Map.Set(at.x, at.y, tileId); // rock and snow are the height's: painting doesn't cover them
+						// Rock and snow are the height's: painting doesn't cover them. A new type mixes its soil in.
+						if (session.Map.Set(at.x, at.y, tileId))
+						{
+							m_PaintedInReach = true;
+							SoilRules::Paint(session.Soil, (size_t)at.y * (size_t)session.Map.GetWidth() + (size_t)at.x, tileId, m_Soil);
+						}
 					}
 				}
 			}
@@ -89,6 +120,11 @@ namespace Hydro
 				std::vector<uint32_t> slumped = HeightRules::Slump(session.Heights, session.Map, session.Land, moved, raise, m_Heights);
 				moved.insert(moved.end(), slumped.begin(), slumped.end());
 				MountainRules::SettleTiles(session.Map, session.Heights, moved, m_Mountains); // rock and snow at once, even paused
+			}
+			if (m_OutOfReach && m_PaintedInReach == false && m_ToldReach == false)
+			{
+				session.Notices.push_back("Farmland can only be laid near a settlement that farms");
+				m_ToldReach = true; // once a stroke; told again on the next press
 			}
 			m_LastPoint = point;
 			m_Stroking = true;
@@ -100,6 +136,21 @@ namespace Hydro
 		}
 
 	private:
+		// The settlement whose centre is within a tile of `point` (its Id; 0 none).
+		static int SettlementAt(const HearthlandsSession& session, const glm::vec2& point)
+		{
+			for (const Settlement& settlement : session.Settlements.List)
+			{
+				const float dx = point.x - ((float)settlement.X + 0.5f);
+				const float dy = point.y - ((float)settlement.Y + 0.5f);
+				if (dx * dx + dy * dy <= 1.2f * 1.2f)
+				{
+					return settlement.Id;
+				}
+			}
+			return 0;
+		}
+
 		// Raise: water and riverbed fill with bare land, then the tile rises its bump. Dig: raised land (at the press) sinks
 		// its bump, ground-level land becomes riverbed.
 		void Shape(HearthlandsSession& session, const glm::ivec2& at, const glm::vec2& centre, float radius, bool raise,
@@ -190,9 +241,15 @@ namespace Hydro
 
 		BrushCursorView m_Cursor;
 		MountainRules::Settings m_Mountains;
+		SoilRules::Settings m_Soil; // what each type's soil is, for mixing
 		HeightRules::Settings m_Heights;
 		HeightRules::Stroke m_Stroke;
 		bool m_Stroking = false;
+		bool m_OutOfReach = false;     // this press touched farmland out of any farming settlement's reach
+		bool m_PaintedInReach = false; // this press painted something
+		bool m_ToldReach = false;      // the out-of-reach notice was shown for this press
+		bool m_HeldSinceSelect = false; // since a press that selected a settlement
+		bool m_WasDown = false;
 		glm::vec2 m_LastPoint{ 0.0f };
 	};
 }

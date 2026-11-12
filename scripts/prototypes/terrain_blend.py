@@ -69,7 +69,12 @@ tiles_art=tiles.copy(); tiles_art[2:7,9:15]=2
 GX,GY=12,8
 gy,gx=np.mgrid[0:H,0:W]   # groundwater: a patch peaking at 1 (GroundwaterRules), shown above ClueFrom 0.78
 ground=np.clip(1.0-np.hypot(gx-GX,gy-GY)/14.0,0,1)
-def render_art(noise_amt,seconds=0.0,clarity=0.25):
+def to_srgb(c): c=np.clip(np.array(c,float),0,1); return np.where(c<=0.0031308,c*12.92,1.055*c**(1/2.4)-0.055)*255
+def value_noise(qx,qy,seed):  # tile_blend.frag's ValueNoise
+    ix,iy=np.floor(qx),np.floor(qy); fx,fy=qx-ix,qy-iy; fx,fy=fx*fx*(3-2*fx),fy*fy*(3-2*fy)
+    b=hash_cell(ix,iy,seed)*(1-fx)+hash_cell(ix+1,iy,seed)*fx; t=hash_cell(ix,iy+1,seed)*(1-fx)+hash_cell(ix+1,iy+1,seed)*fx
+    return b*(1-fy)+t*fy
+def render_art(noise_amt,seconds=0.0,clarity=0.25,tint=(1,1,1),snow=0.0,ice=0.0,fade=0.0):
     clues=np.round(np.clip((ground-0.78)/0.22,0,1)*clarity*63)/63  # GroundwaterRules::Clue, as the texture's B carries it
     seconds=np.floor(seconds*6)/6  # WaterSteps
     py,px=np.mgrid[0:H*T,0:W*T]
@@ -106,9 +111,22 @@ def render_art(noise_amt,seconds=0.0,clarity=0.25):
     # Groundwater clues: cool wet specks in clusters and a rare glint, as plain as the clue (ClueClarity); a cool tint around.
     specks=clue*(0.25+0.5*hash_cell(px//2,py//2,11.0)); pick=hash_cell(px,py,12.0)
     damp=(~water)&(clue>0); c=clue[...,None]
-    tint=img*(1-c*0.5)+img*np.array([0.85,0.9,1.0])*c*0.5
+    cool=img*(1-c*0.5)+img*np.array([0.85,0.9,1.0])*c*0.5
     img=np.where((damp&(pick<clue*0.04))[...,None],[140,175,205],np.where((damp&(pick<specks))[...,None],
-                 img*0.4+np.array([70,88,105])*0.6,np.where(damp[...,None],tint,img)))
+                 img*0.4+np.array([70,88,105])*0.6,np.where(damp[...,None],cool,img)))
+    # The season (TerrainView::SetSeason): snow in drifts on the land, thickest up high; ice from the shores; the tint.
+    if fade>0:  # green fading to straw (greens only)
+        g=img[...,1:2]; green=((~water)&(img[...,1]>img[...,0])&(img[...,1]>img[...,2]))[...,None]
+        img=np.where(green,img*(1-fade)+np.concatenate([g*1.05,g*0.82,g*0.32],-1)*fade,img)
+    if snow>0:
+        ax,ay=px/T,py/T
+        drift=value_noise(ax*0.45,ay*0.45,21.0)*0.75+value_noise(ax*1.3,ay*1.3,26.0)*0.17+hash_cell(px,py,22.0)*0.08; shade=hash_cell(px,py,23.0)
+        snowcol=np.where((shade<0.12)[...,None],to_srgb([0.70,0.76,0.86]),np.where((shade<0.3)[...,None],to_srgb([0.80,0.84,0.90]),to_srgb([0.88,0.90,0.94])))
+        img=np.where(((~water)&(drift<snow*(1+0.12*base)))[...,None],snowcol,img)
+    if ice>0:
+        frozen=water&(share*2+hash_cell(px//2,py//2,24.0)*0.3>1-ice)
+        img=np.where(frozen[...,None],np.where((hash_cell(px,py,25.0)<0.08)[...,None],to_srgb([0.62,0.72,0.80]),to_srgb([0.32,0.45,0.56])),img)
+    img=img*np.array(tint)  # the tint multiplies linear colour in the shader; near enough here
     return np.clip(img,0,255).astype(np.uint8)
 art=render_art(0.18)
 Image.fromarray(art).resize((art.shape[1]*2,art.shape[0]*2),Image.NEAREST).save(os.path.join(os.path.dirname(out),"terrain_art.png"))
@@ -122,3 +140,9 @@ crop=lambda c: render_art(0.18,0.0,c)[(GY-6)*T:(GY+6)*T,(GX-8)*T:(GX+8)*T]
 pair=np.concatenate([crop(0.25),np.full((12*T,4,3),255,np.uint8),crop(1.0)],axis=1)
 Image.fromarray(pair).resize((pair.shape[1]*2,pair.shape[0]*2),Image.NEAREST).save(os.path.join(os.path.dirname(out),"terrain_groundwater.png"))
 print("wrote", os.path.join(os.path.dirname(out),"terrain_groundwater.png"))
+# The four seasons (Assets/Data/Seasons.hytable's Tint, GroundSnow, Ice), side by side, as terrain_seasons.png.
+seasons=[((1.0,1.03,0.98),0,0,0),((1.04,1.02,0.94),0,0,0.1),((1.06,0.96,0.86),0,0,0.45),((0.92,0.96,1.06),0.55,0.5,0.6)]
+crops=[render_art(0.18,0.0,0.25,t,s,i,f)[2*T:14*T,4*T:20*T] for t,s,i,f in seasons]
+strip=np.concatenate(sum([[c,np.full((12*T,4,3),255,np.uint8)] for c in crops],[])[:-1],axis=1)
+Image.fromarray(strip).save(os.path.join(os.path.dirname(out),"terrain_seasons.png"))
+print("wrote", os.path.join(os.path.dirname(out),"terrain_seasons.png"))

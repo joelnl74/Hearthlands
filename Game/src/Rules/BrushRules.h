@@ -81,23 +81,23 @@ namespace Hydro
 			return tiles;
 		}
 
-		// The brush sizes the HUD steps through, in tiles.
-		static constexpr float Radii[8] = { 0.5f, 1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 6.0f, 8.0f };
+		// The brush sizes the HUD steps through, in tiles; the last ones only as large as talents allow.
+		static constexpr int RadiusCount = 10;
+		static constexpr float Radii[RadiusCount] = { 0.5f, 1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 6.0f, 8.0f, 12.0f, 16.0f };
 
-		// The next size up (steps > 0) or down from a radius, staying within Radii; a radius between two counts as the
-		// one below it.
-		static float StepRadius(float radius, int steps)
+		// The next size up (steps > 0) or down from a radius, within Radii and at most `largest`; a radius between two
+		// counts as the one below it.
+		static float StepRadius(float radius, int steps, float largest = 8.0f)
 		{
 			int index = 0;
-			for (int i = 0; i < 8; i++)
+			int top = 0;
+			for (int i = 0; i < RadiusCount; i++)
 			{
-				if (Radii[i] <= radius + 1e-4f)
-				{
-					index = i;
-				}
+				index = Radii[i] <= radius + 1e-4f ? i : index;
+				top = Radii[i] <= largest + 1e-4f ? i : top;
 			}
 			index += steps;
-			return Radii[index < 0 ? 0 : (index > 7 ? 7 : index)];
+			return Radii[index < 0 ? 0 : (index > top ? top : index)];
 		}
 
 		// The tile id the brush paints: the chosen one when it is unlocked, else the first unlocked one (0 without any).

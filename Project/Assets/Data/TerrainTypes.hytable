@@ -14,6 +14,10 @@ DataTable:
       UnlockCount: 0
       FromLevel: 0
       BelowTileId: -1
+      Fertility: 0.1
+      Sand: 0.9
+      Living: false
+      Roots: 0
       CliffColor: [0.72, 0.62, 0.42]
       Generated: true
       MinHeight: 0.35
@@ -31,6 +35,10 @@ DataTable:
       UnlockCount: 0
       FromLevel: 0
       BelowTileId: -1
+      Fertility: 0.3
+      Sand: 0.2
+      Living: false
+      Roots: 0
       CliffColor: [0.4, 0.29, 0.2]
       Generated: true
       MinHeight: 0.45
@@ -49,6 +57,10 @@ DataTable:
       Shelter: 0.15
       FromLevel: 0
       BelowTileId: -1
+      Fertility: 0.45
+      Sand: 0.2
+      Living: true
+      Roots: 0.1
       CliffColor: [0.42, 0.31, 0.21]
       Generated: true
       MinHeight: 0.55
@@ -66,6 +78,10 @@ DataTable:
       UnlockCount: 0
       FromLevel: 0
       BelowTileId: -1
+      Fertility: 0
+      Sand: 0.3
+      Living: false
+      Roots: 0
       CliffColor: [0.3, 0.3, 0.35]
       Generated: true
       MinHeight: 0.0
@@ -83,6 +99,10 @@ DataTable:
       UnlockCount: 0
       FromLevel: 9
       BelowTileId: 6
+      Fertility: 0
+      Sand: 0.3
+      Living: false
+      Roots: 0
       CliffColor: [0.8, 0.84, 0.9]
       Generated: false
       MinHeight: 0.0
@@ -101,6 +121,10 @@ DataTable:
       UnlockCount: 0
       FromLevel: 0
       BelowTileId: -1
+      Fertility: 0.35
+      Sand: 0.45
+      Living: false
+      Roots: 0
       CliffColor: [0.33, 0.25, 0.19]
       Generated: false
       MinHeight: 0.0
@@ -119,9 +143,35 @@ DataTable:
       UnlockCount: 1500
       FromLevel: 4
       BelowTileId: 1
+      Fertility: 0.05
+      Sand: 0.5
+      Living: false
+      Roots: 0
       CliffColor: [0.42, 0.41, 0.4]
       Generated: true
       MinHeight: 0.7
       MaxHeight: 1.0
       MinMoisture: 0
       MaxMoisture: 1
+    Farmland:
+      Name: Farmland
+      BrushName: Farmland
+      TileId: 7
+      Role: Land
+      Color: [0.42, 0.29, 0.18]
+      Priority: 3
+      StartsUnlocked: false
+      UnlockTileId: -1
+      UnlockCount: 0
+      FromLevel: 0
+      BelowTileId: -1
+      Fertility: 0.45
+      Sand: 0.25
+      Living: false
+      Roots: 0.1
+      CliffColor: [0.4, 0.29, 0.2]
+      Generated: false
+      MinHeight: 0
+      MaxHeight: 0
+      MinMoisture: 0
+      MaxMoisture: 0

@@ -2,6 +2,8 @@
 
 #include "Data/TerrainRuleDefinition.h"
 #include "Data/TerrainTypeDefinition.h"
+#include "Rules/ForestRules.h"
+#include "Rules/SoilRules.h"
 #include "State/Hydrology.h"
 #include "State/Random.h"
 #include "State/TileMap.h"
@@ -16,15 +18,18 @@ namespace Hydro
 	class GrowthRules
 	{
 	public:
-		// Whether a row's conditions hold for the tile (x, y): its id, its moisture and its neighbours.
-		static bool Matches(const TerrainRuleDefinition& rule, const TileMap& map, const Hydrology& water, int x, int y)
+		// Whether a row's conditions hold for the tile (x, y): its id, its moisture (or the canopy's `shade` if more) and
+		// its neighbours.
+		static bool Matches(const TerrainRuleDefinition& rule, const TileMap& map, const Hydrology& water, int x, int y,
+			float shade = 0.0f)
 		{
 			const size_t index = (size_t)y * (size_t)map.GetWidth() + (size_t)x;
 			if ((int)map.GetTiles()[index] != rule.FromTileId)
 			{
 				return false;
 			}
-			const float moisture = index < water.Moisture.size() ? (float)water.Moisture[index] / 255.0f : 0.0f;
+			const float ground = index < water.Moisture.size() ? (float)water.Moisture[index] / 255.0f : 0.0f;
+			const float moisture = shade > ground ? shade : ground;
 			if (moisture < rule.MinMoisture - 1e-4f || moisture > rule.MaxMoisture + 1e-4f)
 			{
 				return false;
@@ -32,10 +37,11 @@ namespace Hydro
 			return rule.NeighbourTileId < 0 || CountNeighbours(map, x, y, (uint8_t)rule.NeighbourTileId) >= rule.MinNeighbours;
 		}
 
-		// Looks at `samples` random tiles on the land (land[i] != 0; empty = all): each matching row rolls its Chance in
-		// turn until one changes the tile. Returns how many tiles changed.
+		// Looks at `samples` random land tiles (land[i] != 0; empty = all): each matching row (roots and shade count as
+		// moisture: Canopy::Ground) rolls its Chance (moved by SoilEffect) in turn until one changes the tile.
 		static int Step(TileMap& map, const Hydrology& water, const std::vector<uint8_t>& land,
-			const std::vector<TerrainRuleDefinition>& rules, int samples, Random& random)
+			const std::vector<TerrainRuleDefinition>& rules, int samples, Random& random, const SoilRules::Lookup& soil = {},
+			const ForestRules::Canopy& canopy = {})
 		{
 			const uint32_t count = (uint32_t)map.GetTiles().size();
 			int changed = 0;
@@ -48,9 +54,18 @@ namespace Hydro
 				}
 				const int x = (int)(index % (uint32_t)map.GetWidth());
 				const int y = (int)(index / (uint32_t)map.GetWidth());
+				const int tile = (int)map.GetTiles()[index];
+				float shade = -1.0f; // worked out once, for the first row that starts from this tile
 				for (const TerrainRuleDefinition& rule : rules)
 				{
-					if (Matches(rule, map, water, x, y) && random.Float() < rule.Chance)
+					if (rule.FromTileId != tile)
+					{
+						continue;
+					}
+					shade = shade < 0.0f ? canopy.Ground(map, water, x, y) : shade;
+					const float chance = rule.SoilEffect != 0.0f ? rule.Chance * SoilRules::Factor(rule.SoilEffect, soil.Quality(index))
+						: rule.Chance;
+					if (Matches(rule, map, water, x, y, shade) && random.Float() < chance)
 					{
 						map.Set(x, y, (uint8_t)rule.ToTileId);
 						changed++;

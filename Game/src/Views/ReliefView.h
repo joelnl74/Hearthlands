@@ -43,8 +43,10 @@ namespace Hydro
 			}
 		}
 
-		// centre: the map's centre in the world (the Terrain entity); levelHeight: metres a level stands.
-		void Present(const HeightMap& heights, const TileMap& map, const glm::vec3& centre, float levelHeight, float deltaTime)
+		// centre: the map's centre in the world (the Terrain entity); levelHeight: metres a level stands; the walls take the
+		// season's tint (the tops have it from the plane's material).
+		void Present(const HeightMap& heights, const TileMap& map, const glm::vec3& centre, float levelHeight, float deltaTime,
+			const glm::vec3& tint = glm::vec3(1.0f))
 		{
 			if (m_Scene == nullptr || m_Root.IsValid() == false || map.GetWidth() == 0
 				|| heights.GetLevels().size() != map.GetTiles().size())
@@ -53,6 +55,7 @@ namespace Hydro
 			}
 			m_Root.GetComponent<TransformComponent>().Translation = centre;
 			SyncTopMaterial();
+			SyncWallTint(glm::round(tint * 32.0f) / 32.0f);
 			m_SinceRefresh += deltaTime;
 			const bool moved = heights.GetRevision() != m_HeightRevision || map.GetRevision() != m_MapRevision
 				|| levelHeight != m_LevelHeight;
@@ -250,7 +253,8 @@ namespace Hydro
 				chunk.Holder.AddComponent<TransformComponent>();
 				MeshComponent& mesh = chunk.Holder.AddComponent<MeshComponent>();
 				MeshMaterialSlot wallSlot;
-				wallSlot.Inline.Filter = TextureFilter::Nearest; // Standard shader, white: the walls' vertex colours
+				wallSlot.Inline.Filter = TextureFilter::Nearest; // Standard shader, the season's tint: the walls' vertex colours
+				wallSlot.Inline.Tint = glm::vec4(m_WallTint, 1.0f);
 				mesh.Materials = { MeshMaterialSlot{}, wallSlot };
 				mesh.Materials[0].Inline = m_TopMaterial;
 				mesh.CastShadows = true;
@@ -349,6 +353,22 @@ namespace Hydro
 			}
 		}
 
+		void SyncWallTint(const glm::vec3& tint)
+		{
+			if (tint == m_WallTint)
+			{
+				return;
+			}
+			m_WallTint = tint;
+			for (Chunk& chunk : m_Chunks)
+			{
+				if (chunk.Holder.IsValid())
+				{
+					chunk.Holder.GetComponent<MeshComponent>().Materials[1].Inline.Tint = glm::vec4(tint, 1.0f);
+				}
+			}
+		}
+
 		Scene* m_Scene = nullptr;
 		Entity m_Terrain;
 		Entity m_Root;
@@ -361,6 +381,7 @@ namespace Hydro
 		std::vector<uint8_t> m_ShownLevels;
 		std::vector<uint8_t> m_ShownTiles;
 		MaterialData m_TopMaterial;
+		glm::vec3 m_WallTint{ 1.0f };
 		uint64_t m_HeightRevision = ~0ull;
 		uint64_t m_MapRevision = ~0ull;
 		float m_LevelHeight = -1.0f;

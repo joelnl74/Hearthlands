@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Hydro.h"
+#include "Hydro/Scene/UI/UI.h"
 #include "Rules/CameraRules.h"
 #include "State/HearthlandsSession.h"
 
@@ -9,7 +10,7 @@
 namespace Hydro
 {
 	// The world camera, on the Camera entity: orthographic and isometric (Yaw, Elevation). WASD or the arrows pan, Q / E or
-	// - / = zoom in whole pixel steps, the right mouse button drags the ground; it always looks at a point over the map.
+	// - / = zoom in whole pixel steps, the right mouse drags the ground (none while a modal UI is open); it looks over the map.
 	HY_SCRIPT()
 	class CameraScript : public ScriptableEntity
 	{
@@ -46,22 +47,36 @@ namespace Hydro
 			const float size = CameraRules::OrthographicSize(viewportHeight, CameraRules::PixelScales[m_Zoom], PixelsPerTile);
 			const float pixelsPerUnit = viewportHeight / size;
 
+			const bool free = UI::CapturesInput(scene) == false; // the keys move the menu's focus instead
 			glm::vec2 move(0.0f);
 			move.x += Held(Key::D, Key::Right) - Held(Key::A, Key::Left);
 			move.y += Held(Key::S, Key::Down) - Held(Key::W, Key::Up); // screen y points down
-			m_Target += CameraRules::GroundDelta(move * PanSpeed * viewportHeight * deltaTime, pixelsPerUnit, Yaw, Elevation);
+			if (free)
+			{
+				m_Target += CameraRules::GroundDelta(move * PanSpeed * viewportHeight * deltaTime, pixelsPerUnit, Yaw, Elevation);
+			}
 
-			if (Pressed(Key::E, m_InHeld) || Pressed(Key::Equal, m_InHeld2))
+			const bool zoomIn = Pressed(Key::E, m_InHeld) || Pressed(Key::Equal, m_InHeld2);
+			const bool zoomOut = Pressed(Key::Q, m_OutHeld) || Pressed(Key::Minus, m_OutHeld2);
+			if (free && zoomIn)
 			{
 				m_Zoom = CameraRules::StepZoom(m_Zoom, 1);
 			}
-			if (Pressed(Key::Q, m_OutHeld) || Pressed(Key::Minus, m_OutHeld2))
+			if (free && zoomOut)
 			{
 				m_Zoom = CameraRules::StepZoom(m_Zoom, -1);
 			}
 
-			Drag(scene, pixelsPerUnit);
-			const TileMap& map = HearthlandsSession::Get().Map;
+			Drag(scene, pixelsPerUnit, free);
+			HearthlandsSession& session = HearthlandsSession::Get();
+			const TileMap& map = session.Map;
+			if (session.FocusRequested && map.GetWidth() > 0)
+			{
+				// A tile to look at (a settlement chosen on the HUD): map tiles to the map-centred ground point.
+				m_Target = glm::vec2(session.FocusTile.x + 0.5f - (float)map.GetWidth() * 0.5f,
+					(float)map.GetHeight() * 0.5f - session.FocusTile.y - 0.5f);
+				session.FocusRequested = false;
+			}
 			if (map.GetWidth() > 0)
 			{
 				m_Target = CameraRules::ClampTarget(m_Target, map.GetWidth(), map.GetHeight());
@@ -86,12 +101,12 @@ namespace Hydro
 			return pressed;
 		}
 
-		// Right mouse held over the game: the ground follows the pointer.
-		void Drag(Scene& scene, float pixelsPerUnit)
+		// Right mouse held over the game: the ground follows the pointer (not while `free` is false).
+		void Drag(Scene& scene, float pixelsPerUnit, bool free)
 		{
 			const auto [mouseX, mouseY] = Input::GetMousePosition();
 			const glm::vec2 mouse(mouseX, mouseY);
-			const bool dragging = Input::IsMouseButtonPressed(MouseButton::Right) && (m_Dragging || scene.GetUIPointer().Inside);
+			const bool dragging = free && Input::IsMouseButtonPressed(MouseButton::Right) && (m_Dragging || scene.GetUIPointer().Inside);
 			if (dragging && m_Dragging)
 			{
 				m_Target -= CameraRules::GroundDelta(mouse - m_LastMouse, pixelsPerUnit, Yaw, Elevation);

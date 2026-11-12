@@ -8,6 +8,7 @@
 #include "Scripts/World/CameraScript.h"
 #include "Scripts/World/HudScript.h"
 #include "Scripts/World/SimulationScript.h"
+#include "Scripts/World/WorldMenuScript.h"
 #include "Scripts/World/WorldScript.h"
 
 namespace Hydro
@@ -34,14 +35,27 @@ namespace Hydro
 
 		ScriptRegistry::Register<HudScript>("HudScript")
 			.Property("UIFont", "UI Font", &HudScript::UIFont).Tooltip("The HUD's text").AssetFilter(AssetType::Font)
-			.Property("TerrainTypes", "Terrain Types", &HudScript::TerrainTypes).Tooltip("The brushes' names and colours").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition");
+			.Property("HeadingFont", "Heading Font", &HudScript::HeadingFont).Tooltip("The clock and the size buttons (the World Menu's heading font)").AssetFilter(AssetType::Font)
+			.Property("Art", "Art", &HudScript::Art).Tooltip("The World Menu's sprites by name (scripts/art/make_ui_art.py); none draws flat colours").AssetFilter(AssetType::Texture2D)
+			.Property("TerrainTypes", "Terrain Types", &HudScript::TerrainTypes).Tooltip("The brushes' names and colours").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
+			.Property("Milestones", "Milestones", &HudScript::Milestones).Tooltip("What gives talent points (the same table as SimulationScript's)").AssetFilter(AssetType::DataTable).DataTypeFilter("MilestoneDefinition")
+			.Property("Peoples", "Peoples", &HudScript::Peoples).Tooltip("The peoples, for the settlement panels (as SimulationScript's)").AssetFilter(AssetType::DataTable).DataTypeFilter("PeopleDefinition")
+			.Property("Animals", "Animals", &HudScript::Animals).Tooltip("The wild animals, for discoveries (the same table as SimulationScript's)").AssetFilter(AssetType::DataTable).DataTypeFilter("AnimalDefinition");
 
 		ScriptRegistry::Register<SimulationScript>("SimulationScript")
 			.Property("TerrainTypes", "Terrain Types", &SimulationScript::TerrainTypes).Tooltip("Roles (water, riverbed) and unlocks").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
 			.Property("TerrainRules", "Terrain Rules", &SimulationScript::TerrainRules).Tooltip("How land changes by itself").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainRuleDefinition")
 			.Property("ObjectTypes", "Object Types", &SimulationScript::ObjectTypes).Tooltip("What grows and stands on the tiles").AssetFilter(AssetType::DataTable).DataTypeFilter("ObjectDefinition")
+			.Property("Milestones", "Milestones", &SimulationScript::Milestones).Tooltip("First-time events that give talent points").AssetFilter(AssetType::DataTable).DataTypeFilter("MilestoneDefinition")
+			.Property("Seasons", "Seasons", &SimulationScript::Seasons).Tooltip("The year: rivers, snowline, growth and colours by season").AssetFilter(AssetType::DataTable).DataTypeFilter("SeasonDefinition")
+			.Property("Animals", "Animals", &SimulationScript::Animals).Tooltip("The wild animals: where they live, how they grow and spread").AssetFilter(AssetType::DataTable).DataTypeFilter("AnimalDefinition")
+			.Property("Peoples", "Peoples", &SimulationScript::Peoples).Tooltip("The peoples: what they need, gather, hunt and build").AssetFilter(AssetType::DataTable).DataTypeFilter("PeopleDefinition")
+			.Property("FireObjectId", "Fire Object Id", &SimulationScript::FireObjectId).Range(1.0f, 255.0f).Tooltip("The centre object of a people without their own CentreObjectId (Objects table)")
+			.Property("RegionsPerTick", "Regions Per Tick", &SimulationScript::RegionsPerTick).Range(1.0f, 1024.0f).Tooltip("Regions of the map whose animals are worked out each tick")
+			.Property("BlendDays", "Blend Days", &SimulationScript::BlendDays).Range(0.0f, 10.0f).Tooltip("Days at the end of each season over which it turns into the next")
 			.Property("TicksPerSecond", "Ticks Per Second", &SimulationScript::TicksPerSecond).Range(1.0f, 20.0f).Tooltip("Ticks per world second (at 1x)")
 			.Property("SamplesPerTick", "Samples Per Tick", &SimulationScript::SamplesPerTick).Range(0.0f, 200000.0f).Tooltip("Random tiles the terrain rules look at per tick")
+			.Property("SoilSamplesPerTick", "Soil Samples Per Tick", &SimulationScript::SoilSamplesPerTick).Range(0.0f, 200000.0f).Tooltip("Random tiles whose soil builds up or wears out per tick")
 			.Property("SourceHead", "Source Head", &SimulationScript::SourceHead).Range(1.0f, 200.0f).Tooltip("How far a one-tile-wide channel carries water from the sea, in tiles")
 			.Property("Loss", "Loss", &SimulationScript::Loss).Range(0.1f, 10.0f).Tooltip("Head lost per tile in a narrow channel; wide ones lose less")
 			.Property("MoistureReach", "Moisture Reach", &SimulationScript::MoistureReach).Range(1.0f, 32.0f).Tooltip("Tiles over which moisture fades from fresh water")
@@ -51,11 +65,26 @@ namespace Hydro
 			.Property("RainPerLevel", "Rain Per Level", &SimulationScript::RainPerLevel).Range(0.0f, 0.25f).Tooltip("Moisture each level gives all raised land (rain); 0: only snow and rivers wet hills")
 			.Property("SpringFrom", "Spring From", &SimulationScript::SpringFrom).Range(0.0f, 1.0f).Tooltip("Groundwater (0 to 1) from which a dug riverbed springs")
 			.Property("SpringHead", "Spring Head", &SimulationScript::SpringHead).Range(1.0f, 200.0f).Tooltip("A spring's head at full groundwater (tiles of narrow channel it fills); weaker ones less")
-			.Property("GroundwaterMoisture", "Groundwater Moisture", &SimulationScript::GroundwaterMoisture).Range(0.0f, 1.0f).Tooltip("Moisture full groundwater gives the land above it");
+			.Property("GroundwaterMoisture", "Groundwater Moisture", &SimulationScript::GroundwaterMoisture).Range(0.0f, 1.0f).Tooltip("Moisture full groundwater gives the land above it")
+			.Property("ForestCover", "Forest Cover", &SimulationScript::ForestCover).Range(0.5f, 9.0f).Tooltip("Canopy around a tile (a grown tree about 1) that shades it fully")
+			.Property("ForestKeep", "Forest Keep", &SimulationScript::ForestKeep).Range(0.0f, 1.0f).Tooltip("Share of its trees' moisture a fully shaded tile keeps (grass under and beside forest)");
+
+		ScriptRegistry::Register<WorldMenuScript>("WorldMenuScript")
+			.Property("UIFont", "UI Font", &WorldMenuScript::UIFont).Tooltip("Running text").AssetFilter(AssetType::Font)
+			.Property("HeadingFont", "Heading Font", &WorldMenuScript::HeadingFont).Tooltip("Headings: tiles, panels, sections").AssetFilter(AssetType::Font)
+			.Property("TitleFont", "Title Font", &WorldMenuScript::TitleFont).Tooltip("Page titles").AssetFilter(AssetType::Font)
+			.Property("Art", "Art", &WorldMenuScript::Art).Tooltip("The menu's sprites by name (scripts/art/make_ui_art.py); none draws flat colours").AssetFilter(AssetType::Texture2D)
+			.Property("TerrainTypes", "Terrain Types", &WorldMenuScript::TerrainTypes).Tooltip("The brushes' names (talents that unlock one, milestones)").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
+			.Property("Talents", "Talents", &WorldMenuScript::Talents).Tooltip("What talent points buy").AssetFilter(AssetType::DataTable).DataTypeFilter("TalentDefinition")
+			.Property("Milestones", "Milestones", &WorldMenuScript::Milestones).Tooltip("What gives talent points (the same table as SimulationScript's)").AssetFilter(AssetType::DataTable).DataTypeFilter("MilestoneDefinition")
+			.Property("Animals", "Animals", &WorldMenuScript::Animals).Tooltip("The species (the same table as SimulationScript's)").AssetFilter(AssetType::DataTable).DataTypeFilter("AnimalDefinition")
+			.Property("PauseInMenu", "Pause In Menu", &WorldMenuScript::PauseInMenu).Tooltip("Stop the clock while the menu is open (Settings > Gameplay)");
 
 		ScriptRegistry::Register<WorldScript>("WorldScript")
 			.Property("TerrainTypes", "Terrain Types", &WorldScript::TerrainTypes).Tooltip("The terrain types generation picks from and the shader draws").AssetFilter(AssetType::DataTable).DataTypeFilter("TerrainTypeDefinition")
 			.Property("ObjectTypes", "Object Types", &WorldScript::ObjectTypes).Tooltip("The objects' sprites and sizes").AssetFilter(AssetType::DataTable).DataTypeFilter("ObjectDefinition")
+			.Property("Animals", "Animals", &WorldScript::Animals).Tooltip("The wild animals' looks (SimulationScript keeps their numbers)").AssetFilter(AssetType::DataTable).DataTypeFilter("AnimalDefinition")
+			.Property("Peoples", "Peoples", &WorldScript::Peoples).Tooltip("The settlers' looks (SimulationScript keeps their settlements)").AssetFilter(AssetType::DataTable).DataTypeFilter("PeopleDefinition")
 			.Property("TerrainArt", "Terrain Art", &WorldScript::TerrainArt).Tooltip("The terrain atlas (scripts/art/make_terrain_atlas.py); none draws flat colours").AssetFilter(AssetType::Texture2D)
 			.Property("BaseTileId", "Base Tile Id", &WorldScript::BaseTileId).Range(-1.0f, 255.0f).Tooltip("Every tile starts as this terrain id (1 = dirt); -1 generates the world from Seed")
 			.Property("Seed", "Seed", &WorldScript::Seed).Range(0.0f, 1000000.0f).Tooltip("The same seed makes the same world")
@@ -68,6 +97,7 @@ namespace Hydro
 			.Property("LevelHeight", "Level Height", &WorldScript::LevelHeight).Range(0.05f, 2.0f).Tooltip("Metres a level of height stands: 8 art pixels at 32 a tile from 30 degrees = 0.2887")
 			.Property("HillsFrom", "Hills From", &WorldScript::HillsFrom).Range(0.0f, 1.0f).Tooltip("Generated worlds: the height noise above which the land rises")
 			.Property("LevelsPerHeight", "Levels Per Height", &WorldScript::LevelsPerHeight).Range(1.0f, 100.0f).Tooltip("Generated worlds: levels per unit of height noise above HillsFrom")
+			.Property("Creeks", "Creeks", &WorldScript::Creeks).Range(0.0f, 10.0f).Tooltip("Dry creeks a new world gets per 100 x 100 tiles of land; digging a head opens its spring")
 			.Property("GroundwaterScale", "Groundwater Scale", &WorldScript::GroundwaterScale).Range(4.0f, 256.0f).Tooltip("Tiles across a patch of groundwater")
 			.Property("ClueClarity", "Clue Clarity", &WorldScript::ClueClarity).Range(0.0f, 1.0f).Tooltip("How plainly the surface shows groundwater at the start: 0 not, 1 plainly")
 			.Property("ClueFrom", "Clue From", &WorldScript::ClueFrom).Range(0.0f, 1.0f).Tooltip("Groundwater (0 to 1) from which the surface shows it at the start");

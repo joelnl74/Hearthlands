@@ -1,0 +1,18 @@
+Handle: 816922904342397002
+Type: Texture2D
+TextureImport:
+  Format: SRGB
+  Filter: Nearest
+  Wrap: Clamp
+  SpriteMode: Multiple
+  PixelsPerUnit: 32
+  Slicing:
+    Mode: Grid
+    CellSize: [16, 26]
+    Offset: [0, 0]
+    Spacing: [0, 0]
+    Columns: 4
+    Rows: 12
+    RowNames: [idle_SE, idle_SW, idle_NE, idle_NW, walk_SE, walk_SW, walk_NE, walk_NW, work_SE, work_SW, work_NE, work_NW]
+    DefaultPivot: [0.5, 0.5]
+  Sprites: []
