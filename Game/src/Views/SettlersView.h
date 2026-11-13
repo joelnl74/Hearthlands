@@ -3,6 +3,7 @@
 #include "Data/ObjectDefinition.h"
 #include "Data/PeopleDefinition.h"
 #include "Rules/SettlementRules.h"
+#include "Rules/WalkRules.h"
 #include "Rules/WildlifeRules.h"
 #include "State/HeightMap.h"
 #include "State/Hydrology.h"
@@ -26,7 +27,8 @@
 namespace Hydro
 {
 	// The settlements as they look: each centre's light (its people's GlowColor, smoke from a fire or forge) and every
-	// villager doing their job: at bushes, trees, out hunting, at shelters, on guard; the hurt and resting by the centre.
+	// villager doing their job within the settlement's reach (it grows with the level), walking round water and steep
+	// steps (WalkRules); a spot they can't get to they give up.
 	class SettlersView
 	{
 	public:
@@ -154,6 +156,9 @@ namespace Hydro
 			int Facing = 0;       // SE, SW, NE, NW
 			float Shown = 0.0f;
 			bool Leaving = false;
+			int Side = 1;         // the side they turn to round what is in the way (WalkRules::Heading)
+			float Best = 1e9f;    // the nearest they got to the target so far ...
+			float Stuck = 0.0f;   // ... and the seconds since they got nearer
 		};
 
 		struct Fire
@@ -334,6 +339,7 @@ namespace Hydro
 			person.Timer = 1.0f + m_Random.Float() * 4.0f;
 			person.Clock = m_Random.Float() * 8.0f;
 			person.Facing = (int)m_Random.Below(4);
+			person.Side = m_Random.Below(2) == 0 ? 1 : -1; // some go round an obstacle to the left, some to the right
 			person.Sprite = TakeSprite();
 			SpriteRendererComponent& renderer = person.Sprite.GetComponent<SpriteRendererComponent>();
 			renderer.Texture = m_Looks[person.People].Sprite;
@@ -365,10 +371,20 @@ namespace Hydro
 					person.Action = person.WorkThere ? Doing::Work : Doing::Rest;
 					person.Timer = 3.0f + m_Random.Float() * 5.0f;
 				}
-				else
+				else if (dt > 0.0f)
 				{
-					person.Position += way / distance * step;
-					person.Facing = Facing(way, right, up);
+					const glm::vec2 heading = WalkRules::Heading(GroundFor(in, people), person.Position, person.Target, person.Side);
+					if (heading.x != 0.0f || heading.y != 0.0f)
+					{
+						person.Position += heading * step;
+						person.Facing = Facing(heading, right, up);
+					}
+					person.Stuck = distance < person.Best - 0.3f ? 0.0f : person.Stuck + dt;
+					person.Best = std::fmin(person.Best, distance);
+					if (person.Stuck > GiveUpAfter)
+					{
+						GiveUp(person, in, settlement, people);
+					}
 				}
 			}
 			else
@@ -395,9 +411,11 @@ namespace Hydro
 			const VillagerJob job = villager != nullptr ? villager->Job : VillagerJob::Resting;
 			const glm::vec2 centre((float)settlement.X + 0.5f, (float)settlement.Y + 0.5f);
 			const bool working = job != VillagerJob::Resting && job != VillagerJob::Hurt && m_Random.Float() < 0.8f;
+			const int area = SettlementRules::Reach(people, settlement.Level);
+			const int home = SettlementRules::HomeReach(people, settlement.Level);
 			if (working && (job == VillagerJob::Gatherer || job == VillagerJob::Woodcutter || job == VillagerJob::Builder))
 			{
-				const int reach = job == VillagerJob::Builder ? SettlementRules::ShelterReach : people.Radius;
+				const int reach = job == VillagerJob::Builder ? home + BuildingsBeyond : area;
 				for (int tries = 0; tries < 32; tries++)
 				{
 					const int dx = (int)m_Random.Below((uint32_t)(reach * 2 + 1)) - reach;
@@ -431,8 +449,8 @@ namespace Hydro
 				// Out in the fields: a farmland tile within reach.
 				for (int tries = 0; tries < 32; tries++)
 				{
-					const int dx = (int)m_Random.Below((uint32_t)(people.Radius * 2 + 1)) - people.Radius;
-					const int dy = (int)m_Random.Below((uint32_t)(people.Radius * 2 + 1)) - people.Radius;
+					const int dx = (int)m_Random.Below((uint32_t)(area * 2 + 1)) - area;
+					const int dy = (int)m_Random.Below((uint32_t)(area * 2 + 1)) - area;
 					const int x = settlement.X + dx;
 					const int y = settlement.Y + dy;
 					if (in.Map->InBounds(x, y) && in.Map->Get(x, y) == (uint8_t)people.FarmTileId)
@@ -446,7 +464,7 @@ namespace Hydro
 			{
 				const float angle = m_Random.Float() * 6.2832f;
 				const float outward = job == VillagerJob::Hunter ? 0.5f : 0.35f; // foresters plant nearer
-				const float reach = (float)std::min(people.Radius, 14) * (outward + 0.5f * m_Random.Float());
+				const float reach = (float)std::min(area, FarthestOut) * (outward + 0.5f * m_Random.Float());
 				const glm::vec2 spot = centre + glm::vec2(std::cos(angle), std::sin(angle)) * reach;
 				if (Standable(in, spot))
 				{
@@ -471,6 +489,45 @@ namespace Hydro
 			person.Target = spot;
 			person.WorkThere = work;
 			person.Action = Doing::Walk;
+			person.Best = 1e9f;
+			person.Stuck = 0.0f;
+		}
+
+		// They can't get to their spot (water or a cliff in the way): a work spot they give up and go home; on the way home
+		// near it they rest where they are; far out they are lost and fade, to come back by the centre (SyncPeople).
+		void GiveUp(Person& person, const Inputs& in, const Settlement* settlement, const PeopleDefinition& people)
+		{
+			if (settlement == nullptr)
+			{
+				person.Leaving = true;
+				return;
+			}
+			const glm::vec2 centre((float)settlement->X + 0.5f, (float)settlement->Y + 0.5f);
+			if (person.WorkThere)
+			{
+				const float angle = m_Random.Float() * 6.2832f;
+				const glm::vec2 spot = centre + glm::vec2(std::cos(angle), std::sin(angle)) * (0.9f + m_Random.Float() * 2.5f);
+				Go(person, Standable(in, spot) ? spot : centre, false);
+				return;
+			}
+			const float lost = (float)(SettlementRules::HomeReach(people, settlement->Level) + 3);
+			if (glm::length(person.Position - centre) > lost)
+			{
+				person.Leaving = true;
+				return;
+			}
+			person.Action = Doing::Rest;
+			person.Timer = 1.0f + m_Random.Float() * 2.0f;
+		}
+
+		static WalkRules::Ground GroundFor(const Inputs& in, const PeopleDefinition& people)
+		{
+			WalkRules::Ground ground;
+			ground.Map = in.Map;
+			ground.Water = in.Water;
+			ground.Heights = in.Heights;
+			ground.Climb = people.Climb;
+			return ground;
 		}
 
 		void Draw(const Person& person, const Inputs& in)
@@ -505,9 +562,10 @@ namespace Hydro
 
 		static bool Standable(const Inputs& in, const glm::vec2& at)
 		{
-			const int x = (int)std::floor(at.x);
-			const int y = (int)std::floor(at.y);
-			return in.Map->InBounds(x, y) && (in.Water == nullptr || WildlifeRules::Walkable(in.Map->Get(x, y), *in.Water));
+			WalkRules::Ground ground;
+			ground.Map = in.Map;
+			ground.Water = in.Water;
+			return WalkRules::Standable(ground, (int)std::floor(at.x), (int)std::floor(at.y));
 		}
 
 		static float GroundZ(const Inputs& in, const glm::vec2& at)
@@ -564,5 +622,9 @@ namespace Hydro
 		std::vector<Fire> m_Fires;
 		Random m_Random{ 0xF14Eull };
 		float m_SinceSync = 1.0f;
+
+		static constexpr float GiveUpAfter = 3.0f;  // seconds without getting nearer before they give up a spot
+		static constexpr int BuildingsBeyond = 4;   // builders go this much beyond the shelters (lodges stand further out)
+		static constexpr int FarthestOut = 20;      // tiles hunters and foresters go out at most
 	};
 }

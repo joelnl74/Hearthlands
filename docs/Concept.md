@@ -478,6 +478,14 @@ built, with the barn lifting how many fields a settlement works.
    Peoples tab now has pages. In the sim every people built theirs within its first two months; late-winter stores
    can still run dry (tune in play). Art is temporary.
 3. **The area grows with the level**, then **work parties and steering home** (the same walking code).
+   **Area and steering built Nov 13**: `PeopleLevel` has `Radius` (the land a settlement of that level uses: survey,
+   felling, planting, farmland reach, where villagers walk; 0 keeps the people's `Radius`, which is still where a people
+   looks to settle) and `ShelterReach` (where its shelters go, 0 keeps 4). Humans 10 / 13 / 16 tiles, elves 12 / 15 / 18,
+   dwarves 12 / 14 / 17; wood elves keep their 32 at every level; shelters within 4 / 5 / 6. Villagers steer round water
+   and steps steeper than their people's `Climb` (1; dwarves 2) with `WalkRules` (a heading turned to a kept side, no
+   pathfinding), give up a spot after 3 s without getting nearer, and when lost far from home fade and come back by the
+   centre. In a headless sim on thin land (2% berry bushes, no game) humans grow from 9 to 13 people at a hamlet, elves
+   from 12 at a glen to a full village; on rich land nothing changes (they were full anyway). Work parties still to come.
 4. **Fishing** (lodge, shore fishers; boats later) and **Orchards / mushroom beds** through the building system.
 5. **Third-level art** for shelters, centres and the new buildings.
 6. **Pacing profiles** with the timeline from the sim, then **brush energy** (needs the profiles to tune).

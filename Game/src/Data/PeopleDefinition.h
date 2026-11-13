@@ -25,9 +25,9 @@ namespace Hydro
 		int Shelters = 0;
 		HY_PROPERTY(Range(0, 30), Tooltip("... food in store, in days of eating for all, at least"))
 		float FoodDays = 0.0f;
-		HY_PROPERTY(Range(0, 100), Tooltip("... of the people's NeedObjectIds within Radius (old trees), at least"))
+		HY_PROPERTY(Range(0, 100), Tooltip("... of the people's NeedObjectIds within the area (old trees), at least"))
 		int NeedObjects = 0;
-		HY_PROPERTY(Range(0, 2000), Tooltip("... of the people's NeedTileIds within Radius (mountain rock), at least"))
+		HY_PROPERTY(Range(0, 2000), Tooltip("... of the people's NeedTileIds within the area (mountain rock), at least"))
 		int NeedTiles = 0;
 		HY_PROPERTY(Range(-1, 255), Tooltip("The shelter they build at this level (a tent, a hut); -1 none"))
 		int ShelterObjectId = -1;
@@ -35,6 +35,10 @@ namespace Hydro
 		int PeoplePerShelter = 3;
 		HY_PROPERTY(Range(0, 50), Tooltip("Wood it takes"))
 		float WoodPerShelter = 6.0f;
+		HY_PROPERTY(Range(0, 64), Tooltip("Tiles round the centre they use at this level (food, wood, fields); 0: the people's Radius"))
+		int Radius = 0;
+		HY_PROPERTY(Range(0, 16), Tooltip("Tiles from the centre their shelters go up (and are counted) at this level; 0: 4"))
+		int ShelterReach = 0;
 		HY_PROPERTY(Range(1, 200), Tooltip("People the settlement holds at this level, at most"))
 		int MaxPeople = 15;
 		HY_PROPERTY(Range(1, 30), Tooltip("Days of eating they keep in store at this level, at most"))
@@ -67,6 +71,8 @@ namespace Hydro
 		int WorkFrames = 2;
 		HY_PROPERTY(Range(0.05, 10), Tooltip("Tiles a second, walking"))
 		float WalkSpeed = 0.8f;
+		HY_PROPERTY(Range(0, 15), Tooltip("Height levels they step up or down from one tile to the next; steeper they walk round"))
+		int Climb = 1;
 
 		HY_PROPERTY(Range(-1, 255), Tooltip("What they put up at a settlement's centre (a fire, a lantern, a mine); -1 the world's fire"))
 		int CentreObjectId = -1;
@@ -79,7 +85,7 @@ namespace Hydro
 		HY_PROPERTY(Range(0, 15), Tooltip("The centre goes on land at least this many levels high (a mine in the hills)"))
 		int CentreMinLevel = 0;
 
-		HY_PROPERTY(Range(1, 32), Tooltip("Tiles around the centre they use: water, plants, game, wood"))
+		HY_PROPERTY(Range(1, 32), Tooltip("Tiles around a place they look at to settle; a level's area where its Radius is 0"))
 		int Radius = 10;
 		HY_PROPERTY(Range(0, 1), Tooltip("To settle: fresh water near, at least (1: 6 tiles or more)"))
 		float NeedWater = 0.3f;

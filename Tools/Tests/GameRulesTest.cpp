@@ -1060,6 +1060,7 @@ namespace Hydro
 	int TestCreekRules(int& checks); // CreekRulesTest.cpp
 	int TestOldWoodsRules(int& checks); // OldWoodsRulesTest.cpp
 	int TestWaterLifeRules(int& checks); // WaterLifeRulesTest.cpp
+	int TestSettlementArea(int& checks); // SettlementAreaTest.cpp
 
 	int TestGameRules(int& checks)
 	{
@@ -1089,6 +1090,7 @@ namespace Hydro
 		s_RuleFailures += TestCreekRules(checks);
 		s_RuleFailures += TestOldWoodsRules(checks);
 		s_RuleFailures += TestWaterLifeRules(checks);
+		s_RuleFailures += TestSettlementArea(checks);
 
 		return s_RuleFailures;
 	}
