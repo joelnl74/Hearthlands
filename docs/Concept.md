@@ -386,51 +386,97 @@ running downhill (real depth below the ground, waterfalls at the steps), and dig
 
 ### Plan (agreed ideas, Nov 12, 2026; not built yet)
 
-In rough order. Each is discussed again briefly before it is built.
+Everything agreed with the user on Nov 12, thought through as one game and put in a build order. Each step is talked
+over briefly before it is built.
 
-1. **Third-level art**: a shelter for every people's third level (humans a longhouse, elves a great hall, wood elves an
-   elder tree, dwarves a carved gate); the centres grow a step with the levels (a bigger fire, a mine with a headframe).
-   Temporary art drawn in code, as before.
-2. **Each people farms its own way** (same `FarmRules`, growth per people as data): elves and wood elves an **Orchard**
-   brush (fruit trees their foresters plant: slow, a year to the first fruit, then fruit each autumn without sowing;
-   little soil wear; like moisture and old woods near); dwarves **mushroom beds** on rock or dug ground near their
-   mine (no soil, need moisture, no frost: steady in winter, less food). Each unlocked by a talent after that people's
-   own first level-up.
-3. **Fishing** (the user, Nov 12): a talent unlocked once a human or dwarf settlement builds its first lasting building
-   (hut or stone hall). **Fishers** sit at the shore, or later go out in **boats** on lakes, rivers and the sea (a
-   dock on the shore; the boat sprite moves on water tiles). The catch comes from the water life the player made
-   (`HabitatRules`, the fish species): fishing thins a habitat's fish, so the player's rivers and lakes feed people.
-4. **The settlement's area grows with its level** (the user, Nov 12): a reach per `PeopleLevel` instead of one
-   `Radius`, used by the survey (food, wood, farmland), jobs and where villagers walk; bigger places work more land.
-   Villagers may walk further out as it grows, and always find their way home **without pathfinding** (the user, Nov
-   12): they steer towards a heading (out to the work spot, back to the centre), step round water and steep height by
-   trying a turned heading, and give up a spot they can't reach. Cheap for many walkers.
-5. **Work parties for large towns** (the user, Nov 12, like Total War): villagers with the same job walk as a group;
-   one leader picks where to go, the others follow at a set offset and spread round the spot when they arrive. Walking
-   is already only for show (the simulation counts jobs, nobody pathfinds), so this cuts the per-sprite work in
-   `SettlersView`; the party heads home the same way. Agreed by the user, Nov 12. With it: a sprite stands for several people in big towns, and far-off settlements update less often.
-6. **Naming** (the user, Nov 12): the player names settlements and renames villagers. Needs a text field in Hydro's UI
-   first (an engine change: `UIInputFieldComponent`, focus by click, typed characters, Backspace, Enter, Escape, the
-   keyboard captured while a field has focus); then the panel's name and each villager become editable, Rename stays
-   as "suggest a name". ASCII at first (bitmap fonts); Japanese input (IME) and more letters later.
-7. **Hidden species with a loop** (the user, Nov 12): every species (and later faction) starts hidden, like the fish and
-   water birds: **hint** (? card, silhouette, riddle; Insight talents sharpen hints or show where it could live),
-   **discovery** (it appears, the card flips, an entry with what it needs), **influence** (only then its talents:
-   attract, protect, spread), **upgrade** (hidden variants by habitat: deer in snowy hills become red deer, wolves in
-   old woods grey wolves). Factions can arise the same way (a warlike people where land is scarce beside rich
-   neighbours; a people that builds defences after surviving raids). Always a few visible goals; Dev mode reveals all.
-8. **Pacing profiles** (the user, Nov 12: Dev fast, a release slower): `Pacing.hytable` with Dev and Release rows that
-   scale day and season length, milestone targets, talent costs and points, settling, births and level needs; the
-   Dist build uses Release, Oxygen and Debug use Dev, Settings can switch. Milestone times are logged and the headless
-   sim prints a timeline per profile (first people, first village, half the talents) to tune against targets. Later a
-   pace choice per world (Relaxed, Standard, Long).
-9. **Brush energy** (from the design above): brushes cost energy that refills with the world's health, so shaping is a
-   choice; instant in Dev.
-11. **Saving and loading with several slots** (the user, Nov 12; also makes testing easier): the whole session (map,
-    heights, water, soil, objects, wildlife, settlements and villagers, talents, milestones, clock and season) to a file
-    per slot with a name, date and a small picture; quick save and load keys in Dev; a version number so old saves load.
-10. **More factions** (the user, Nov 12): warlike peoples that raid, peoples that build defences (walls, towers), more
-    ways to steer peoples indirectly; with the ages.
+#### Buildings and unlocks (the user, Nov 12 14:04)
+
+Every people gets new buildings as it unlocks things; until a building stands, what it gives is limited. This one
+system carries farming, fishing, hunting, storage and defence, so it comes first.
+
+- **Rule: no building, a low cap.** Each activity works without its building but only a little: the store holds a few
+  days of food (today's `StoreDays`), hunters bring back only what they eat that day, no fish at all. A building lifts
+  the cap or opens the job. So unlocks feel like growth, never like a wall, and the land still decides the most.
+- **The player unlocks, the villagers build.** A Peoples talent (per people) makes a building type known; the settlement
+  builds it itself when it needs it (its store is full, its hunters return more than it holds, fish live in water within
+  reach) with its builders and materials, and places it by the work: a fishing lodge on the shore, a hunting lodge at the
+  edge of the wild, a granary by the centre. Indirect control stays: the player never places a building.
+- **Some need a level.** Defences only from level 3, and only if their talent is learned for that people.
+- **Materials.** Food and wood today; **stone** comes in with dwarves' masons and humans' level 3 (quarries on rock),
+  so stone buildings wait for both. Later tools. Costs are data.
+- **Data, not code**: a `BuildingDefinition` table (`Buildings.hytable`): the people, the talent and level it needs,
+  wood and stone cost, how many per settlement, where it stands (centre, shore, forest edge, rock), what it gives
+  (`StoreBonus`, `HuntKeep`, a job it opens such as Fisher, `Defence`, `Lookout`), its sprite. Rules stay pure
+  (`BuildingRules`: what is wanted, where it goes, what it gives); tests in `BuildingRulesTest.cpp`.
+- **The panel** lists a settlement's buildings and what is next ("Granary: learn Storehouses", "Palisade: needs a town").
+
+| Unlock (talent) | Humans | Elves | Wood elves | Dwarves |
+| --- | --- | --- | --- | --- |
+| Food store | Granary | Larder bower | Seed hollow (in an old tree) | Cold cellar |
+| Hunting | Hunting lodge (keeps meat: hunters bring back more) | Hunters' blind | (they hunt little) | Hunting lodge |
+| Farming | Barn (with the Farmland brush) | Orchard shed (with Orchards) | Orchard shed | Mushroom cellar (with mushroom beds) |
+| Fishing | Fishing lodge, later a dock and boats | (later) | (later) | Fishing lodge on cold streams |
+| Wood and stone | Woodcutters' hut; quarry at level 3 | Foresters' lodge | Foresters' lodge | Masons' hall, quarry |
+| Defence (level 3 + talent) | Palisade, watchtower | Thorn hedge, lookout tree | Warding trees | Stone wall, gatehouse |
+
+How it ties into what exists: stores into seasons (winter needs a granary's worth); hunting lodges into wildlife (more
+meat, herds thin faster); fishing lodges into water life (the player's rivers feed people, fish thin); defences into
+feuds (walls make raids fail more, towers spot raiders so guards turn out sooner; fights still happen); farming as
+built, with the barn lifting how many fields a settlement works.
+
+#### The other agreed ideas
+
+- **Third-level art**: a shelter for every people's third level (humans a longhouse, elves a great hall, wood elves an
+  elder tree, dwarves a carved gate); the centres grow a step with the levels (a bigger fire, a mine with a headframe).
+  Temporary art drawn in code, as before; the new buildings above get the same.
+- **Each people farms its own way** (same `FarmRules`, growth per people as data): elves and wood elves an **Orchard**
+  brush (fruit trees their foresters plant: slow, a year to the first fruit, then fruit each autumn without sowing;
+  little soil wear; like moisture and old woods near); dwarves **mushroom beds** on rock or dug ground near their mine
+  (no soil, need moisture, no frost: steady in winter, less food). Each brush paints only within that people's reach,
+  like Farmland.
+- **Fishing** (the user, Nov 12): a talent unlocked once a human or dwarf settlement has its first lasting building (hut
+  or stone hall); it lets them build a fishing lodge. **Fishers** sit at the shore, later go out in **boats** (a dock,
+  a boat sprite on water tiles). The catch comes from the water life the player made (`HabitatRules`) and thins it.
+- **The area grows with the level** (the user, Nov 12): a reach per `PeopleLevel` instead of one `Radius`, used by the
+  survey, jobs, the farmland reach and where villagers walk. Villagers walk further as it grows and find their way home
+  **without pathfinding**: they steer towards a heading, try a turned heading round water and steep height, and give up
+  a spot they can't reach.
+- **Work parties for large towns** (the user, Nov 12, like Total War): villagers with the same job walk as a group; one
+  leader picks where to go, the others follow at an offset and spread round the spot; home the same way. Walking is only
+  for show (the simulation counts jobs), so this cuts `SettlersView` work; in big towns a sprite stands for several
+  people and far-off settlements update less often.
+- **Naming** (the user, Nov 12): name settlements and villagers. Needs a text field in Hydro's UI first (an engine
+  change: `UIInputFieldComponent`, focus, typed characters, Backspace, Enter, Escape, keyboard captured while focused);
+  ASCII at first, Japanese input (IME) later. Rename stays as "suggest a name".
+- **Hidden species with a loop** (the user, Nov 12): every species (later faction) starts hidden: **hint** (? card,
+  silhouette, riddle; Insight talents sharpen hints or show where it could live), **discovery** (it appears, the card
+  flips, an entry with its needs), **influence** (only then its talents: attract, protect, spread), **upgrade** (hidden
+  variants by habitat: red deer in snowy hills, grey wolves in old woods). Always a few visible goals; Dev reveals all.
+- **Pacing profiles** (the user, Nov 12): `Pacing.hytable` with Dev and Release rows scaling day and season length,
+  milestone targets, talent costs and points, settling, births, level needs and building costs; Dist uses Release, Oxygen
+  and Debug use Dev, Settings can switch. Milestone times logged; the headless sim prints a timeline per profile to tune
+  against target times. Later a pace choice per world (Relaxed, Standard, Long).
+- **Brush energy**: brushes cost energy that refills with the world's health; instant in Dev.
+- **Saving and loading with several slots** (the user, Nov 12; makes testing easier): the whole session to a file per
+  slot with a name, date and a small picture; quick save and load keys in Dev; a version number so old saves load.
+- **More factions** (the user, Nov 12): warlike peoples that raid, peoples that build defences, more indirect ways to
+  steer peoples; factions can arise like hidden species (a warlike people where land is scarce beside rich neighbours).
+
+#### Build order
+
+1. **Saving and loading** (slots, quick save in Dev): every later step is tested from saved worlds. **Built Nov 12**:
+   World Menu > Saved Worlds (quick save and six slots, "Sure?" before loading or saving over), F5 / F9 quick save and
+   load (in every build for now), files in `Saves/` beside the game; a load starts the world's scene again. No picture
+   per slot yet; the saves folder moves to the player's own folder before a release.
+2. **Buildings and unlocks**: `BuildingDefinition`, `BuildingRules`, the panel list; first the food store and hunting
+   lodge for all four peoples (they change the food balance most), the barn for humans' farming.
+3. **The area grows with the level**, then **work parties and steering home** (the same walking code).
+4. **Fishing** (lodge, shore fishers; boats later) and **Orchards / mushroom beds** through the building system.
+5. **Third-level art** for shelters, centres and the new buildings.
+6. **Pacing profiles** with the timeline from the sim, then **brush energy** (needs the profiles to tune).
+7. **Hidden species loop** for land animals and plants, with influence talents.
+8. **Stone, level 3 and defences**, then **more factions** (raiders, wall builders) on top of feuds.
+9. **Naming** (Hydro text field first), whenever the engine has a quiet moment: it blocks nothing.
 
 ### Structure
 

@@ -2,6 +2,7 @@
 
 #include "Views/MenuArt.h"
 #include "Views/MilestonesPageView.h"
+#include "Views/SavesPageView.h"
 #include "Views/SettingsPageView.h"
 #include "Views/TechnologyPageView.h"
 #include "Views/UIBuilder.h"
@@ -25,7 +26,8 @@ namespace Hydro
 		Milestones,
 		Settings,
 		Codex,
-		Map
+		Map,
+		Saves
 	};
 
 	// The World Menu on its own canvas over the HUD (built in code): a "Menu" button while closed; open (modal), the home
@@ -71,7 +73,7 @@ namespace Hydro
 
 			m_Window = m_UI.Fill(root, "Menu Window");
 			UIBuilder::Flat(m_UI.Fill(m_Window, "Backdrop"), MenuArt::Backdrop());
-			for (int p = 0; p <= (int)MenuPage::Map; p++)
+			for (int p = 0; p <= (int)MenuPage::Saves; p++)
 			{
 				m_Pages.push_back(m_UI.Fill(m_Window, std::string("Page ") + PageName((MenuPage)p)));
 			}
@@ -83,7 +85,8 @@ namespace Hydro
 				"Biomes, peoples, animals and brushes as a reference, filled in as you discover them.");
 			BindComingLater(m_Pages[(size_t)MenuPage::Map], "Map Overview",
 				"The whole island at a glance: its regions, what grows and lives there, and where water runs.");
-			for (int p = 1; p <= (int)MenuPage::Map; p++)
+			m_Saves.Bind(m_UI, m_Pages[(size_t)MenuPage::Saves]);
+			for (int p = 1; p <= (int)MenuPage::Saves; p++)
 			{
 				BackButton(m_Pages[(size_t)p]);
 			}
@@ -135,6 +138,7 @@ namespace Hydro
 			case MenuPage::Technology: return m_Technology.GetSelectedButton();
 			case MenuPage::Milestones: return m_Milestones.GetSelectedButton();
 			case MenuPage::Settings: return m_Settings.GetSectionButton();
+			case MenuPage::Saves: return m_Saves.GetFirstButton();
 			default: return m_BackButtons.empty() ? Entity() : m_BackButtons.back();
 			}
 		}
@@ -152,6 +156,11 @@ namespace Hydro
 		SettingsPageView& GetSettings()
 		{
 			return m_Settings;
+		}
+
+		SavesPageView& GetSaves()
+		{
+			return m_Saves;
 		}
 
 		// The closed menu's button: gold with points to spend.
@@ -215,7 +224,7 @@ namespace Hydro
 
 		static const char* PageName(MenuPage page)
 		{
-			const char* names[6] = { "Home", "Technology", "Milestones", "Settings", "Codex", "Map" };
+			const char* names[7] = { "Home", "Technology", "Milestones", "Settings", "Codex", "Map", "Saves" };
 			return names[(int)page];
 		}
 
@@ -257,6 +266,12 @@ namespace Hydro
 					TextAlignH::Center, MenuArt::Muted(), true);
 				m_Tiles.push_back(tile);
 			}
+			Entity saves = m_UI.At(page, "Saved Worlds", TilesX, TilesY + 2.0f * TileHeight + TileGap + 18.0f,
+				3.0f * TileWidth + 2.0f * TileGap, 64.0f);
+			m_UI.Art(saves, MenuArt::Sprite::ButtonDark);
+			UIBuilder::Button(saves, "Open Saves");
+			m_UI.Text(m_UI.Fill(saves, "Label"), "Saved Worlds: save and load   (F5 quick save, F9 quick load)", TextStyle::Body,
+				TextAlignH::Center, MenuArt::Ink());
 
 			Entity panel = m_UI.Element(page, "Island Progress", glm::vec2(1.0f, 1.0f),
 				glm::vec2(-UIBuilder::PageMargin, -(TilesY - 30.0f)),
@@ -319,6 +334,7 @@ namespace Hydro
 		TechnologyPageView m_Technology;
 		MilestonesPageView m_Milestones;
 		SettingsPageView m_Settings;
+		SavesPageView m_Saves;
 		bool m_Open = false;
 		MenuPage m_Page = MenuPage::Home;
 		int m_ShownPoints = -1;

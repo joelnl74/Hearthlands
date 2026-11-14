@@ -29,7 +29,8 @@ namespace Hydro
 	protected:
 		void OnCreate() override
 		{
-			m_Zoom = CameraRules::StepZoom(Zoom, 0);
+			const int saved = HearthlandsSession::Get().CameraZoom; // a loaded save's, else the property's
+			m_Zoom = CameraRules::StepZoom(saved >= 0 ? saved : Zoom, 0);
 			CameraComponent* camera = TryGetComponent<CameraComponent>();
 			if (camera != nullptr)
 			{
@@ -42,6 +43,10 @@ namespace Hydro
 
 		void OnUpdate(float deltaTime) override
 		{
+			if (HearthlandsSession::Get().Loading)
+			{
+				return; // a save was loaded: the new scene's camera looks where the save did
+			}
 			Scene& scene = *GetEntity().GetScene();
 			const float viewportHeight = (float)(scene.GetViewportHeight() > 0 ? scene.GetViewportHeight() : 1080);
 			const float size = CameraRules::OrthographicSize(viewportHeight, CameraRules::PixelScales[m_Zoom], PixelsPerTile);
@@ -80,7 +85,11 @@ namespace Hydro
 			if (map.GetWidth() > 0)
 			{
 				m_Target = CameraRules::ClampTarget(m_Target, map.GetWidth(), map.GetHeight());
+				// Where it looks, in map tiles (the focus above the other way round), for saving.
+				session.CameraTile = glm::vec2(m_Target.x + (float)map.GetWidth() * 0.5f - 0.5f,
+					(float)map.GetHeight() * 0.5f - m_Target.y - 0.5f);
 			}
+			session.CameraZoom = m_Zoom;
 			Place();
 		}
 

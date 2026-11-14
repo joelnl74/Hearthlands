@@ -34,6 +34,17 @@ namespace Hydro
 			return count == 0 ? 0 : (uint32_t)(((uint64_t)Next() * count) >> 32);
 		}
 
+		// The dice's position, to save a run and go on with the same throws after loading it.
+		uint64_t GetState() const
+		{
+			return m_State;
+		}
+
+		void SetState(uint64_t state)
+		{
+			m_State = state != 0 ? state : 0x9E3779B97F4A7C15ull;
+		}
+
 	private:
 		uint64_t m_State;
 	};

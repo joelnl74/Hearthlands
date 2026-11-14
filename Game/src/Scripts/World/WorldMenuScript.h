@@ -7,12 +7,17 @@
 #include "Data/MilestoneDefinition.h"
 #include "Data/TalentDefinition.h"
 #include "Data/TerrainTypeDefinition.h"
+#include "Rules/SaveRules.h"
 #include "Rules/TalentRules.h"
 #include "State/HearthlandsSession.h"
 #include "Views/WorldMenuView.h"
 
 #include <algorithm>
+#include <ctime>
+#include <filesystem>
+#include <fstream>
 #include <string>
+#include <system_error>
 #include <vector>
 
 namespace Hydro
@@ -50,6 +55,8 @@ namespace Hydro
 		AssetHandle Animals = DefaultAnimals;
 		HY_PROPERTY(Tooltip("Stop the clock while the menu is open (Settings > Gameplay)"))
 		bool PauseInMenu = true;
+		HY_PROPERTY(Tooltip("The world's scene (its file name): loading a save starts it again with the loaded run"))
+		std::string WorldScene = "World";
 
 	protected:
 		void OnCreate() override
@@ -90,10 +97,27 @@ namespace Hydro
 			m_View.GetTechnology().SetMilestones(m_Milestones);
 		}
 
-		void OnUpdate([[maybe_unused]] float deltaTime) override
+		void OnUpdate(float deltaTime) override
 		{
 			HearthlandsSession& session = HearthlandsSession::Get();
+			if (m_Reloading)
+			{
+				// Still here a frame after asking for the scene again: it didn't load. Go on with the views as they are.
+				HY_WARN("WorldMenuScript: the scene '{}' didn't load again after loading a save", WorldScene);
+				session.Loading = false;
+				m_Reloading = false;
+			}
+			if (session.Loading)
+			{
+				return;
+			}
 			ReadKeys(session);
+			ReadSaveKeys(session);
+			m_ArmedLeft -= deltaTime;
+			if (m_Armed.empty() == false && m_ArmedLeft <= 0.0f)
+			{
+				SetArmed(std::string());
+			}
 			session.PointerOverMenu = m_View.ContainsPointer(*GetEntity().GetScene());
 			m_View.PresentButton(session.Talents.Points);
 			if (m_View.IsOpen() == false)
@@ -111,6 +135,7 @@ namespace Hydro
 			case MenuPage::Technology: m_View.GetTechnology().Present(session.Talents, Verdicts(session)); break;
 			case MenuPage::Milestones: m_View.GetMilestones().Present(MilestoneLines(session), session.Talents.Points); break;
 			case MenuPage::Settings: m_View.GetSettings().Present(session.ShowMoisture, session.ShowSoil, PauseInMenu); break;
+			case MenuPage::Saves: m_View.GetSaves().Present(m_Slots); break;
 			default: break;
 			}
 		}
@@ -185,6 +210,10 @@ namespace Hydro
 			{
 				SetPauseInMenu(session, PauseInMenu == false);
 			}
+			else if (name.rfind("Save Slot ", 0) == 0 || name.rfind("Load Slot ", 0) == 0)
+			{
+				SlotPressed(session, name);
+			}
 			if (m_View.IsOpen() == false)
 			{
 				UI::ClearFocus(*GetEntity().GetScene()); // so Space and Enter stay with the game
@@ -195,8 +224,8 @@ namespace Hydro
 	private:
 		static MenuPage PageNamed(const std::string& name)
 		{
-			const char* names[6] = { "Home", "Technology", "Milestones", "Settings", "Codex", "Map" };
-			for (int p = 0; p < 6; p++)
+			const char* names[7] = { "Home", "Technology", "Milestones", "Settings", "Codex", "Map", "Saves" };
+			for (int p = 0; p < 7; p++)
 			{
 				if (name == names[p])
 				{
@@ -219,6 +248,12 @@ namespace Hydro
 			if (page == MenuPage::Technology && m_View.GetPage() != MenuPage::Technology)
 			{
 				m_View.GetTechnology().SelectBuyable(Verdicts(session));
+			}
+			if (page == MenuPage::Saves)
+			{
+				RefreshSlots();
+				SetArmed(std::string());
+				m_View.GetSaves().SetNotice(std::string("Saves are kept in ") + SaveFolder().string(), false);
 			}
 			m_View.Show(page);
 			UI::Focus(m_View.GetDefaultFocus());
@@ -282,6 +317,200 @@ namespace Hydro
 					Open(session, MenuPage::Home);
 				}
 			}
+		}
+
+		// F5 saves to the quick save, F9 loads it (no second press: it is quick).
+		void ReadSaveKeys(HearthlandsSession& session)
+		{
+			const bool save = Pressed(Key::F5, m_QuickSaveHeld);
+			const bool load = Pressed(Key::F9, m_QuickLoadHeld);
+			if (save)
+			{
+				SaveTo(session, 0);
+			}
+			else if (load)
+			{
+				LoadFrom(session, 0);
+			}
+		}
+
+		// Save over a used slot and every load ask for a second press ("Sure?") within a few seconds.
+		void SlotPressed(HearthlandsSession& session, const std::string& event)
+		{
+			const bool load = event.rfind("Load", 0) == 0;
+			const int slot = std::stoi(event.substr(10));
+			if (slot < 0 || slot >= SavesPageView::SlotCount)
+			{
+				return;
+			}
+			const bool used = m_Slots[(size_t)slot].Used;
+			if ((load || used) && event != m_Armed)
+			{
+				SetArmed(event);
+				return;
+			}
+			SetArmed(std::string());
+			if (load)
+			{
+				LoadFrom(session, slot);
+			}
+			else
+			{
+				SaveTo(session, slot);
+			}
+		}
+
+		void SetArmed(const std::string& event)
+		{
+			m_Armed = event;
+			m_ArmedLeft = 4.0f;
+			m_View.GetSaves().SetArmed(event);
+		}
+
+		// Saves live in "Saves" under the folder the game runs in.
+		static std::filesystem::path SaveFolder()
+		{
+			return std::filesystem::current_path() / "Saves";
+		}
+
+		static std::filesystem::path SlotPath(int slot)
+		{
+			return SaveFolder() / (slot == 0 ? std::string("quicksave.hlsave") : "slot" + std::to_string(slot) + ".hlsave");
+		}
+
+		static std::string SlotName(int slot)
+		{
+			return slot == 0 ? std::string("the quick save") : "slot " + std::to_string(slot);
+		}
+
+		// The local time now, as year-month-day hours:minutes.
+		static std::string Now()
+		{
+			const std::time_t now = std::time(nullptr);
+			std::tm local{};
+#ifdef _WIN32
+			localtime_s(&local, &now);
+#else
+			localtime_r(&now, &local);
+#endif
+			char text[32] = {};
+			std::strftime(text, sizeof(text), "%Y-%m-%d %H:%M", &local);
+			return text;
+		}
+
+		// Reads at most `most` bytes of a file (all of it for 0); empty when it can't be read.
+		static std::vector<uint8_t> ReadFile(const std::filesystem::path& path, size_t most)
+		{
+			std::ifstream file(path, std::ios::binary);
+			std::vector<uint8_t> bytes;
+			if (file.is_open() == false)
+			{
+				return bytes;
+			}
+			file.seekg(0, std::ios::end);
+			const std::streamoff size = file.tellg();
+			file.seekg(0, std::ios::beg);
+			if (size <= 0)
+			{
+				return bytes;
+			}
+			bytes.resize(most > 0 && (size_t)size > most ? most : (size_t)size);
+			file.read((char*)bytes.data(), (std::streamsize)bytes.size());
+			bytes.resize((size_t)file.gcount());
+			return bytes;
+		}
+
+		// What each slot holds (only the start of each file is read).
+		void RefreshSlots()
+		{
+			m_Slots.assign(SavesPageView::SlotCount, SavesPageView::Slot{});
+			for (int slot = 0; slot < SavesPageView::SlotCount; slot++)
+			{
+				SaveInfo info;
+				if (SaveRules::ReadInfo(ReadFile(SlotPath(slot), 4096), info) == false)
+				{
+					continue;
+				}
+				SavesPageView::Slot& shown = m_Slots[(size_t)slot];
+				shown.Used = true;
+				shown.Title = info.Name;
+				shown.Line = "Year " + std::to_string(info.Year) + ", " + info.Season + " day " + std::to_string(info.Day) + "  -  "
+					+ std::to_string(info.Settlements) + (info.Settlements == 1 ? " settlement, " : " settlements, ")
+					+ std::to_string(info.People) + " people  -  saved " + info.SavedAt;
+			}
+		}
+
+		void Tell(HearthlandsSession& session, const std::string& text, bool good)
+		{
+			if (m_View.IsOpen() && m_View.GetPage() == MenuPage::Saves)
+			{
+				m_View.GetSaves().SetNotice(text, good);
+			}
+			else
+			{
+				session.Notices.push_back(text);
+			}
+		}
+
+		// Writes the run to a slot (a new file first, then over the old, so a failed save keeps the old one).
+		void SaveTo(HearthlandsSession& session, int slot)
+		{
+			const int speed = m_View.IsOpen() && PauseInMenu ? m_SpeedBeforeMenu : session.Clock.Speed;
+			const std::vector<uint8_t> bytes = SaveRules::Write(session, SaveRules::Describe(session, Now(), speed));
+			const std::filesystem::path path = SlotPath(slot);
+			std::filesystem::path temporary = path;
+			temporary += ".new";
+			std::error_code error;
+			std::filesystem::create_directories(SaveFolder(), error);
+			bool written = false;
+			{
+				std::ofstream file(temporary, std::ios::binary | std::ios::trunc);
+				if (file.is_open())
+				{
+					file.write((const char*)bytes.data(), (std::streamsize)bytes.size());
+					written = file.good();
+				}
+			}
+			if (written)
+			{
+				std::filesystem::rename(temporary, path, error);
+				written = error.value() == 0;
+			}
+			if (written == false)
+			{
+				HY_WARN("WorldMenuScript: couldn't write {}", path.string());
+				Tell(session, "Couldn't save to " + SlotName(slot), false);
+				return;
+			}
+			HY_INFO("Saved the world to {} ({} KB)", path.string(), bytes.size() / 1024);
+			Tell(session, "Saved to " + SlotName(slot), true);
+			RefreshSlots();
+		}
+
+		// Loads a slot into the session, then starts the world's scene again so every view is built for the loaded run.
+		void LoadFrom(HearthlandsSession& session, int slot)
+		{
+			const std::vector<uint8_t> bytes = ReadFile(SlotPath(slot), 0);
+			SaveInfo info;
+			if (bytes.empty())
+			{
+				Tell(session, std::string("Nothing saved in ") + SlotName(slot) + " yet", false);
+				return;
+			}
+			if (SaveRules::Read(bytes, session, info) == false)
+			{
+				Tell(session, "Couldn't load " + SlotName(slot) + ": the file is damaged or from a newer game", false);
+				return;
+			}
+			TalentRules::Recount(m_Talents, session.Talents); // what the owned talents add up to, from today's table
+			session.Clock.Speed = std::clamp(info.Speed, 0, 10);
+			session.FocusTile = session.CameraTile;
+			session.FocusRequested = true;
+			session.Notices.push_back("Loaded " + info.Name + " (saved " + info.SavedAt + ")");
+			session.Loading = true;
+			m_Reloading = true;
+			HY_INFO("Loaded {} from {}", info.Name, SlotPath(slot).string());
+			SceneTransition::Replace(WorldScene);
 		}
 
 		// True on the frame the key goes down.
@@ -486,5 +715,11 @@ namespace Hydro
 		bool m_TabHeld = false;
 		bool m_TalentsHeld = false;
 		bool m_EscapeHeld = false;
+		bool m_QuickSaveHeld = false;
+		bool m_QuickLoadHeld = false;
+		std::vector<SavesPageView::Slot> m_Slots = std::vector<SavesPageView::Slot>(SavesPageView::SlotCount);
+		std::string m_Armed;     // the slot button waiting for its second press
+		float m_ArmedLeft = 0.0f; // seconds it waits
+		bool m_Reloading = false; // a save was loaded and the scene asked for again this frame
 	};
 }

@@ -81,6 +81,24 @@ namespace Hydro
 			return true;
 		}
 
+		// A map of `width` x `height` with these tiles (row by row); empty when they don't fit (a loaded save).
+		static TileMap FromTiles(int width, int height, const std::vector<uint8_t>& tiles)
+		{
+			TileMap map;
+			if (width <= 0 || height <= 0 || tiles.size() != (size_t)width * (size_t)height)
+			{
+				return map;
+			}
+			map.m_Width = width;
+			map.m_Height = height;
+			map.m_Tiles = tiles;
+			for (uint8_t tile : tiles)
+			{
+				map.m_Counts[tile]++;
+			}
+			return map;
+		}
+
 		// Takes another map's size and tiles; the revision ends past both maps', so a view of either sees a change. The
 		// change log is cleared: a whole new map is not a list of changes.
 		void Replace(const TileMap& other)

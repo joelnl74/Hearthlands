@@ -67,6 +67,20 @@ namespace Hydro
 			return true;
 		}
 
+		// A height map of `width` x `height` with these levels (row by row); empty when they don't fit (a loaded save).
+		static HeightMap FromLevels(int width, int height, const std::vector<uint8_t>& levels)
+		{
+			HeightMap heights;
+			if (width <= 0 || height <= 0 || levels.size() != (size_t)width * (size_t)height)
+			{
+				return heights;
+			}
+			heights.m_Width = width;
+			heights.m_Height = height;
+			heights.m_Levels = levels;
+			return heights;
+		}
+
 		// Takes another map's size and levels; the revision ends past both. The change log is cleared.
 		void Replace(const HeightMap& other)
 		{

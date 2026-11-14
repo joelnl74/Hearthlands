@@ -90,6 +90,7 @@ namespace Hydro
 			}
 
 			HearthlandsSession& session = HearthlandsSession::Get();
+			session.Loading = false; // a loaded save's scene: everything below finds the run already made
 			TileMap& map = session.Map;
 			session.LevelHeight = LevelHeight;
 			const bool made = map.GetWidth() == 0;
@@ -172,6 +173,10 @@ namespace Hydro
 		void OnUpdate(float deltaTime) override
 		{
 			HearthlandsSession& writable = HearthlandsSession::Get();
+			if (writable.Loading)
+			{
+				return; // a save was loaded: the scene starts again with it
+			}
 			GameTimings& timings = writable.Timings;
 			const HearthlandsSession& session = writable;
 			UpdateClues(session);
