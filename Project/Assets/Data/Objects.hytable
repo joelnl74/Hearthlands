@@ -1440,3 +1440,65 @@ DataTable:
       Food: 0
       Wood: 0
       StartDensity: 0
+    FishingLodge:
+      Name: FishingLodge
+      ObjectId: 83
+      Kind: Building
+      Sprite: 268695600704116859
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0
+    FishersHall:
+      Name: FishersHall
+      ObjectId: 84
+      Kind: Building
+      Sprite: 495861936772587302
+      Variants: []
+      PixelsPerTile: 32
+      CastsShadow: true
+      Deciduous: false
+      GrowsOnTileId: -1
+      MinMoisture: 0
+      MaxMoisture: 1
+      NeighbourTileId: -1
+      MinNeighbours: 1
+      MinLevel: 0
+      MaxLevel: 255
+      ChancePerLevel: 0
+      SproutChance: 0
+      MinSpacing: 0
+      SpreadFromObjectId: -1
+      SpreadChance: 0
+      GrowsIntoObjectId: -1
+      GrowDays: 0
+      SoilEffect: 0
+      Roots: 0
+      Canopy: 0
+      ShadeEffect: 0
+      Ancient: false
+      Food: 0
+      Wood: 0
+      StartDensity: 0

@@ -459,3 +459,27 @@ DataTable:
       Amount: 9
       TargetId: 3
       Description: "Dwarves who hunt build a stone lodge: more meat from each animal"
+    Fishing:
+      Name: "Fishing"
+      TalentId: 54
+      Branch: Peoples
+      Row: 18
+      Cost: 1
+      RequiresTalentId: 14
+      RequiresMilestoneId: 39
+      Effect: Building
+      Amount: 10
+      TargetId: 1
+      Description: "A hamlet by water with fish builds a fishing lodge on the shore: three villagers fish there"
+    ColdStreamFishing:
+      Name: "Cold-stream fishing"
+      TalentId: 55
+      Branch: Peoples
+      Row: 19
+      Cost: 1
+      RequiresTalentId: 16
+      RequiresMilestoneId: 40
+      Effect: Building
+      Amount: 11
+      TargetId: 3
+      Description: "A dwarf hold by water with trout or salmon builds a fishers' hall on the shore: three dwarves fish there"

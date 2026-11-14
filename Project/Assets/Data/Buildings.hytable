@@ -12,11 +12,13 @@ DataTable:
       RequiresTalentId: 46
       MinLevel: 0
       Wood: 6
+      Site: Ring
       RingFrom: 2
       RingTo: 4
       StoreDays: 6
       HuntKeep: 0
       Fields: 0
+      Fishers: 0
       Description: "Holds six more days of food"
     HuntingLodge:
       Name: "Hunting lodge"
@@ -27,11 +29,13 @@ DataTable:
       RequiresTalentId: 47
       MinLevel: 0
       Wood: 6
+      Site: Ring
       RingFrom: 4
       RingTo: 7
       StoreDays: 0
       HuntKeep: 0.5
       Fields: 0
+      Fishers: 0
       Description: "Half again as much meat from each animal"
     Barn:
       Name: "Barn"
@@ -42,11 +46,13 @@ DataTable:
       RequiresTalentId: 45
       MinLevel: 1
       Wood: 10
+      Site: Ring
       RingFrom: 3
       RingTo: 6
       StoreDays: 0
       HuntKeep: 0
       Fields: 24
+      Fishers: 0
       Description: "Farmers work 24 more fields"
     LarderBower:
       Name: "Larder bower"
@@ -57,11 +63,13 @@ DataTable:
       RequiresTalentId: 48
       MinLevel: 0
       Wood: 4
+      Site: Ring
       RingFrom: 2
       RingTo: 4
       StoreDays: 6
       HuntKeep: 0
       Fields: 0
+      Fishers: 0
       Description: "Holds six more days of food"
     HuntersBlind:
       Name: "Hunters' blind"
@@ -72,11 +80,13 @@ DataTable:
       RequiresTalentId: 49
       MinLevel: 0
       Wood: 3
+      Site: Ring
       RingFrom: 5
       RingTo: 8
       StoreDays: 0
       HuntKeep: 0.5
       Fields: 0
+      Fishers: 0
       Description: "Half again as much meat from each animal"
     SeedHollow:
       Name: "Seed hollow"
@@ -87,11 +97,13 @@ DataTable:
       RequiresTalentId: 50
       MinLevel: 0
       Wood: 0
+      Site: Ring
       RingFrom: 2
       RingTo: 4
       StoreDays: 8
       HuntKeep: 0
       Fields: 0
+      Fishers: 0
       Description: "Holds eight more days of food"
     WoodlandBlind:
       Name: "Woodland blind"
@@ -102,11 +114,13 @@ DataTable:
       RequiresTalentId: 51
       MinLevel: 0
       Wood: 0
+      Site: Ring
       RingFrom: 5
       RingTo: 8
       StoreDays: 0
       HuntKeep: 0.5
       Fields: 0
+      Fishers: 0
       Description: "Half again as much meat from each animal"
     ColdCellar:
       Name: "Cold cellar"
@@ -117,11 +131,13 @@ DataTable:
       RequiresTalentId: 52
       MinLevel: 0
       Wood: 4
+      Site: Ring
       RingFrom: 2
       RingTo: 4
       StoreDays: 8
       HuntKeep: 0
       Fields: 0
+      Fishers: 0
       Description: "Holds eight more days of food"
     StoneLodge:
       Name: "Stone lodge"
@@ -132,9 +148,45 @@ DataTable:
       RequiresTalentId: 53
       MinLevel: 0
       Wood: 4
+      Site: Ring
       RingFrom: 4
       RingTo: 7
       StoreDays: 0
       HuntKeep: 0.5
       Fields: 0
+      Fishers: 0
       Description: "Half again as much meat from each animal"
+    FishingLodge:
+      Name: "Fishing lodge"
+      BuildingId: 10
+      PeopleId: 1
+      Kind: FishingLodge
+      ObjectId: 83
+      RequiresTalentId: 54
+      MinLevel: 1
+      Wood: 6
+      Site: Shore
+      RingFrom: 3
+      RingTo: 16
+      StoreDays: 0
+      HuntKeep: 0
+      Fields: 0
+      Fishers: 3
+      Description: "Three fish at the shore of water within reach"
+    FishersHall:
+      Name: "Fishers' hall"
+      BuildingId: 11
+      PeopleId: 3
+      Kind: FishingLodge
+      ObjectId: 84
+      RequiresTalentId: 55
+      MinLevel: 1
+      Wood: 4
+      Site: Shore
+      RingFrom: 3
+      RingTo: 17
+      StoreDays: 0
+      HuntKeep: 0
+      Fields: 0
+      Fishers: 3
+      Description: "Three fish the cold streams within reach"

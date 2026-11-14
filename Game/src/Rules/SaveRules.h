@@ -459,7 +459,7 @@ namespace Hydro
 				villager.Id = in.Value<int32_t>();
 				villager.Name = in.Text();
 				const uint8_t job = in.Value<uint8_t>();
-				villager.Job = job <= (uint8_t)VillagerJob::Farmer ? (VillagerJob)job : VillagerJob::Resting;
+				villager.Job = job <= (uint8_t)VillagerJob::Fisher ? (VillagerJob)job : VillagerJob::Resting;
 				villager.HurtDays = in.Value<float>();
 				villager.Days = in.Value<float>();
 				s.Villagers.push_back(villager);

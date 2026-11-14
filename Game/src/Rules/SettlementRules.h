@@ -6,6 +6,7 @@
 #include "Data/PeopleDefinition.h"
 #include "Rules/BuildingRules.h"
 #include "Rules/ObjectRules.h"
+#include "Rules/FishRules.h"
 #include "Rules/SettlementGround.h"
 #include "Rules/SoilRules.h"
 #include "Rules/WildlifeRules.h"
@@ -26,9 +27,8 @@
 
 namespace Hydro
 {
-	// A settlement's life: villagers take jobs from its needs and the player's focus, eat, grow, build, reach the next
-	// level (camp, hamlet, village) and leave when food runs out. The ground they work is SettlementGround; settling
-	// SettlingRules; feuds FeudRules. Pure.
+	// A settlement's life (pure): villagers take jobs from its needs and the focus, eat, grow, build, level up and leave
+	// when food runs out. Its ground is SettlementGround; fishing FishRules; settling SettlingRules; feuds FeudRules.
 	class SettlementRules : public SettlementGround
 	{
 	public:
@@ -38,6 +38,8 @@ namespace Hydro
 			int FreshWater = 0;       // water tiles inside the coast (lakes, rivers; not the sea)
 			float PlantFood = 0.0f;   // food the plants give a day
 			float Game = 0.0f;        // animals they hunt in the centre's region
+			float Fish = 0.0f;        // fish they catch in water within reach (FishRules)
+			int Fishers = 0;          // villagers who may fish: their fishing lodge's (Update sets it)
 			float Wood = 0.0f;        // wood the trees would give
 			int Trees = 0;            // trees that would give it
 			int Meadow = 0;           // land tiles without shrubs or trees
@@ -62,6 +64,7 @@ namespace Hydro
 			int Planted = 0;
 			int Upgraded = 0; // older shelters rebuilt as the level's
 			int BuiltBuilding = 0; // a building (BuildingId) put up
+			float Caught = 0.0f;   // fish caught
 		};
 
 		// One thing a settlement needs to reach its next level: what it has and what it needs.
@@ -222,6 +225,7 @@ namespace Hydro
 				}
 			}
 			survey.Game = Game(world, people, centreX, centreY);
+			survey.Fish = people.FishAnimalIds.empty() ? 0.0f : FishRules::Stock(world, people, centreX, centreY, radius);
 			return survey;
 		}
 
@@ -336,14 +340,17 @@ namespace Hydro
 			int left = able;
 			const float gatherYield = std::max(0.01f, people.GatherPerPerson);
 			const float huntYield = std::max(0.01f, people.HuntPerPerson * people.MeatPerAnimal);
+			const float fishYield = std::max(0.01f, people.FishPerPerson * people.FoodPerFish);
 			const int gatherMost = (int)std::ceil(survey.PlantFood / gatherYield);
 			const int huntMost = people.HuntPerPerson > 0.0f ? (int)std::ceil(survey.Game * 0.25f / people.HuntPerPerson) : 0;
+			const int fishMost = people.FishPerPerson > 0.0f
+				? std::min(survey.Fishers, (int)std::ceil(survey.Fish * FishRules::MostShare / people.FishPerPerson)) : 0;
 			const float eat = settlement.Count * people.FoodPerPerson;
 			const float store = std::max(1.0f, settlement.Count) * people.FoodPerPerson
 				* (LevelOf(people, settlement.Level).StoreDays + survey.StoreDays);
 			float made = 0.0f;
 			// Food enough to eat, then more while the store isn't full (more still with the focus on food): each worker to
-			// whichever of gathering and hunting gives more (dwarves hunt first, elves gather), as far as the land gives it.
+			// whichever of gathering, hunting and fishing (with a lodge) gives more, as far as the land and water give it.
 			auto feed = [&](float want)
 			{
 				while (left > 0 && made < want)
@@ -352,13 +359,15 @@ namespace Hydro
 					const float gather = gathering < gatherMost
 						? std::min(gatherYield, survey.PlantFood - (float)gathering * gatherYield) : 0.0f;
 					const float hunt = slots[(int)VillagerJob::Hunter] < huntMost ? huntYield : 0.0f;
-					if (gather <= 0.0f && hunt <= 0.0f)
+					const float fish = slots[(int)VillagerJob::Fisher] < fishMost ? fishYield : 0.0f;
+					if (gather <= 0.0f && hunt <= 0.0f && fish <= 0.0f)
 					{
 						return;
 					}
-					const VillagerJob job = gather >= hunt ? VillagerJob::Gatherer : VillagerJob::Hunter;
+					VillagerJob job = gather >= hunt ? VillagerJob::Gatherer : VillagerJob::Hunter;
+					job = fish > std::max(gather, hunt) ? VillagerJob::Fisher : job;
 					slots[(int)job]++;
-					made += std::max(gather, hunt);
+					made += std::max(std::max(gather, hunt), fish);
 					left--;
 				}
 			};
@@ -446,8 +455,8 @@ namespace Hydro
 					placed[i] = true;
 				}
 			}
-			const VillagerJob order[] = { VillagerJob::Gatherer, VillagerJob::Hunter, VillagerJob::Guard, VillagerJob::Farmer,
-				VillagerJob::Woodcutter, VillagerJob::Builder, VillagerJob::Forester, VillagerJob::Resting };
+			const VillagerJob order[] = { VillagerJob::Gatherer, VillagerJob::Hunter, VillagerJob::Fisher, VillagerJob::Guard,
+				VillagerJob::Farmer, VillagerJob::Woodcutter, VillagerJob::Builder, VillagerJob::Forester, VillagerJob::Resting };
 			size_t next = 0;
 			for (size_t i = 0; i < settlement.Villagers.size(); i++)
 			{
@@ -556,6 +565,7 @@ namespace Hydro
 			const BuildingRules::Bonus bonus = world.Buildings != nullptr ? BuildingRules::Of(*world.Buildings, settlement)
 				: BuildingRules::Bonus{};
 			survey.StoreDays = bonus.StoreDays;
+			survey.Fishers = bonus.Fishers;
 			const BuildingDefinition* planned = Plan(settlement, world, people, survey);
 			survey.BuildWood = planned != nullptr ? planned->Wood : -1.0f;
 			for (Villager& villager : settlement.Villagers)
@@ -565,13 +575,17 @@ namespace Hydro
 			}
 			AssignJobs(settlement, people, survey);
 
-			// Food: what the gatherers and hunters bring, then they eat.
+			// Food: what the gatherers, hunters and fishers bring, then they eat.
 			const float gatherers = (float)Workers(settlement, VillagerJob::Gatherer);
 			const float hunters = (float)Workers(settlement, VillagerJob::Hunter);
+			const float fishers = (float)Workers(settlement, VillagerJob::Fisher);
 			const float gathered = std::min(gatherers * people.GatherPerPerson, survey.PlantFood) * days;
 			const float hunted = Hunt(world, people, settlement, hunters * people.HuntPerPerson * days);
 			const float meat = people.MeatPerAnimal * (1.0f + bonus.HuntKeep); // a hunting lodge keeps more of each animal
-			settlement.Food += gathered + hunted * meat - settlement.Count * people.FoodPerPerson * days;
+			const float caught = FishRules::Catch(world, people, settlement.X, settlement.Y, Reach(people, settlement.Level),
+				fishers * people.FishPerPerson * days);
+			report.Caught = caught;
+			settlement.Food += gathered + hunted * meat + caught * people.FoodPerFish - settlement.Count * people.FoodPerPerson * days;
 			const PeopleLevel& level = LevelOf(people, settlement.Level);
 			if (settlement.Food < 0.0f)
 			{
@@ -611,7 +625,9 @@ namespace Hydro
 				report.Built++;
 			}
 			else if (planned != nullptr && WantShelter(settlement, people) == false && settlement.Building >= 1.0f
-				&& settlement.Wood >= planned->Wood && PutUp(world, *planned, settlement, random))
+				&& settlement.Wood >= planned->Wood && (planned->Site == BuildingSite::Shore
+					? FishRules::PutUp(world, *planned, people, settlement, Reach(people, settlement.Level), random)
+					: PutUp(world, *planned, settlement, random)))
 			{
 				settlement.Wood -= planned->Wood; // the planned building before rebuilding older shelters
 				settlement.Building = 0.0f;
@@ -675,7 +691,7 @@ namespace Hydro
 		}
 
 		// What the settlement builds next (BuildingRules::Wanted): its store when nearly full, a hunting lodge once they
-		// hunt, a barn when there is farmland beyond what they work. Sets Planned.
+		// hunt, a barn when there is farmland beyond what they work, a fishing lodge once fish live within reach. Sets Planned.
 		static const BuildingDefinition* Plan(Settlement& settlement, const World& world, const PeopleDefinition& people,
 			const Survey& survey)
 		{
@@ -692,6 +708,7 @@ namespace Hydro
 			needs.StoreFull = settlement.Food >= store * 0.8f;
 			needs.Hunting = Workers(settlement, VillagerJob::Hunter) > 0;
 			needs.MoreFields = settlement.FieldsMost > 0 && settlement.Fields > settlement.FieldsMost;
+			needs.Fish = survey.Fish >= FishRules::LodgeFrom;
 			const BuildingDefinition* wanted = BuildingRules::Wanted(*world.Buildings, people, settlement, owned, needs);
 			settlement.Planned = wanted != nullptr ? wanted->BuildingId : 0;
 			return wanted;
@@ -720,11 +737,12 @@ namespace Hydro
 			case VillagerJob::Hurt: return "Hurt";
 			case VillagerJob::Forester: return "Forester";
 			case VillagerJob::Farmer: return "Farmer";
+			case VillagerJob::Fisher: return "Fisher";
 			default: return "Resting";
 			}
 		}
 
-		static constexpr int JobCount = 9;        // VillagerJob values
+		static constexpr int JobCount = 10;       // VillagerJob values
 		static constexpr float GuardFrom = 0.35f; // tension from which some stand guard
 	};
 }

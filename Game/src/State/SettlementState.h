@@ -17,7 +17,8 @@ namespace Hydro
 		Guard,      // stands watch while tension with a disliked people is high
 		Hurt,       // can't work until healed
 		Forester,   // plants saplings where they can grow (elves)
-		Farmer      // sows and harvests the farmland the player painted (humans, from a hamlet)
+		Farmer,     // sows and harvests the farmland the player painted (humans, from a hamlet)
+		Fisher      // fishes at the shore (with a fishing lodge)
 	};
 
 	// What the player asks a settlement to lean towards; the villagers still choose their jobs.

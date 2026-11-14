@@ -432,3 +432,14 @@ DataTable:
       Hidden: false
       Hint: ""
       Track: Peoples
+    FirstHold:
+      Name: First hold
+      MilestoneId: 40
+      Kind: SettlementLevel
+      TargetId: 3
+      Count: 1
+      Points: 1
+      Description: A dwarf delving grows into a hold of stone halls
+      Hidden: true
+      Hint: "Stone halls deep under the hills"
+      Track: Peoples
