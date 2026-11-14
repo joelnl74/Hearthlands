@@ -14,6 +14,7 @@ DataTable:
       WalkFrames: 4
       WorkFrames: 2
       WalkSpeed: 0.8
+      Climb: 1
       CentreObjectId: 60
       CentreName: fire
       GlowColor: [1, 0.72, 0.25]
@@ -72,6 +73,8 @@ DataTable:
           ShelterObjectId: 61
           PeoplePerShelter: 3
           WoodPerShelter: 6
+          Radius: 0
+          ShelterReach: 0
           MaxPeople: 9
           StoreDays: 4
           Description: Tents of hides round a fire
@@ -84,9 +87,11 @@ DataTable:
           ShelterObjectId: 66
           PeoplePerShelter: 4
           WoodPerShelter: 10
+          Radius: 13
+          ShelterReach: 5
           MaxPeople: 16
           StoreDays: 6
-          Description: "Timber huts that hold 4: room for 16"
+          Description: "Timber huts for 4, room for 16; wider lands"
         - Name: Village
           People: 14
           Shelters: 4
@@ -96,9 +101,11 @@ DataTable:
           ShelterObjectId: 66
           PeoplePerShelter: 4
           WoodPerShelter: 10
+          Radius: 16
+          ShelterReach: 6
           MaxPeople: 24
           StoreDays: 8
-          Description: Room for 24; a full village sends settlers out
+          Description: Room for 24 and wider lands; sends settlers out
       Dislikes: []
       DislikeRadius: 32
       TensionPerDay: 0.12
@@ -114,6 +121,7 @@ DataTable:
       WalkFrames: 4
       WorkFrames: 2
       WalkSpeed: 0.75
+      Climb: 1
       CentreObjectId: 70
       CentreName: hearth
       GlowColor: [0.72, 0.86, 1]
@@ -172,6 +180,8 @@ DataTable:
           ShelterObjectId: 69
           PeoplePerShelter: 3
           WoodPerShelter: 3
+          Radius: 0
+          ShelterReach: 0
           MaxPeople: 9
           StoreDays: 4
           Description: Bowers of woven boughs round a hearth
@@ -184,9 +194,11 @@ DataTable:
           ShelterObjectId: 71
           PeoplePerShelter: 4
           WoodPerShelter: 6
+          Radius: 15
+          ShelterReach: 5
           MaxPeople: 16
           StoreDays: 6
-          Description: "Elven lodges that hold 4: room for 16"
+          Description: "Elven lodges for 4, room for 16; wider woods"
         - Name: Village
           People: 13
           Shelters: 4
@@ -196,9 +208,11 @@ DataTable:
           ShelterObjectId: 71
           PeoplePerShelter: 4
           WoodPerShelter: 6
+          Radius: 18
+          ShelterReach: 6
           MaxPeople: 24
           StoreDays: 7
-          Description: Room for 24; a full village sends elves out
+          Description: Room for 24 and wider woods; sends elves out
       Dislikes: [3]
       DislikeRadius: 32
       TensionPerDay: 0.12
@@ -214,6 +228,7 @@ DataTable:
       WalkFrames: 4
       WorkFrames: 2
       WalkSpeed: 0.7
+      Climb: 1
       CentreObjectId: 62
       CentreName: lantern
       GlowColor: [0.62, 1, 0.82]
@@ -272,6 +287,8 @@ DataTable:
           ShelterObjectId: 63
           PeoplePerShelter: 3
           WoodPerShelter: 0
+          Radius: 0
+          ShelterReach: 0
           MaxPeople: 8
           StoreDays: 5
           Description: Leaf huts under the old trees
@@ -284,6 +301,8 @@ DataTable:
           ShelterObjectId: 67
           PeoplePerShelter: 4
           WoodPerShelter: 0
+          Radius: 0
+          ShelterReach: 5
           MaxPeople: 14
           StoreDays: 6
           Description: "Tree houses in the boughs: room for 14"
@@ -296,6 +315,8 @@ DataTable:
           ShelterObjectId: 67
           PeoplePerShelter: 4
           WoodPerShelter: 0
+          Radius: 0
+          ShelterReach: 6
           MaxPeople: 20
           StoreDays: 7
           Description: The heart of the old woods; a full hold sends elves out
@@ -314,6 +335,7 @@ DataTable:
       WalkFrames: 4
       WorkFrames: 2
       WalkSpeed: 0.6
+      Climb: 2
       CentreObjectId: 64
       CentreName: mine
       GlowColor: [1, 0.6, 0.2]
@@ -372,6 +394,8 @@ DataTable:
           ShelterObjectId: 65
           PeoplePerShelter: 4
           WoodPerShelter: 0
+          Radius: 0
+          ShelterReach: 0
           MaxPeople: 8
           StoreDays: 6
           Description: Stone huts dug into the hill
@@ -384,9 +408,11 @@ DataTable:
           ShelterObjectId: 68
           PeoplePerShelter: 6
           WoodPerShelter: 4
+          Radius: 14
+          ShelterReach: 5
           MaxPeople: 16
           StoreDays: 8
-          Description: Halls cut into the rock that hold 6
+          Description: Rock-cut halls for 6; they delve further out
         - Name: Deep hall
           People: 14
           Shelters: 3
@@ -396,9 +422,11 @@ DataTable:
           ShelterObjectId: 68
           PeoplePerShelter: 6
           WoodPerShelter: 4
+          Radius: 17
+          ShelterReach: 6
           MaxPeople: 26
           StoreDays: 9
-          Description: Deep halls; a full one sends dwarves to new mountains
+          Description: Deep halls, wider lands; sends dwarves to new hills
       Dislikes: [2, 4]
       DislikeRadius: 32
       TensionPerDay: 0.12

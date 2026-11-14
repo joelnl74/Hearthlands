@@ -42,8 +42,8 @@ namespace Hydro
 			return SettlementRules::Farming(people, settlement);
 		}
 
-		// Where the Farmland brush may paint (the player paints only where a people farms): 1 within Radius of a
-		// settlement that farms that tile (`Farms`), else 0. `reach` is sized to the map.
+		// Where the Farmland brush may paint (the player paints only where a people farms): 1 within the reach of a
+		// settlement that farms that tile (`Farms`; it grows with the level), else 0. `reach` is sized to the map.
 		static void Reach(const SettlementState& state, const std::vector<PeopleDefinition>& peoples, int fieldTileId, int width,
 			int height, std::vector<uint8_t>& reach)
 		{
@@ -60,7 +60,7 @@ namespace Hydro
 				{
 					continue;
 				}
-				const int radius = people.Radius;
+				const int radius = SettlementRules::Reach(people, settlement.Level);
 				for (int dy = -radius; dy <= radius; dy++)
 				{
 					for (int dx = -radius; dx <= radius; dx++)
@@ -100,13 +100,13 @@ namespace Hydro
 			return -1;
 		}
 
-		// The farmland tiles within the people's Radius of the settlement, nearest first (ring by ring).
+		// The farmland tiles within the settlement's reach, nearest first (ring by ring).
 		static std::vector<size_t> Farmland(const SettlementRules::World& world, const PeopleDefinition& people,
 			const Settlement& settlement)
 		{
 			std::vector<size_t> tiles;
 			const TileMap& map = *world.Map;
-			const int radius = people.Radius;
+			const int radius = SettlementRules::Reach(people, settlement.Level);
 			for (int ring = 0; ring <= radius; ring++)
 			{
 				for (int dy = -ring; dy <= ring; dy++)

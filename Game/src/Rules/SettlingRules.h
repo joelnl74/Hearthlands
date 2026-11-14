@@ -399,7 +399,7 @@ namespace Hydro
 		{
 			const PeopleDefinition& from = peoples[(size_t)settlement.People];
 			const PeopleDefinition& to = peoples[(size_t)row];
-			const int reach = SettlementRules::ShelterReach;
+			const int reach = SettlementRules::HomeReach(from, settlement.Level);
 			for (int dy = -reach; dy <= reach; dy++)
 			{
 				for (int dx = -reach; dx <= reach; dx++)

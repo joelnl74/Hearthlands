@@ -239,7 +239,7 @@ namespace Hydro
 		// Burns one of the settlement's shelters near its centre (the first found, ring by ring). False: none.
 		static bool Burn(Settlement& settlement, const PeopleDefinition& people, const SettlementRules::World& world)
 		{
-			const int reach = SettlementRules::ShelterReach;
+			const int reach = SettlementRules::HomeReach(people, settlement.Level);
 			for (int ring = 1; ring <= reach; ring++)
 			{
 				for (int dy = -ring; dy <= ring; dy++)
