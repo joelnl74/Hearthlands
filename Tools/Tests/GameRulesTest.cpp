@@ -1055,6 +1055,7 @@ namespace Hydro
 	int TestSettlingRules(int& checks);   // SettlingRulesTest.cpp
 	int TestFarmRules(int& checks);       // FarmRulesTest.cpp
 	int TestSaveRules(int& checks);       // SaveRulesTest.cpp
+	int TestBuildingRules(int& checks);   // BuildingRulesTest.cpp
 	int TestForestRules(int& checks); // ForestRulesTest.cpp
 	int TestCreekRules(int& checks); // CreekRulesTest.cpp
 	int TestOldWoodsRules(int& checks); // OldWoodsRulesTest.cpp
@@ -1083,6 +1084,7 @@ namespace Hydro
 		s_RuleFailures += TestSettlingRules(checks);
 		s_RuleFailures += TestFarmRules(checks);
 		s_RuleFailures += TestSaveRules(checks);
+		s_RuleFailures += TestBuildingRules(checks);
 		s_RuleFailures += TestForestRules(checks);
 		s_RuleFailures += TestCreekRules(checks);
 		s_RuleFailures += TestOldWoodsRules(checks);

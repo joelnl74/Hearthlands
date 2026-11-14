@@ -3,6 +3,7 @@
 #include "Hydro.h"
 #include "Data/AnimalDefinition.h"
 #include "Data/MilestoneDefinition.h"
+#include "Data/BuildingDefinition.h"
 #include "Data/PeopleDefinition.h"
 #include "Data/ObjectDefinition.h"
 #include "Data/SeasonDefinition.h"
@@ -41,6 +42,7 @@ namespace Hydro
 		static constexpr uint64_t DefaultSeasons = 6640277151823094117ull;      // Assets/Data/Seasons.hytable
 		static constexpr uint64_t DefaultAnimals = 8152222171692113247ull;      // Assets/Data/Animals.hytable
 		static constexpr uint64_t DefaultPeoples = 3987286432867960408ull;      // Assets/Data/Peoples.hytable
+		static constexpr uint64_t DefaultBuildings = 5318008417246625193ull;    // Assets/Data/Buildings.hytable
 
 		HY_PROPERTY(Asset(DataTable, TerrainTypeDefinition), Tooltip("Roles (water, riverbed) and unlocks"))
 		AssetHandle TerrainTypes = DefaultTerrainTypes;
@@ -56,6 +58,8 @@ namespace Hydro
 		AssetHandle Animals = DefaultAnimals;
 		HY_PROPERTY(Asset(DataTable, PeopleDefinition), Tooltip("The peoples: what they need, gather, hunt and build"))
 		AssetHandle Peoples = DefaultPeoples;
+		HY_PROPERTY(Asset(DataTable, BuildingDefinition), Tooltip("What the peoples build besides shelters, and the talents that allow it"))
+		AssetHandle Buildings = DefaultBuildings;
 		HY_PROPERTY(Range(1, 255), Tooltip("The centre object of a people without their own CentreObjectId (Objects table)"))
 		int FireObjectId = 60;
 		HY_PROPERTY(Range(1, 1024), Tooltip("Regions of the map whose animals are worked out each tick"))
@@ -115,6 +119,10 @@ namespace Hydro
 			for (const auto& [id, people] : Data::GetTable<PeopleDefinition>(Peoples).Rows())
 			{
 				m_Peoples.push_back(people);
+			}
+			for (const auto& [id, building] : Data::GetTable<BuildingDefinition>(Buildings).Rows())
+			{
+				m_Buildings.push_back(building);
 			}
 			const DataTableView<MilestoneDefinition> milestones = Data::GetTable<MilestoneDefinition>(Milestones);
 			for (const auto& [id, milestone] : milestones.Rows())
@@ -347,6 +355,8 @@ namespace Hydro
 			world.Growth = session.Season.Growth;
 			world.Sowing = session.Season.Sowing;
 			world.Frost = session.Season.Frost;
+			world.Buildings = &m_Buildings;
+			world.Talents = &session.Talents.Owned;
 			return world;
 		}
 
@@ -445,6 +455,11 @@ namespace Hydro
 					const PeopleLevel& level = SettlementRules::LevelOf(m_Peoples[(size_t)settlement.People], settlement.Level);
 					session.Notices.push_back(settlement.Name + " is now a " + Lowered(level.Name)
 						+ (level.Description.empty() ? std::string() : ": " + Lowered(level.Description)));
+				}
+				const BuildingDefinition* built = BuildingRules::Find(m_Buildings, report.BuiltBuilding);
+				if (built != nullptr)
+				{
+					session.Notices.push_back(settlement.Name + " builds a " + Lowered(built->Name) + ": " + Lowered(built->Description));
 				}
 				if (report.Abandoned || report.Gone)
 				{
@@ -638,6 +653,7 @@ namespace Hydro
 		std::vector<SeasonDefinition> m_Seasons; // in Order
 		std::vector<AnimalDefinition> m_Animals; // table order: the wildlife's rows
 		std::vector<PeopleDefinition> m_Peoples; // table order: Settlement::People
+		std::vector<BuildingDefinition> m_Buildings; // what the peoples build besides shelters
 		bool m_HabitatChanged = true;            // the water changed since the habitats were worked out
 		std::vector<uint32_t> m_HabitatCounts;   // water tiles per WaterHabitat, as last worked out
 		std::vector<uint8_t> m_Cover;            // per object id: 1 for shrubs and trees (WildlifeRules::CoverOf)

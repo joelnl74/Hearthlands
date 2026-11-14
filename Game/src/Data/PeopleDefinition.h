@@ -161,6 +161,8 @@ namespace Hydro
 		float HarvestPerDay = 6.0f;
 		HY_PROPERTY(Range(0, 1), Tooltip("... soil richness a harvest takes from its field (the soil builds up again in time)"))
 		float SoilWear = 0.04f;
+		HY_PROPERTY(Range(0, 500), Tooltip("... fields the farmers work without a barn (a Barn building adds its Fields)"))
+		int FieldsWorked = 12;
 		HY_PROPERTY(Range(0, 1), Tooltip("Growth a day (share of the people) while food is plenty and there is room"))
 		float BirthsPerDay = 0.08f;
 		HY_PROPERTY(Range(0, 5), Tooltip("People who leave a day while there is no food"))

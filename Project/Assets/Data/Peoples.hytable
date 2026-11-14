@@ -59,6 +59,7 @@ DataTable:
       SowPerDay: 4
       HarvestPerDay: 6
       SoilWear: 0.04
+      FieldsWorked: 12
       BirthsPerDay: 0.08
       LeavePerDay: 0.5
       Levels:
@@ -158,6 +159,7 @@ DataTable:
       SowPerDay: 4
       HarvestPerDay: 6
       SoilWear: 0.04
+      FieldsWorked: 12
       BirthsPerDay: 0.07
       LeavePerDay: 0.45
       Levels:
@@ -257,6 +259,7 @@ DataTable:
       SowPerDay: 4
       HarvestPerDay: 6
       SoilWear: 0.04
+      FieldsWorked: 12
       BirthsPerDay: 0.05
       LeavePerDay: 0.4
       Levels:
@@ -356,6 +359,7 @@ DataTable:
       SowPerDay: 4
       HarvestPerDay: 6
       SoilWear: 0.04
+      FieldsWorked: 12
       BirthsPerDay: 0.06
       LeavePerDay: 0.4
       Levels:

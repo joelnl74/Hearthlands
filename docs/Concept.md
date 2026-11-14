@@ -470,6 +470,13 @@ built, with the barn lifting how many fields a settlement works.
    per slot yet; the saves folder moves to the player's own folder before a release.
 2. **Buildings and unlocks**: `BuildingDefinition`, `BuildingRules`, the panel list; first the food store and hunting
    lodge for all four peoples (they change the food balance most), the barn for humans' farming.
+   **Built Nov 12**: `Buildings.hytable` (granary, hunting lodge, barn; larder bower and hunters' blind for elves; seed
+   hollow and woodland blind for wood elves; cold cellar and stone lodge for dwarves), eight 1-point Peoples talents
+   (Storehouses, Hunting lodges, Larders, Hunters' blinds, Seed hollows, Woodland blinds, Cold cellars, Stone lodges;
+   after each people's settling talent), the barn with Farming (from a hamlet; farmers work 12 fields without it, 36
+   with it). Stores add 6 to 8 days of food, lodges half again as much meat. The settlement panel lists them; the
+   Peoples tab now has pages. In the sim every people built theirs within its first two months; late-winter stores
+   can still run dry (tune in play). Art is temporary.
 3. **The area grows with the level**, then **work parties and steering home** (the same walking code).
 4. **Fishing** (lodge, shore fishers; boats later) and **Orchards / mushroom beds** through the building system.
 5. **Third-level art** for shelters, centres and the new buildings.

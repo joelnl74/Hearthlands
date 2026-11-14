@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Data/AnimalDefinition.h"
+#include "Data/BuildingDefinition.h"
 #include "Data/ObjectDefinition.h"
 #include "Data/PeopleDefinition.h"
+#include "Rules/BuildingRules.h"
 #include "Rules/ObjectRules.h"
 #include "Rules/SoilRules.h"
 #include "Rules/WildlifeRules.h"
@@ -48,6 +50,8 @@ namespace Hydro
 			float Growth = 1.0f;                       // ... crops grow, times this
 			bool Sowing = true;                        // ... farmers sow
 			bool Frost = false;                        // ... crops wither
+			const std::vector<BuildingDefinition>* Buildings = nullptr; // what peoples build besides shelters; nullptr none
+			const std::vector<int>* Talents = nullptr; // the owned talents (TalentIds): which buildings are known
 		};
 
 		// What the land around a settlement's centre offers.
@@ -64,6 +68,9 @@ namespace Hydro
 			int Needed = 0;           // objects of their NeedObjectIds within reach (old trees)
 			int NeededTiles = 0;      // tiles of their NeedTileIds within reach (mountain rock)
 			bool Sowing = true;       // the season lets farmers sow (Update sets it from the world)
+			std::vector<int> Buildings; // their buildings (BuildingIds) within reach
+			float StoreDays = 0.0f;   // days of food more the store holds (their buildings; Update sets it)
+			float BuildWood = -1.0f;  // wood the planned building takes; below 0 none planned (Update sets it)
 		};
 
 		// What happened in an update, for notices.
@@ -76,6 +83,7 @@ namespace Hydro
 			int Felled = 0;
 			int Planted = 0;
 			int Upgraded = 0; // older shelters rebuilt as the level's
+			int BuiltBuilding = 0; // a building (BuildingId) put up
 		};
 
 		// One thing a settlement needs to reach its next level: what it has and what it needs.
@@ -270,6 +278,15 @@ namespace Hydro
 					survey.PlantFood += object->Food;
 					survey.Wood += object->Wood;
 					survey.Trees += object->Wood > 0.0f ? 1 : 0;
+					if (object->Kind == ObjectKind::Building && world.Buildings != nullptr)
+					{
+						const int row = BuildingRules::RowOf(*world.Buildings, object->ObjectId, people.PeopleId);
+						const int id = row >= 0 ? (*world.Buildings)[(size_t)row].BuildingId : 0;
+						if (id > 0 && std::find(survey.Buildings.begin(), survey.Buildings.end(), id) == survey.Buildings.end())
+						{
+							survey.Buildings.push_back(id);
+						}
+					}
 					const int holds = ShelterHolds(people, object->ObjectId);
 					const bool inReach = dx * dx + dy * dy <= ShelterReach * ShelterReach;
 					survey.Shelters += holds > 0 && inReach ? 1 : 0;
@@ -397,7 +414,8 @@ namespace Hydro
 			const int gatherMost = (int)std::ceil(survey.PlantFood / gatherYield);
 			const int huntMost = people.HuntPerPerson > 0.0f ? (int)std::ceil(survey.Game * 0.25f / people.HuntPerPerson) : 0;
 			const float eat = settlement.Count * people.FoodPerPerson;
-			const float store = std::max(1.0f, settlement.Count) * people.FoodPerPerson * LevelOf(people, settlement.Level).StoreDays;
+			const float store = std::max(1.0f, settlement.Count) * people.FoodPerPerson
+				* (LevelOf(people, settlement.Level).StoreDays + survey.StoreDays);
 			float made = 0.0f;
 			// Food enough to eat, then more while the store isn't full (more still with the focus on food): each worker to
 			// whichever of gathering and hunting gives more (dwarves hunt first, elves gather), as far as the land gives it.
@@ -429,8 +447,10 @@ namespace Hydro
 			}
 			if (Farming(people, settlement) && left > 0)
 			{
-				// Farmers for what is ripe and, in a sowing season, what is empty (FarmRules counted the fields).
-				const int empty = std::max(0, settlement.Fields - settlement.FieldsGrowing - settlement.FieldsRipe);
+				// Farmers for what is ripe and, in a sowing season, what is empty (FarmRules counted the fields) as far as
+				// they work fields (more with a barn).
+				const int worked = settlement.FieldsMost > 0 ? std::min(settlement.Fields, settlement.FieldsMost) : settlement.Fields;
+				const int empty = std::max(0, worked - settlement.FieldsGrowing - settlement.FieldsRipe);
 				const float work = (float)settlement.FieldsRipe / std::max(0.01f, people.HarvestPerDay)
 					+ (survey.Sowing ? (float)empty / std::max(0.01f, people.SowPerDay) : 0.0f);
 				const int farmers = std::min(left, (int)std::ceil(work));
@@ -438,17 +458,19 @@ namespace Hydro
 				left -= farmers;
 			}
 			const PeopleLevel& level = LevelOf(people, settlement.Level);
-			const bool shelter = WantShelter(settlement, people) || settlement.OldShelters > 0; // new, or older ones to upgrade
-			const bool needWood = level.WoodPerShelter > 0.0f && settlement.Wood < level.WoodPerShelter && survey.Trees > 0
-				&& people.FellPerDay > 0.0f;
-			const bool canBuild = settlement.Wood >= level.WoodPerShelter;
-			if (shelter && needWood && left > 0)
+			// Something to build: a shelter (new, or an older one to upgrade), else the planned building.
+			const bool shelter = WantShelter(settlement, people) || settlement.OldShelters > 0;
+			const bool project = shelter || survey.BuildWood >= 0.0f;
+			const float wood = shelter ? level.WoodPerShelter : survey.BuildWood;
+			const bool needWood = project && wood > 0.0f && settlement.Wood < wood && survey.Trees > 0 && people.FellPerDay > 0.0f;
+			const bool canBuild = project && settlement.Wood >= wood;
+			if (needWood && left > 0)
 			{
 				const int cutters = std::min(left, 1 + (settlement.Focus == SettlementFocus::Wood || able >= 10 ? 1 : 0));
 				slots[(int)VillagerJob::Woodcutter] += cutters;
 				left -= cutters;
 			}
-			if (shelter && canBuild && left > 0)
+			if (canBuild && left > 0)
 			{
 				const int builders = std::min(left, 1 + (settlement.Focus == SettlementFocus::Building ? 1 : 0));
 				slots[(int)VillagerJob::Builder] += builders;
@@ -604,6 +626,12 @@ namespace Hydro
 			settlement.Shelters = survey.Shelters;
 			settlement.Room = RoomFor(people, settlement.Level, survey.ShelterRoom);
 			settlement.OldShelters = CountOld(world, people, settlement);
+			settlement.Buildings = survey.Buildings;
+			const BuildingRules::Bonus bonus = world.Buildings != nullptr ? BuildingRules::Of(*world.Buildings, settlement)
+				: BuildingRules::Bonus{};
+			survey.StoreDays = bonus.StoreDays;
+			const BuildingDefinition* planned = Plan(settlement, world, people, survey);
+			survey.BuildWood = planned != nullptr ? planned->Wood : -1.0f;
 			for (Villager& villager : settlement.Villagers)
 			{
 				villager.Days += days;
@@ -616,7 +644,8 @@ namespace Hydro
 			const float hunters = (float)Workers(settlement, VillagerJob::Hunter);
 			const float gathered = std::min(gatherers * people.GatherPerPerson, survey.PlantFood) * days;
 			const float hunted = Hunt(world, people, settlement, hunters * people.HuntPerPerson * days);
-			settlement.Food += gathered + hunted * people.MeatPerAnimal - settlement.Count * people.FoodPerPerson * days;
+			const float meat = people.MeatPerAnimal * (1.0f + bonus.HuntKeep); // a hunting lodge keeps more of each animal
+			settlement.Food += gathered + hunted * meat - settlement.Count * people.FoodPerPerson * days;
 			const PeopleLevel& level = LevelOf(people, settlement.Level);
 			if (settlement.Food < 0.0f)
 			{
@@ -628,7 +657,8 @@ namespace Hydro
 				const float born = std::max(0.02f, settlement.Count * people.BirthsPerDay) * days;
 				settlement.Count = std::min((float)settlement.Room, settlement.Count + born);
 			}
-			settlement.Food = std::min(settlement.Food, std::max(1.0f, settlement.Count) * people.FoodPerPerson * level.StoreDays);
+			settlement.Food = std::min(settlement.Food, std::max(1.0f, settlement.Count) * people.FoodPerPerson
+				* (level.StoreDays + bonus.StoreDays));
 
 			// Wood and shelters: the woodcutters fell, the builders build once there is a shelter's wood.
 			const float cutters = (float)Workers(settlement, VillagerJob::Woodcutter);
@@ -652,6 +682,15 @@ namespace Hydro
 				settlement.Shelters++;
 				settlement.Room = std::min(level.MaxPeople, settlement.Room + level.PeoplePerShelter);
 				report.Built++;
+			}
+			else if (planned != nullptr && WantShelter(settlement, people) == false && settlement.Building >= 1.0f
+				&& settlement.Wood >= planned->Wood && PutUp(world, *planned, settlement, random))
+			{
+				settlement.Wood -= planned->Wood; // the planned building before rebuilding older shelters
+				settlement.Building = 0.0f;
+				settlement.Buildings.push_back(planned->BuildingId);
+				settlement.Planned = 0;
+				report.BuiltBuilding = planned->BuildingId;
 			}
 			else if (ready && settlement.OldShelters > 0 && Upgrade(world, people, settlement))
 			{
@@ -865,6 +904,51 @@ namespace Hydro
 					world.Objects->Set(IndexOf(world, x, y), (uint8_t)pick);
 					return true;
 				}
+			}
+			return false;
+		}
+
+		// What the settlement builds next (BuildingRules::Wanted): its store when nearly full, a hunting lodge once they
+		// hunt, a barn when there is farmland beyond what they work. Sets Planned.
+		static const BuildingDefinition* Plan(Settlement& settlement, const World& world, const PeopleDefinition& people,
+			const Survey& survey)
+		{
+			settlement.Planned = 0;
+			if (world.Buildings == nullptr)
+			{
+				return nullptr;
+			}
+			static const std::vector<int> none;
+			const std::vector<int>& owned = world.Talents != nullptr ? *world.Talents : none;
+			const float store = std::max(1.0f, settlement.Count) * people.FoodPerPerson
+				* (LevelOf(people, settlement.Level).StoreDays + survey.StoreDays);
+			BuildingRules::Needs needs;
+			needs.StoreFull = settlement.Food >= store * 0.8f;
+			needs.Hunting = Workers(settlement, VillagerJob::Hunter) > 0;
+			needs.MoreFields = settlement.FieldsMost > 0 && settlement.Fields > settlement.FieldsMost;
+			const BuildingDefinition* wanted = BuildingRules::Wanted(*world.Buildings, people, settlement, owned, needs);
+			settlement.Planned = wanted != nullptr ? wanted->BuildingId : 0;
+			return wanted;
+		}
+
+		// Puts up a building on a buildable tile its RingFrom to RingTo tiles from the centre, with no building beside it.
+		static bool PutUp(const World& world, const BuildingDefinition& building, const Settlement& settlement, Random& random)
+		{
+			const int from = std::max(2, building.RingFrom);
+			const int to = std::max(from, building.RingTo);
+			for (int tries = 0; tries < 60; tries++)
+			{
+				const int dx = (int)random.Below((uint32_t)(to * 2 + 1)) - to;
+				const int dy = (int)random.Below((uint32_t)(to * 2 + 1)) - to;
+				const int distance = dx * dx + dy * dy;
+				const int x = settlement.X + dx;
+				const int y = settlement.Y + dy;
+				if (distance < from * from || distance > to * to || Buildable(world, x, y) == false || BesideBuilding(world, x, y))
+				{
+					continue;
+				}
+				world.Objects->Set(IndexOf(world, x, y), (uint8_t)building.ObjectId);
+				return true;
 			}
 			return false;
 		}

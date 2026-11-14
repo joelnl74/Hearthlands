@@ -103,6 +103,9 @@ namespace Hydro
 		home.Focus = SettlementFocus::Food;
 		home.Tension = 0.25f;
 		home.EvolveAllowed = true;
+		home.Buildings = { 1, 3 };
+		home.Planned = 2;
+		home.FieldsMost = 36;
 		Villager aldric;
 		aldric.Id = 1;
 		aldric.Name = "Aldric";
@@ -167,6 +170,7 @@ namespace Hydro
 			SAVE_CHECK(home.Focus == SettlementFocus::Food && home.Tension == 0.25f && home.EvolveAllowed);
 			SAVE_CHECK(home.Villagers.size() == 1 && home.Villagers[0].Name == "Aldric");
 			SAVE_CHECK(home.Villagers.size() == 1 && home.Villagers[0].Job == VillagerJob::Farmer);
+			SAVE_CHECK(home.Buildings == std::vector<int>({ 1, 3 }) && home.Planned == 2 && home.FieldsMost == 36);
 		}
 		SAVE_CHECK(loaded.SelectedSettlement == 0 && loaded.Notices.empty() && loaded.MountainsChanged);
 

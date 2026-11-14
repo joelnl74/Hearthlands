@@ -4,6 +4,7 @@
 #include "Hydro/Renderer/Font.h"
 #include "Hydro/Scene/UI/UI.h"
 #include "Data/AnimalDefinition.h"
+#include "Data/BuildingDefinition.h"
 #include "Data/MilestoneDefinition.h"
 #include "Data/PeopleDefinition.h"
 #include "Data/TalentDefinition.h"
@@ -34,6 +35,7 @@ namespace Hydro
 		static constexpr uint64_t DefaultTerrainTypes = 4392505292887402202ull; // Assets/Data/TerrainTypes.hytable
 		static constexpr uint64_t DefaultMilestones = 5179923417704519381ull;   // Assets/Data/Milestones.hytable
 		static constexpr uint64_t DefaultPeoples = 3987286432867960408ull;      // Assets/Data/Peoples.hytable
+		static constexpr uint64_t DefaultBuildings = 5318008417246625193ull;    // Assets/Data/Buildings.hytable
 		static constexpr uint64_t DefaultAnimals = 8152222171692113247ull;      // Assets/Data/Animals.hytable
 
 		HY_PROPERTY(Asset(Font), Tooltip("The HUD's text"))
@@ -48,6 +50,8 @@ namespace Hydro
 		AssetHandle Milestones = DefaultMilestones;
 		HY_PROPERTY(Asset(DataTable, PeopleDefinition), Tooltip("The peoples, for the settlement panels (as SimulationScript's)"))
 		AssetHandle Peoples = DefaultPeoples;
+		HY_PROPERTY(Asset(DataTable, BuildingDefinition), Tooltip("What the peoples build (the settlement panel lists them)"))
+		AssetHandle Buildings = DefaultBuildings;
 		HY_PROPERTY(Asset(DataTable, AnimalDefinition), Tooltip("The wild animals, for discoveries (the same table as SimulationScript's)"))
 		AssetHandle Animals = DefaultAnimals;
 
@@ -74,6 +78,10 @@ namespace Hydro
 			for (const auto& [id, people] : Data::GetTable<PeopleDefinition>(Peoples).Rows())
 			{
 				m_Peoples.push_back(people);
+			}
+			for (const auto& [id, building] : Data::GetTable<BuildingDefinition>(Buildings).Rows())
+			{
+				m_Buildings.push_back(building);
 			}
 			for (const auto& [id, animal] : Data::GetTable<AnimalDefinition>(Animals).Rows())
 			{
@@ -130,7 +138,7 @@ namespace Hydro
 				&& session.ShowSoil == false;
 			m_View.PresentOverlays(session.ShowMoisture, session.ShowSoil, session.ShowGroundwater, groundwaterLearned);
 			m_Settlements.Present(session.Settlements, m_Peoples, Settling(session), session.SelectedSettlement);
-			m_Detail.Present(session.Settlements, m_Peoples, session.SelectedSettlement);
+			m_Detail.Present(session.Settlements, m_Peoples, m_Buildings, session.Talents.Owned, session.SelectedSettlement);
 		}
 
 		bool OnUIEvent(const UIEvent& event) override
@@ -448,6 +456,7 @@ namespace Hydro
 		std::vector<TerrainTypeDefinition> m_Types;
 		std::vector<MilestoneDefinition> m_Milestones;
 		std::vector<PeopleDefinition> m_Peoples;
+		std::vector<BuildingDefinition> m_Buildings;
 		size_t m_AnnouncedMilestones = 0;
 		size_t m_AnnouncedSpecies = 0;
 		std::vector<AnimalDefinition> m_Animals;

@@ -5,6 +5,7 @@
 #include "Hydro/Data/DataTypeRegistry.h"
 
 #include "Data/AnimalDefinition.h"
+#include "Data/BuildingDefinition.h"
 #include "Data/MilestoneDefinition.h"
 #include "Data/ObjectDefinition.h"
 #include "Data/PeopleDefinition.h"
@@ -42,6 +43,11 @@ namespace Hydro
 			.Value("SeaRun", WaterHabitat::SeaRun)
 			.Value("ColdStream", WaterHabitat::ColdStream)
 			.Value("Fresh", WaterHabitat::Fresh);
+
+		DataTypeRegistry::RegisterEnum<BuildingKind>("BuildingKind")
+			.Value("Store", BuildingKind::Store)
+			.Value("HuntingLodge", BuildingKind::HuntingLodge)
+			.Value("Barn", BuildingKind::Barn);
 
 		DataTypeRegistry::RegisterEnum<MilestoneKind>("MilestoneKind")
 			.Value("Tiles", MilestoneKind::Tiles)
@@ -97,7 +103,8 @@ namespace Hydro
 			.Value("GroundwaterView", TalentEffect::GroundwaterView)
 			.Value("OldGrowth", TalentEffect::OldGrowth)
 			.Value("FeudCalm", TalentEffect::FeudCalm)
-			.Value("Evolve", TalentEffect::Evolve);
+			.Value("Evolve", TalentEffect::Evolve)
+			.Value("Building", TalentEffect::Building);
 
 		DataTypeRegistry::RegisterEnum<TerrainRole>("TerrainRole")
 			.Value("Land", TerrainRole::Land)
@@ -154,6 +161,24 @@ namespace Hydro
 			.Field<&AnimalDefinition::ShowShare>("ShowShare", "Show Share").Range(0.0f, 4.0f).Tooltip("Share of a region's animals shown near the camera (particles: how lively)")
 			.Field<&AnimalDefinition::MaxShown>("MaxShown", "Max Shown").Range(0.0f, 40.0f).Tooltip("Shown per region, at most")
 			.Field<&AnimalDefinition::StartShare>("StartShare", "Start Share").Range(0.0f, 1.0f).Tooltip("Share of what the land holds at the start of a generated world");
+
+		DataTypeRegistry::Register<BuildingDefinition>("BuildingDefinition", "Building")
+			.Table()
+			.DisplayField("Name")
+			.Field<&BuildingDefinition::Name>("Name", "Name")
+			.Field<&BuildingDefinition::BuildingId>("BuildingId", "Building Id").Range(1.0f, 1000.0f).Tooltip("Unique, never reused: saves keep a settlement's buildings by it")
+			.Field<&BuildingDefinition::PeopleId>("PeopleId", "People Id").Range(1.0f, 255.0f).Tooltip("The people that builds it (PeopleId in Peoples.hytable)")
+			.Field<&BuildingDefinition::Kind>("Kind", "Kind")
+			.Field<&BuildingDefinition::ObjectId>("ObjectId", "Object Id").Range(1.0f, 255.0f).Tooltip("The object put up (a Building in Objects.hytable)")
+			.Field<&BuildingDefinition::RequiresTalentId>("RequiresTalentId", "Requires Talent Id").Range(-1.0f, 1000.0f).Tooltip("The talent that makes it known (-1: known from the start)")
+			.Field<&BuildingDefinition::MinLevel>("MinLevel", "Min Level").Range(0.0f, 10.0f).Tooltip("The settlement's level from which they build it (0 the first)")
+			.Field<&BuildingDefinition::Wood>("Wood", "Wood").Range(0.0f, 100.0f).Tooltip("Wood it takes")
+			.Field<&BuildingDefinition::RingFrom>("RingFrom", "Ring From").Range(2.0f, 30.0f).Tooltip("Tiles from the centre it stands at, at least ...")
+			.Field<&BuildingDefinition::RingTo>("RingTo", "Ring To").Range(2.0f, 30.0f).Tooltip("... and at most")
+			.Field<&BuildingDefinition::StoreDays>("StoreDays", "Store Days").Range(0.0f, 100.0f).Tooltip("Store: days of food more the store holds")
+			.Field<&BuildingDefinition::HuntKeep>("HuntKeep", "Hunt Keep").Range(0.0f, 5.0f).Tooltip("Hunting lodge: share more meat from each animal hunted (0.5: half again)")
+			.Field<&BuildingDefinition::Fields>("Fields", "Fields").Range(0.0f, 200.0f).Tooltip("Barn: fields more the farmers work")
+			.Field<&BuildingDefinition::Description>("Description", "Description").Tooltip("One short line for the settlement panel and the talent");
 
 		DataTypeRegistry::Register<MilestoneDefinition>("MilestoneDefinition", "Milestone")
 			.Table()
@@ -261,6 +286,7 @@ namespace Hydro
 			.Field<&PeopleDefinition::SowPerDay>("SowPerDay", "Sow Per Day").Range(0.0f, 50.0f).Tooltip("... fields a farmer sows a day (in a sowing season)")
 			.Field<&PeopleDefinition::HarvestPerDay>("HarvestPerDay", "Harvest Per Day").Range(0.0f, 50.0f).Tooltip("... and harvests")
 			.Field<&PeopleDefinition::SoilWear>("SoilWear", "Soil Wear").Range(0.0f, 1.0f).Tooltip("... soil richness a harvest takes from its field (the soil builds up again in time)")
+			.Field<&PeopleDefinition::FieldsWorked>("FieldsWorked", "Fields Worked").Range(0.0f, 500.0f).Tooltip("... fields the farmers work without a barn (a Barn building adds its Fields)")
 			.Field<&PeopleDefinition::BirthsPerDay>("BirthsPerDay", "Births Per Day").Range(0.0f, 1.0f).Tooltip("Growth a day (share of the people) while food is plenty and there is room")
 			.Field<&PeopleDefinition::LeavePerDay>("LeavePerDay", "Leave Per Day").Range(0.0f, 5.0f).Tooltip("People who leave a day while there is no food")
 			.Field<&PeopleDefinition::Levels>("Levels", "Levels").Tooltip("Their levels, the first where a settlement starts (camp, hamlet, village)")

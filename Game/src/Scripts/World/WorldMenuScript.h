@@ -4,9 +4,11 @@
 #include "Hydro/Renderer/Font.h"
 #include "Hydro/Scene/UI/UI.h"
 #include "Data/AnimalDefinition.h"
+#include "Data/BuildingDefinition.h"
 #include "Data/MilestoneDefinition.h"
 #include "Data/TalentDefinition.h"
 #include "Data/TerrainTypeDefinition.h"
+#include "Rules/BuildingRules.h"
 #include "Rules/SaveRules.h"
 #include "Rules/TalentRules.h"
 #include "State/HearthlandsSession.h"
@@ -36,6 +38,7 @@ namespace Hydro
 		static constexpr uint64_t DefaultTalents = 3307419921861244467ull;      // Assets/Data/Talents.hytable
 		static constexpr uint64_t DefaultMilestones = 5179923417704519381ull;   // Assets/Data/Milestones.hytable
 		static constexpr uint64_t DefaultAnimals = 8152222171692113247ull;      // Assets/Data/Animals.hytable
+		static constexpr uint64_t DefaultBuildings = 5318008417246625193ull;    // Assets/Data/Buildings.hytable
 
 		HY_PROPERTY(Asset(Font), Tooltip("Running text"))
 		AssetHandle UIFont = DefaultFont;
@@ -53,6 +56,8 @@ namespace Hydro
 		AssetHandle Milestones = DefaultMilestones;
 		HY_PROPERTY(Asset(DataTable, AnimalDefinition), Tooltip("The species (the same table as SimulationScript's)"))
 		AssetHandle Animals = DefaultAnimals;
+		HY_PROPERTY(Asset(DataTable, BuildingDefinition), Tooltip("The buildings talents let a people build (their names)"))
+		AssetHandle Buildings = DefaultBuildings;
 		HY_PROPERTY(Tooltip("Stop the clock while the menu is open (Settings > Gameplay)"))
 		bool PauseInMenu = true;
 		HY_PROPERTY(Tooltip("The world's scene (its file name): loading a save starts it again with the loaded run"))
@@ -88,10 +93,18 @@ namespace Hydro
 			{
 				m_Animals.push_back(animal);
 			}
+			std::vector<BuildingDefinition> buildings;
+			for (const auto& [id, building] : Data::GetTable<BuildingDefinition>(Buildings).Rows())
+			{
+				buildings.push_back(building);
+			}
 			std::vector<std::string> effects;
 			for (const TalentDefinition& talent : m_Talents)
 			{
-				effects.push_back(TechnologyPageView::EffectLine(talent, TileName((int)talent.Amount, true)));
+				const BuildingDefinition* building = talent.Effect == TalentEffect::Building
+					? BuildingRules::Find(buildings, (int)talent.Amount) : nullptr;
+				const std::string name = building != nullptr ? BuildingRules::Lower(building->Name) : TileName((int)talent.Amount, true);
+				effects.push_back(TechnologyPageView::EffectLine(talent, name));
 			}
 			m_View.Bind(GetEntity(), fonts, Art, m_Talents, effects, MilestoneLines(HearthlandsSession::Get()));
 			m_View.GetTechnology().SetMilestones(m_Milestones);
@@ -175,6 +188,10 @@ namespace Hydro
 			else if (name.rfind("Talent ", 0) == 0)
 			{
 				m_View.GetTechnology().Select(std::stoi(name.substr(7)));
+			}
+			else if (name == "Talents Prev" || name == "Talents Next")
+			{
+				m_View.GetTechnology().TurnPage(name == "Talents Next" ? 1 : -1);
 			}
 			else if (name == "Learn")
 			{
