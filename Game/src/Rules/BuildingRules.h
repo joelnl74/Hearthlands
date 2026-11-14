@@ -11,7 +11,7 @@
 namespace Hydro
 {
 	// A settlement's buildings besides its shelters (pure): known by a talent, built once needed, each lifting a cap (store,
-	// meat kept, fields worked). SettlementRules finds, plans and builds them; FarmRules works the fields a barn allows.
+	// meat kept, fields worked, fishers). SettlementRules plans and builds them (a fishing lodge with FishRules).
 	class BuildingRules
 	{
 	public:
@@ -21,6 +21,7 @@ namespace Hydro
 			float StoreDays = 0.0f;
 			float HuntKeep = 0.0f;
 			int Fields = 0;
+			int Fishers = 0;
 		};
 
 		// What the settlement lacks now, for deciding what to build.
@@ -29,6 +30,7 @@ namespace Hydro
 			bool StoreFull = false;  // the store is nearly full
 			bool Hunting = false;    // they hunt
 			bool MoreFields = false; // there is farmland beyond what the farmers work
+			bool Fish = false;       // fish they catch live in water within reach
 		};
 
 		// The row of the building that `objectId` is for this people; -1 none.
@@ -98,6 +100,7 @@ namespace Hydro
 				bonus.StoreDays += building->StoreDays;
 				bonus.HuntKeep += building->HuntKeep;
 				bonus.Fields += building->Fields;
+				bonus.Fishers += building->Fishers;
 			}
 			return bonus;
 		}
@@ -109,6 +112,7 @@ namespace Hydro
 			case BuildingKind::Store: return needs.StoreFull;
 			case BuildingKind::HuntingLodge: return needs.Hunting;
 			case BuildingKind::Barn: return needs.MoreFields;
+			case BuildingKind::FishingLodge: return needs.Fish;
 			default: return false;
 			}
 		}

@@ -47,7 +47,12 @@ namespace Hydro
 		DataTypeRegistry::RegisterEnum<BuildingKind>("BuildingKind")
 			.Value("Store", BuildingKind::Store)
 			.Value("HuntingLodge", BuildingKind::HuntingLodge)
-			.Value("Barn", BuildingKind::Barn);
+			.Value("Barn", BuildingKind::Barn)
+			.Value("FishingLodge", BuildingKind::FishingLodge);
+
+		DataTypeRegistry::RegisterEnum<BuildingSite>("BuildingSite")
+			.Value("Ring", BuildingSite::Ring)
+			.Value("Shore", BuildingSite::Shore);
 
 		DataTypeRegistry::RegisterEnum<MilestoneKind>("MilestoneKind")
 			.Value("Tiles", MilestoneKind::Tiles)
@@ -173,11 +178,13 @@ namespace Hydro
 			.Field<&BuildingDefinition::RequiresTalentId>("RequiresTalentId", "Requires Talent Id").Range(-1.0f, 1000.0f).Tooltip("The talent that makes it known (-1: known from the start)")
 			.Field<&BuildingDefinition::MinLevel>("MinLevel", "Min Level").Range(0.0f, 10.0f).Tooltip("The settlement's level from which they build it (0 the first)")
 			.Field<&BuildingDefinition::Wood>("Wood", "Wood").Range(0.0f, 100.0f).Tooltip("Wood it takes")
+			.Field<&BuildingDefinition::Site>("Site", "Site")
 			.Field<&BuildingDefinition::RingFrom>("RingFrom", "Ring From").Range(2.0f, 30.0f).Tooltip("Tiles from the centre it stands at, at least ...")
 			.Field<&BuildingDefinition::RingTo>("RingTo", "Ring To").Range(2.0f, 30.0f).Tooltip("... and at most")
 			.Field<&BuildingDefinition::StoreDays>("StoreDays", "Store Days").Range(0.0f, 100.0f).Tooltip("Store: days of food more the store holds")
 			.Field<&BuildingDefinition::HuntKeep>("HuntKeep", "Hunt Keep").Range(0.0f, 5.0f).Tooltip("Hunting lodge: share more meat from each animal hunted (0.5: half again)")
 			.Field<&BuildingDefinition::Fields>("Fields", "Fields").Range(0.0f, 200.0f).Tooltip("Barn: fields more the farmers work")
+			.Field<&BuildingDefinition::Fishers>("Fishers", "Fishers").Range(0.0f, 20.0f).Tooltip("Fishing lodge: villagers who fish, at most")
 			.Field<&BuildingDefinition::Description>("Description", "Description").Tooltip("One short line for the settlement panel and the talent");
 
 		DataTypeRegistry::Register<MilestoneDefinition>("MilestoneDefinition", "Milestone")
@@ -274,7 +281,10 @@ namespace Hydro
 			.Field<&PeopleDefinition::GatherPerPerson>("GatherPerPerson", "Gather Per Person").Range(0.0f, 10.0f).Tooltip("Plant food (berries) a gatherer gathers a day, as far as the plants give it")
 			.Field<&PeopleDefinition::HuntPerPerson>("HuntPerPerson", "Hunt Per Person").Range(0.0f, 2.0f).Tooltip("Animals a hunter takes a day, as far as the region has them")
 			.Field<&PeopleDefinition::MeatPerAnimal>("MeatPerAnimal", "Meat Per Animal").Range(0.0f, 50.0f).Tooltip("Food an animal hunted gives")
-			.Field<&PeopleDefinition::HuntAnimalIds>("HuntAnimalIds", "Hunt Animal Ids").Tooltip("The AnimalIds they hunt and fish")
+			.Field<&PeopleDefinition::HuntAnimalIds>("HuntAnimalIds", "Hunt Animal Ids").Tooltip("The AnimalIds they hunt (in the centre's region)")
+			.Field<&PeopleDefinition::FishAnimalIds>("FishAnimalIds", "Fish Animal Ids").Tooltip("The AnimalIds they fish (in water within reach), once a fishing lodge stands; empty: they don't fish")
+			.Field<&PeopleDefinition::FishPerPerson>("FishPerPerson", "Fish Per Person").Range(0.0f, 5.0f).Tooltip("Fish a fisher catches a day, as far as the water has them")
+			.Field<&PeopleDefinition::FoodPerFish>("FoodPerFish", "Food Per Fish").Range(0.0f, 50.0f).Tooltip("Food a fish caught gives")
 			.Field<&PeopleDefinition::FellPerDay>("FellPerDay", "Fell Per Day").Range(0.0f, 20.0f).Tooltip("Trees a woodcutter fells a day, while they need wood")
 			.Field<&PeopleDefinition::PlantObjectIds>("PlantObjectIds", "Plant Object Ids").Tooltip("Saplings (ObjectIds) their foresters plant where they can grow; empty: they plant none")
 			.Field<&PeopleDefinition::PlantPerDay>("PlantPerDay", "Plant Per Day").Range(0.0f, 20.0f).Tooltip("Saplings a forester plants a day")

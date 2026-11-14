@@ -1,7 +1,8 @@
 # Makes temporary building art, drawn in code until painted art replaces it: the food stores, hunting lodges and the barn
 # of the building system (Buildings.hytable) in Project/Assets/Sprites/Buildings (32 px a tile) with their .hymeta (handles
-# kept). Granary, HuntingLodge, Barn (humans), LarderBower, HuntersBlind (elves, also wood elves), SeedHollow (wood
-# elves), ColdCellar, StoneLodge (dwarves). Pillow only; the palette and helpers are make_temp_settler_art.py's.
+# kept). Granary, HuntingLodge, Barn, FishingLodge (humans), LarderBower, HuntersBlind (elves, also wood elves), SeedHollow
+# (wood elves), ColdCellar, StoneLodge, FishersHall (dwarves). Pillow only; the palette and helpers are
+# make_temp_settler_art.py's.
 #   py scripts/art/make_temp_building_art.py [--preview]   (--preview also writes scripts/art/out/buildings_preview.png)
 import hashlib
 import os
@@ -25,6 +26,9 @@ ANTLER = (232, 220, 190, 255)
 BARN, BARN_DARK, BARN_LIGHT = (150, 70, 52, 255), (112, 50, 40, 255), (178, 92, 66, 255)
 FRUIT, FRUIT_LIGHT = (210, 72, 66, 255), (240, 120, 96, 255)
 ICE, ICE_LIGHT = (170, 214, 236, 255), (220, 242, 252, 255)
+NET, NET_DARK = (200, 190, 160, 255), (150, 140, 116, 255)
+FISH, FISH_LIGHT = (150, 170, 184, 255), (200, 214, 222, 255)
+WATER, WATER_LIGHT = (70, 120, 160, 255), (120, 170, 200, 255)
 
 
 def roof(image, top, bottom, centre, half_top, half_bottom, light, mid, dark):
@@ -183,6 +187,59 @@ def stone_lodge():
     return outline(image)
 
 
+def fish_rack(image, left, top, bottom):
+    """A pole rack with fish hung up to dry."""
+    rect(image, left, top, left, bottom, BARK)
+    rect(image, left + 6, top, left + 6, bottom, BARK)
+    rect(image, left, top, left + 6, top, BARK)
+    for x in (left + 2, left + 4):
+        rect(image, x, top + 1, x, top + 5, FISH)
+        put(image, x, top + 1, FISH_LIGHT)
+        put(image, x, top + 6, FISH_LIGHT)
+
+
+def fishing_lodge():
+    """The humans' fishing lodge: a plank hut on stilts at the water, a net hung on its wall, fish drying on a rack."""
+    image = Image.new("RGBA", (38, 38), (0, 0, 0, 0))
+    rect(image, 2, 33, 30, 35, WATER)  # the water's edge under the stilts
+    for x in (4, 10, 18, 26):
+        put(image, x, 34, WATER_LIGHT)
+    for x in (7, 15, 23):  # stilts
+        rect(image, x, 29, x + 1, 35, TIMBER_DARK)
+    rect(image, 4, 28, 28, 29, TIMBER_DARK)  # the deck
+    rect(image, 6, 17, 26, 27, TIMBER)
+    for x in range(7, 26, 3):
+        rect(image, x, 17, x, 27, TIMBER_DARK)
+    rect(image, 23, 17, 26, 27, TIMBER_DARK)
+    roof(image, 6, 18, 16, 3, 13, THATCH_LIGHT, THATCH, THATCH_DARK)
+    rect(image, 13, 21, 17, 27, DOOR)
+    for y in range(19, 26):  # the net on the wall
+        for x in range(19, 23):
+            put(image, x, y, NET if (x + y) % 2 == 0 else NET_DARK)
+    fish_rack(image, 30, 20, 31)
+    return outline(image)
+
+
+def fishers_hall():
+    """The dwarves' fishing place: a squat stone hall by a cold stream, a turf roof, fish on a rack and a creel."""
+    image = Image.new("RGBA", (38, 36), (0, 0, 0, 0))
+    rect(image, 2, 32, 28, 34, WATER)
+    for x in (5, 13, 21):
+        put(image, x, 33, ICE_LIGHT)
+    rect(image, 5, 18, 26, 31, STONE)
+    for y in range(19, 32, 3):
+        for x in range(5 + (y % 2) * 2, 27, 5):
+            put(image, x, y, STONE_DARK)
+    rect(image, 23, 18, 26, 31, STONE_DARK)
+    roof(image, 10, 18, 15, 5, 13, (110, 150, 80, 255), MOSS, (70, 100, 56, 255))
+    rect(image, 12, 24, 17, 31, DOOR)
+    rect(image, 19, 27, 22, 31, TIMBER)  # a creel by the door
+    rect(image, 19, 27, 22, 27, TIMBER_DARK)
+    put(image, 20, 26, FISH_LIGHT)
+    fish_rack(image, 29, 19, 31)
+    return outline(image)
+
+
 def handle_for(meta_path, name):
     if os.path.exists(meta_path):
         with open(meta_path, encoding="utf-8") as file:
@@ -207,7 +264,8 @@ def write(image, name):
 
 def main():
     images = {"Granary": granary(), "HuntingLodge": hunting_lodge(), "Barn": barn(), "LarderBower": larder_bower(),
-              "HuntersBlind": hunters_blind(), "SeedHollow": seed_hollow(), "ColdCellar": cold_cellar(), "StoneLodge": stone_lodge()}
+              "HuntersBlind": hunters_blind(), "SeedHollow": seed_hollow(), "ColdCellar": cold_cellar(), "StoneLodge": stone_lodge(),
+              "FishingLodge": fishing_lodge(), "FishersHall": fishers_hall()}
     for name, image in images.items():
         write(image, name)
     if "--preview" in sys.argv:

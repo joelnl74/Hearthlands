@@ -26,9 +26,8 @@
 
 namespace Hydro
 {
-	// The settlements as they look: each centre's light (its people's GlowColor, smoke from a fire or forge) and every
-	// villager doing their job within the settlement's reach (it grows with the level), walking round water and steep
-	// steps (WalkRules); a spot they can't get to they give up.
+	// The settlements as they look: each centre's light and smoke, and every villager at their job within the reach
+	// (fishers at the shore), walking round water and steep steps (WalkRules), giving up a spot they can't get to.
 	class SettlersView
 	{
 	public:
@@ -460,6 +459,21 @@ namespace Hydro
 					}
 				}
 			}
+			if (working && job == VillagerJob::Fisher && in.Water != nullptr)
+			{
+				// At the shore: a tile beside water within reach, sitting facing it.
+				for (int tries = 0; tries < 48; tries++)
+				{
+					const int dx = (int)m_Random.Below((uint32_t)(area * 2 + 1)) - area;
+					const int dy = (int)m_Random.Below((uint32_t)(area * 2 + 1)) - area;
+					const glm::vec2 spot((float)(settlement.X + dx) + 0.5f, (float)(settlement.Y + dy) + 0.5f);
+					if (dx * dx + dy * dy <= area * area && Standable(in, spot) && BesideWater(in, settlement.X + dx, settlement.Y + dy))
+					{
+						Go(person, spot, true);
+						return;
+					}
+				}
+			}
 			if (working && (job == VillagerJob::Hunter || job == VillagerJob::Forester))
 			{
 				const float angle = m_Random.Float() * 6.2832f;
@@ -518,6 +532,20 @@ namespace Hydro
 			}
 			person.Action = Doing::Rest;
 			person.Timer = 1.0f + m_Random.Float() * 2.0f;
+		}
+
+		static bool BesideWater(const Inputs& in, int x, int y)
+		{
+			const int dx[] = { 1, -1, 0, 0 };
+			const int dy[] = { 0, 0, 1, -1 };
+			for (int i = 0; i < 4; i++)
+			{
+				if (in.Map->InBounds(x + dx[i], y + dy[i]) && in.Map->Get(x + dx[i], y + dy[i]) == in.Water->WaterTileId)
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		static WalkRules::Ground GroundFor(const Inputs& in, const PeopleDefinition& people)

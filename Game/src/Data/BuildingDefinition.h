@@ -16,7 +16,16 @@ namespace Hydro
 	{
 		Store,        // food lasts: StoreDays more days of food fit in the store (built when the store is nearly full)
 		HuntingLodge, // the hunt kept: HuntKeep more of each animal's meat (built once they hunt)
-		Barn          // more fields: Fields more fields the farmers work (built when there is more farmland than they work)
+		Barn,         // more fields: Fields more fields the farmers work (built when there is more farmland than they work)
+		FishingLodge  // fishing: Fishers villagers fish (without it, none; built once fish live in water within reach)
+	};
+
+	// Where a building goes up.
+	HY_ENUM()
+	enum class BuildingSite : uint8_t
+	{
+		Ring, // RingFrom to RingTo tiles from the centre
+		Shore // beside water within the settlement's reach, where most fish are (from RingFrom tiles out)
 	};
 
 	HY_DATA(Table, DisplayField(Name))
@@ -38,6 +47,8 @@ namespace Hydro
 		int MinLevel = 0;
 		HY_PROPERTY(Range(0, 100), Tooltip("Wood it takes"))
 		float Wood = 6.0f;
+		HY_PROPERTY()
+		BuildingSite Site = BuildingSite::Ring;
 		HY_PROPERTY(Range(2, 30), Tooltip("Tiles from the centre it stands at, at least ..."))
 		int RingFrom = 2;
 		HY_PROPERTY(Range(2, 30), Tooltip("... and at most"))
@@ -48,6 +59,8 @@ namespace Hydro
 		float HuntKeep = 0.0f;
 		HY_PROPERTY(Range(0, 200), Tooltip("Barn: fields more the farmers work"))
 		int Fields = 0;
+		HY_PROPERTY(Range(0, 20), Tooltip("Fishing lodge: villagers who fish, at most"))
+		int Fishers = 0;
 		HY_PROPERTY(Tooltip("One short line for the settlement panel and the talent"))
 		std::string Description;
 	};

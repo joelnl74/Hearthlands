@@ -487,6 +487,15 @@ built, with the barn lifting how many fields a settlement works.
    centre. In a headless sim on thin land (2% berry bushes, no game) humans grow from 9 to 13 people at a hamlet, elves
    from 12 at a glen to a full village; on rich land nothing changes (they were full anyway). Work parties still to come.
 4. **Fishing** (lodge, shore fishers; boats later) and **Orchards / mushroom beds** through the building system.
+   **Fishing built Nov 14** (before work parties, the user agreed): talent Fishing (54, Peoples row 18, after First
+   fire and First hamlet) lets a human hamlet build a **fishing lodge** (`BuildingKind::FishingLodge`, `Site: Shore`):
+   once 2 or more of their fish live in water within reach, the builders put it on the shore tile whose region has
+   the most. Talent Cold-stream fishing (55, row 19, after Mountain halls and the new hidden milestone First hold, 40)
+   gives dwarf holds a **fishers' hall**. Without a lodge no one fishes; with one, up to its `Fishers` (3) fish when
+   it feeds best (0.5 fish a day each, 5 food a fish), at most a quarter of the fish in reach at a time, so the catch
+   thins the water life and follows it as it regrows. Humans fish all six of the player's fish (30-35), dwarves
+   minnows, trout and salmon; elves not yet. Fishers sit at the shore. In a headless sim a hamlet on thin land by a
+   2-tile stream of minnows grew from 12 people to a village of about 21. Boats and docks later.
 5. **Third-level art** for shelters, centres and the new buildings.
 6. **Pacing profiles** with the timeline from the sim, then **brush energy** (needs the profiles to tune).
 7. **Hidden species loop** for land animals and plants, with influence talents.

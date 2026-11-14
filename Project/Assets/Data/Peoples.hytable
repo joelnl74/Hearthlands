@@ -48,6 +48,9 @@ DataTable:
       HuntPerPerson: 0.25
       MeatPerAnimal: 6
       HuntAnimalIds: [1, 2, 20]
+      FishAnimalIds: [30, 31, 32, 33, 34, 35]
+      FishPerPerson: 0.5
+      FoodPerFish: 5
       FellPerDay: 1
       PlantObjectIds: []
       PlantPerDay: 0
@@ -155,6 +158,9 @@ DataTable:
       HuntPerPerson: 0.2
       MeatPerAnimal: 6
       HuntAnimalIds: [1, 2]
+      FishAnimalIds: []
+      FishPerPerson: 0.5
+      FoodPerFish: 4
       FellPerDay: 0.6
       PlantObjectIds: [5, 8]
       PlantPerDay: 0.5
@@ -262,6 +268,9 @@ DataTable:
       HuntPerPerson: 0.15
       MeatPerAnimal: 6
       HuntAnimalIds: [1]
+      FishAnimalIds: []
+      FishPerPerson: 0.5
+      FoodPerFish: 4
       FellPerDay: 0
       PlantObjectIds: [5, 11]
       PlantPerDay: 0.5
@@ -369,6 +378,9 @@ DataTable:
       HuntPerPerson: 0.3
       MeatPerAnimal: 6
       HuntAnimalIds: [1, 2, 4]
+      FishAnimalIds: [30, 31, 33]
+      FishPerPerson: 0.5
+      FoodPerFish: 5
       FellPerDay: 1
       PlantObjectIds: []
       PlantPerDay: 0

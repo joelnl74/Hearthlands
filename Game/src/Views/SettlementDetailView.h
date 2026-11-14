@@ -378,6 +378,7 @@ namespace Hydro
 			case VillagerJob::Guard: return MenuArt::Sky();
 			case VillagerJob::Forester: return glm::vec4(0.55f, 0.85f, 0.70f, 1.0f);
 			case VillagerJob::Farmer: return glm::vec4(0.98f, 0.86f, 0.46f, 1.0f);
+			case VillagerJob::Fisher: return glm::vec4(0.55f, 0.78f, 0.95f, 1.0f);
 			case VillagerJob::Hurt: return SettlementsPanelView::Bad();
 			default: return MenuArt::Muted();
 			}

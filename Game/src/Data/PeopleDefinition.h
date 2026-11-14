@@ -141,8 +141,14 @@ namespace Hydro
 		float HuntPerPerson = 0.25f;
 		HY_PROPERTY(Range(0, 50), Tooltip("Food an animal hunted gives"))
 		float MeatPerAnimal = 6.0f;
-		HY_PROPERTY(Tooltip("The AnimalIds they hunt and fish"))
+		HY_PROPERTY(Tooltip("The AnimalIds they hunt (in the centre's region)"))
 		std::vector<int> HuntAnimalIds;
+		HY_PROPERTY(Tooltip("The AnimalIds they fish (in water within reach), once a fishing lodge stands; empty: they don't fish"))
+		std::vector<int> FishAnimalIds;
+		HY_PROPERTY(Range(0, 5), Tooltip("Fish a fisher catches a day, as far as the water has them"))
+		float FishPerPerson = 0.5f;
+		HY_PROPERTY(Range(0, 50), Tooltip("Food a fish caught gives"))
+		float FoodPerFish = 4.0f;
 		HY_PROPERTY(Range(0, 20), Tooltip("Trees a woodcutter fells a day, while they need wood"))
 		float FellPerDay = 1.0f;
 		HY_PROPERTY(Tooltip("Saplings (ObjectIds) their foresters plant where they can grow; empty: they plant none"))
